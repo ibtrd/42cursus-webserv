@@ -7,14 +7,16 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-Webserv::Webserv(void) :_socket(-1), _maxQueue(5) {}
+Webserv::Webserv(void) : _socket(-1) {}
 
-Webserv::Webserv(const int32_t port) : _maxQueue(5) {
-	this->_init(port);
+Webserv::Webserv(const int32_t port) {
+	this->_config.setPort(port);
+	this->_init();
 }
 
-Webserv::Webserv(const int32_t port, const int32_t maxQueue) : _maxQueue(maxQueue) {
-	this->_init(port);
+Webserv::Webserv(const std::string &configFile) {
+	(void)configFile; //TODO configFile parsing 
+	this->_init();
 }
 
 Webserv::~Webserv(void) {}
@@ -25,15 +27,15 @@ Webserv	&Webserv::operator=(const Webserv &other) {
 	if (this == &other) {
 		return (*this);
 	}
+	this->_config = other._config;
 	this->_socket = other._socket;
 	this->_address = other._address;
-	this->_maxQueue = other._maxQueue;
 	return (*this);
 }
 
 /* PRIVATE METHODS ********************************************************** */
 
-void	Webserv::_init(const int32_t port) {
+void	Webserv::_init(void) {
 	this->_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_socket == -1) {
 		std::string	message("socket(): ");
@@ -41,7 +43,7 @@ void	Webserv::_init(const int32_t port) {
 		throw std::runtime_error(message);
 	}
 	this->_address.sin_family = AF_INET;
-	this->_address.sin_port = htons(port);
+	this->_address.sin_port = htons(this->_config.port());
 	this->_address.sin_addr.s_addr = INADDR_ANY;
 
 	if (-1 == bind(this->_socket, (struct sockaddr*)&this->_address, sizeof(this->_address))) {
@@ -49,7 +51,7 @@ void	Webserv::_init(const int32_t port) {
 		message.append(strerror(errno));
 		throw std::runtime_error(message);
 	}
-	if (-1 == listen(this->_socket, 5)) {
+	if (-1 == listen(this->_socket, this->_config.backlog())) {
 		std::string	message("listen(): ");
 		message.append(strerror(errno));
 		throw std::runtime_error(message);
@@ -59,7 +61,6 @@ void	Webserv::_init(const int32_t port) {
 /* PUBLIC METHODS *********************************************************** */
 
 void	Webserv::recieveMessage(void) const {
-	std::cerr << this->_socket << std::endl;
 	int clientSocket = accept(this->_socket, NULL, NULL);
 	if (-1 == clientSocket) {
 		throw std::runtime_error(strerror(errno));

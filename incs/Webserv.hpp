@@ -3,18 +3,20 @@
 
 # include <arpa/inet.h>
 
+# include "Configuration.hpp"
+
 class Webserv {
 private:
-	int32_t		_socket;
-	sockaddr_in	_address;
-	int32_t		_maxQueue;
+	Configuration	_config;
+	int32_t			_socket;
+	sockaddr_in		_address;
 
-	void	_init(const int32_t port);
+	void	_init(void);
 
 public:
 	Webserv(void);
 	Webserv(const int32_t port);
-	Webserv(const int32_t port, const int32_t maxQueue);
+	Webserv(const std::string &configFile);
 
 	~Webserv(void);
 
