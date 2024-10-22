@@ -9,24 +9,26 @@ class Server
 {
 	public:
 		Server(/* args */);
-		Server(int port);
+		Server(int port, int queueSize = 1);
 		Server(const Server &src);
 		~Server();
 		Server &operator=(const Server &src);
 
 		int getServerSocket() const { return serverSocket; }
 
-		void acceptClient(void);
-		void dialog(void);
-		void closeClient(void);
+		void run(void);
+
+		void sendAll(const char *msg);
 
 	private:
 		int serverSocket;
 		// int opt;
+		// int queueSize;
 		struct sockaddr_in addr;
 		socklen_t addrlen;
-		// std::vector<Client> clients;
-		Client client;	// 1 client at a time for now
+		fd_set readfds;
+		std::vector<Client> clients;
+		// Client client;	// 1 client at a time for now
 };
 
 #endif

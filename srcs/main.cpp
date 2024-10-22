@@ -8,11 +8,9 @@
 
 int main(void)
 {
-	Server server(8080);
+	Server server(8080, 5);
 
-	server.acceptClient();
-	server.dialog();
-	server.closeClient();
+	server.run();
 
 	return 0;
 }
