@@ -33,3 +33,11 @@
 
 # Misc
 webserv
+en.subject.pdf
+.vscode/
+.*
+cgi_tester
+client
+tester
+ubuntu_cgi_tester
+ubuntu_tester
