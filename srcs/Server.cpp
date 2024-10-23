@@ -6,6 +6,7 @@
 #include <cstring>
 #include <errno.h>
 #include <algorithm>
+#include <sstream>
 
 Server::Server(/* args */)
 {
@@ -14,7 +15,7 @@ Server::Server(/* args */)
 Server::Server(int port, int queueSize)
 	// : queueSize(queueSize)
 {
-	this->serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+	this->serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (this->serverSocket < 0)
 	{
 		std::string err = "Error: socket: ";
@@ -77,9 +78,9 @@ Server::Server(const Server &src)
 Server::~Server()
 {
 	close(this->serverSocket);
-	for (std::vector<int>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (std::map<int, t_client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
-		close(*it);
+		close(it->first);
 	}
 }
 
@@ -125,7 +126,8 @@ void Server::run(void)
 					std::string err = "Error: epoll_ctl: ";
 					throw std::runtime_error((err + strerror(errno)).c_str());
 				}
-				this->clients.push_back(clientSocket);
+				// this->clients.push_back(clientSocket);
+				this->clients[clientSocket] = (t_client){addr, this->addrlen};
 			}
 			else
 			{
@@ -149,13 +151,25 @@ void Server::run(void)
 						throw std::runtime_error((err + strerror(errno)).c_str());
 					}
 					close(clientSocket);
-					this->clients.erase(std::remove(this->clients.begin(), this->clients.end(), clientSocket), this->clients.end());
+					// this->clients.erase(std::remove(this->clients.begin(), this->clients.end(), clientSocket), this->clients.end());
+					this->clients.erase(clientSocket);
 				}
 				else
 				{
 					std::string msg = inet_ntoa(addr.sin_addr);
 					msg += ": ";
 					msg += buffer;
+					// int value;
+					// std::stringstream ss;
+					// ss << inet_ntoa(addr.sin_addr) << ": ";
+					// while (recv_size > 0)
+					// {
+					// 	value = buffer[--recv_size];
+					// 	ss << std::hex << value;
+					// 	if (recv_size > 0)
+					// 		ss << " ";
+					// }
+					// std::string msg = ss.str();
 					std::cout << msg << std::endl;
 					this->sendAll(msg.c_str());
 				}
@@ -231,9 +245,9 @@ void Server::run(void)
 
 void Server::sendAll(const char *msg)
 {
-	for (std::vector<int>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
+	for (std::map<int, t_client>::iterator it = this->clients.begin(); it != this->clients.end(); ++it)
 	{
-		if (send(*it, msg, strlen(msg), 0) == -1)
+		if (send(it->first, msg, strlen(msg), 0) == -1)
 		{
 			std::string err = "Error: send: ";
 			throw std::runtime_error((err + strerror(errno)).c_str());

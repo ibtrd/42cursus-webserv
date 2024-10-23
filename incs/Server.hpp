@@ -1,12 +1,19 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
-# include "Client.hpp"
+// # include "Client.hpp"
 # include <arpa/inet.h>
 # include <vector>
+# include <map>
 # include <sys/epoll.h>
 
 # define MAX_EVENTS 10
+
+typedef struct
+{
+	struct sockaddr_in	addr;
+	socklen_t			addrlen;
+}	t_client;
 
 class Server
 {
@@ -31,7 +38,8 @@ class Server
 		socklen_t addrlen;
 		struct epoll_event events[MAX_EVENTS];
 		int epoll_fd;
-		std::vector<int> clients;
+		// std::vector<int> clients;
+		std::map<int, t_client> clients;
 };
 
 #endif
