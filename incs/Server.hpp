@@ -4,6 +4,9 @@
 # include "Client.hpp"
 # include <arpa/inet.h>
 # include <vector>
+# include <sys/epoll.h>
+
+# define MAX_EVENTS 10
 
 class Server
 {
@@ -26,9 +29,9 @@ class Server
 		// int queueSize;
 		struct sockaddr_in addr;
 		socklen_t addrlen;
-		fd_set readfds;
-		std::vector<Client> clients;
-		// Client client;	// 1 client at a time for now
+		struct epoll_event events[MAX_EVENTS];
+		int epoll_fd;
+		std::vector<int> clients;
 };
 
 #endif

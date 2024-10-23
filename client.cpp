@@ -62,8 +62,8 @@ int main(int argc, char* argv[]) {
 		server_ip = argv[1];
 	}
 
-	std::cout << "My IP: " << get_my_ip() << std::endl;
 	my_ip = get_my_ip();
+	std::cout << "My IP: " << my_ip << std::endl;
 
     // Create the socket
     if ((client_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
