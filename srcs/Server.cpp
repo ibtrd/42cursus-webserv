@@ -11,7 +11,7 @@ Server::Server()
 {
 }
 
-Server::Server(const int32_t port)
+Server::Server(const Configuration &config)
 {
 	this->_serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (this->_serverSocket == -1)
@@ -29,7 +29,7 @@ Server::Server(const int32_t port)
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(port);
+	addr.sin_port = htons(config.port());
 	socklen_t addrlen = sizeof(addr);
 
 	if (bind(this->_serverSocket, (struct sockaddr *)&addr, addrlen) == -1)
@@ -38,7 +38,7 @@ Server::Server(const int32_t port)
 		throw std::runtime_error((err + strerror(errno)).c_str());
 	}
 
-	if (listen(this->_serverSocket, 10) == -1)
+	if (listen(this->_serverSocket, config.backlog()) == -1)
 	{
 		std::string err = "Error: listen: ";
 		throw std::runtime_error((err + strerror(errno)).c_str());

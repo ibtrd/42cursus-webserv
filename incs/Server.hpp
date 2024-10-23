@@ -1,6 +1,7 @@
 #ifndef SERVER_HPP
 # define SERVER_HPP
 
+# include "Configuration.hpp"
 # include "Client.hpp"
 
 # include <stdint.h>
@@ -13,7 +14,7 @@ class Server
 {
 	public:
 		Server();
-		Server(const int32_t port);	// tmp
+		Server(const Configuration &config);	// tmp
 		Server(const Server &src);
 
 		~Server();
