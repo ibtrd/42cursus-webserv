@@ -1,12 +1,12 @@
-#ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#ifndef SERVER_HPP
+# define SERVER_HPP
 
 # include <arpa/inet.h>
 # include <map>
 
 # include "Configuration.hpp"
 
-class Webserv {
+class Server {
 private:
 	Configuration	_config;
 	int32_t			_socket;
@@ -18,13 +18,13 @@ private:
 	void	_addConnection(void);
 
 public:
-	Webserv(void);
-	Webserv(const int32_t port);
-	Webserv(const std::string &configFile);
+	Server(void);
+	Server(const int32_t port);
+	Server(const std::string &configFile);
 
-	~Webserv(void);
+	~Server(void);
 
-	Webserv	&operator=(const Webserv &other);
+	Server	&operator=(const Server &other);
 
 	void	recieveMessage(void) const;
 	void	routine(void);

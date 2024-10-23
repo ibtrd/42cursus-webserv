@@ -1,7 +1,7 @@
 SRCS_DIR = srcs/
 SRC = \
 	main \
-	Webserv \
+	Server \
 	Configuration \
 	signal \
 

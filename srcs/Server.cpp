@@ -5,27 +5,27 @@
 #include <sys/select.h>
 #include <fcntl.h>
 
-#include "Webserv.hpp"
+#include "Server.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
-Webserv::Webserv(void) : _socket(-1), _maxfd(0) {}
+Server::Server(void) : _socket(-1), _maxfd(0) {}
 
-Webserv::Webserv(const int32_t port) : _maxfd(0) {
+Server::Server(const int32_t port) : _maxfd(0) {
 	this->_config.setPort(port);
 	this->_init();
 }
 
-Webserv::Webserv(const std::string &configFile) : _maxfd(0) {
+Server::Server(const std::string &configFile) : _maxfd(0) {
 	(void)configFile; //TODO configFile parsing 
 	this->_init();
 }
 
-Webserv::~Webserv(void) {}
+Server::~Server(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-Webserv	&Webserv::operator=(const Webserv &other) {
+Server	&Server::operator=(const Server &other) {
 	if (this == &other) {
 		return (*this);
 	}
@@ -39,7 +39,7 @@ Webserv	&Webserv::operator=(const Webserv &other) {
 
 /* PRIVATE METHODS ********************************************************** */
 
-void	Webserv::_init(void) {
+void	Server::_init(void) {
 	this->_socket = socket(AF_INET, SOCK_STREAM, 0);
 	if (this->_socket == -1) {
 		std::string	message("socket(): ");
@@ -75,7 +75,7 @@ void	Webserv::_init(void) {
 	}
 }
 
-void	Webserv::_addConnection(void) {
+void	Server::_addConnection(void) {
 	// struct machin test;
 
 	std::cout << "adding client" << std::endl;
@@ -101,13 +101,13 @@ void	Webserv::_addConnection(void) {
 
 /* PUBLIC METHODS *********************************************************** */
 
-int32_t	Webserv::closeSocket(void) {
+int32_t	Server::closeSocket(void) {
 	int32_t status = close(this->_socket);
 	this->_socket = -1;
 	return status;
 }
 
-void	Webserv::routine(void) {
+void	Server::routine(void) {
 	fd_set fds = this->_clientsSockets;
 	select(FD_SETSIZE, &fds, NULL, NULL, NULL);
 	for (int i = 0; i < FD_SETSIZE; ++i) {

@@ -3,16 +3,17 @@
 
 #include <stdint.h>
 #include <string>
+#include <exception>
 
 class Configuration {
 private:
 	int32_t		_port;
 	int32_t		_backlog;
-	std::string	_name;
 	
 public:
 	Configuration(void);
 	Configuration(const Configuration &other);
+	Configuration(int argc, char *argv[]);
 
 	~Configuration(void);
 
@@ -25,6 +26,8 @@ public:
 	void	setPort(const int32_t port);
 	void	setBacklog(const int32_t backlog);
 	void	setName(const std::string &name);
+
+	class	BadArgumentsException : public std::runtime_error {};
 };
 
 #endif /* ******************************************************************* */

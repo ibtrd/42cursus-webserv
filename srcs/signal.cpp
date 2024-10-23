@@ -4,7 +4,7 @@ extern int g_signal;
 
 #include <iostream>
 
-void	sigHandler(int sig) {
+static void	sigHandler(int sig) {
 	std::cout << " Interrupt signal (" << sig << ") received.\n";
 	g_signal = sig;
 }
