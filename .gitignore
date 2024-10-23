@@ -33,3 +33,9 @@
 
 # Misc
 webserv
+.*
+cgi_tester
+client
+tester
+ubuntu_cgi_tester
+ubuntu_tester
