@@ -4,12 +4,17 @@
 #include <Webserv.hpp>
 
 static int	argvCheck(int argc, char *argv[]);
+int	setupSignalHandlers(void);
+
+int g_signal = 0;
 
 int main(int argc, char *argv[]) {
 
 	if (argvCheck(argc, argv)) {
-		return (1);
+		// return (1);
 	}
+
+	setupSignalHandlers();
 
 	Webserv	server;
 
@@ -20,9 +25,10 @@ int main(int argc, char *argv[]) {
 		return (1);
 	}
 
-	while (1) {
-		server.recieveMessage();
+	while (g_signal == 0) {
+		server.routine();
 	}
+	server.closeSocket();
 	return 0;
 }
 

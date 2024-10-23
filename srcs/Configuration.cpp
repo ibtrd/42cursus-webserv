@@ -17,7 +17,7 @@ Configuration	&Configuration::operator=(const Configuration &other) {
 		return (*this);
 	this->_port = other._port;
 	this->_backlog = other._backlog;
-	this->_name = other._name;
+	// this->_name = other._name;
 	return (*this);
 }
 
