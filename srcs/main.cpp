@@ -1,8 +1,6 @@
 #include <iostream>
-#include <exception>
 
 #include "Server.hpp"
-#include "Configuration.hpp"
 #include "webserv.hpp"
 
 int g_signal = 0;
@@ -17,8 +15,8 @@ int main(int argc, char *argv[]) {
 
 	try {
 		Configuration config(argc, argv);
-
-		server = Server(config);
+		
+		server.configure(config);
 	} catch (std::invalid_argument &e) {
 		std::cerr << "Error: " << e.what() << std::endl;
 		std::cerr << "Usage: " << *argv << " [CONFIGURATION FILE]" << std::endl;

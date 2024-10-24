@@ -3,6 +3,7 @@
 
 # include "Configuration.hpp"
 # include "Client.hpp"
+# include "Request.hpp"
 
 # include <stdint.h>
 # include <sys/epoll.h>
@@ -10,25 +11,24 @@
 
 # define MAX_EVENTS 64
 
-class Server
-{
-	public:
-		Server();
-		Server(const Configuration &config);	// tmp
-		Server(const Server &src);
+class Server {
+public:
+	Server();
+	~Server();
 
-		~Server();
+	void	configure(const Configuration &config);
+	void	routine(void);
 
-		Server &operator=(const Server &src);
+	int32_t	epollFd(void) const;
 
-		void routine(void);
-	private:
-		int32_t _serverSocket;
-		int32_t _epollFd;
-		// struct epoll_event _event[MAX_EVENTS]; // ne passe pas la compilation car pas utilisé
-		std::map<int32_t, t_client> _clients;
+private:
+	int32_t 					_serverSocket;
+	int32_t 					_epollFd;
+	struct epoll_event 			_events[MAX_EVENTS];
+	std::map<int32_t, Request>	_requests;
 
-		void _init(void);
+	void	_init(void);
+	void	_addConnection(const int32_t socket);
 };
 
 #endif

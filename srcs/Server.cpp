@@ -1,18 +1,25 @@
 #include "Server.hpp"
 
-#include <string>
-#include <stdexcept>
 #include <cstring>
-#include <sys/socket.h>
 #include <errno.h>
 #include <unistd.h>
+#include <iostream>
 
 Server::Server()
 {
 }
 
-Server::Server(const Configuration &config)
+Server::~Server()
 {
+	close(this->_serverSocket);
+	close(this->_epollFd);
+	// for (std::map<int, t_client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
+	// {
+	// 	close(it->first);
+	// }
+}
+
+void	Server::configure(const Configuration &config) {
 	this->_serverSocket = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (this->_serverSocket == -1)
 	{
@@ -20,17 +27,19 @@ Server::Server(const Configuration &config)
 		throw std::runtime_error((err + strerror(errno)).c_str());
 	}
 
-	// if (setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &(int){1}, sizeof(int)) == -1)
-	// {
-	// 	std::string err = "Error: setsockopt: ";
-	// 	throw std::runtime_error((err + strerror(errno)).c_str());
-	// }
+	int reuse = 1;
+ 	if(setsockopt(this->_serverSocket, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) == -1) {
+		std::string err = "Error: setsockopt: ";
+		throw std::runtime_error((err + strerror(errno)).c_str());
+	}
 
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
 	addr.sin_port = htons(config.port());
 	socklen_t addrlen = sizeof(addr);
+
+
 
 	if (bind(this->_serverSocket, (struct sockaddr *)&addr, addrlen) == -1)
 	{
@@ -50,6 +59,7 @@ Server::Server(const Configuration &config)
 		std::string err = "Error: epoll_create: ";
 		throw std::runtime_error((err + strerror(errno)).c_str());
 	}
+	Request::setEpollFd(this->_epollFd);
 
 	struct epoll_event event;
 	event.events = EPOLLIN;
@@ -61,31 +71,41 @@ Server::Server(const Configuration &config)
 	}
 }
 
-Server::Server(const Server &src)
-{
-	(void)src;
-}
-
-Server::~Server()
-{
-	close(this->_serverSocket);
-	close(this->_epollFd);
-	for (std::map<int, t_client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-	{
-		close(it->first);
-	}
-}
-
-Server &Server::operator=(const Server &src)
-{
-	(void)src;
-	return *this;
-}
-
 void Server::routine(void)
 {
+	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, 50000);
+	if (nfds == -1) {
+		std::cerr << "error: epoll_wait: " << strerror(errno) << std::endl;
+		return ;
+	}
+	for(int i = 0; i < nfds; i++) {
+      int32_t fd = this->_events[i].data.fd;
+		if (fd == this->_serverSocket) {
+			this->_addConnection(fd);
+		} else {
+			char truc[1024];
+
+			read(fd, truc, 1024);
+			std::cout << truc << std::endl;
+			send(fd, "BITE", 4, 0);
+			this->_requests.erase(fd);
+			close(fd);
+
+		}
+    }
 }
 
 void Server::_init(void)
 {
 }
+
+void	Server::_addConnection(const int32_t socket) {
+	try {
+		Request	req(socket);
+		this->_requests[req.socket()] = req;
+	} catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+	}
+}
+
+int32_t	Server::epollFd(void) const { return (this->_epollFd); }
