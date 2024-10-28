@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <unistd.h>
 #include <iostream>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
 Server::Server()
 {
@@ -85,7 +87,8 @@ void Server::routine(void)
 		} else {
 			char truc[1024];
 
-			read(fd, truc, 1024);
+			// read(fd, truc, 1024);
+			recv(fd, truc, 1024, 0);
 			std::cout << truc << std::endl;
 			send(fd, "BITE", 4, 0);
 			this->_requests.erase(fd);
