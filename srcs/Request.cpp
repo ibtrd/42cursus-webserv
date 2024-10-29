@@ -45,7 +45,6 @@ Request	&Request::operator=(const Request &other) {
 	this->_method = other._method;
 	this->_url = other._url;
 	this->_protocolVersion = other._protocolVersion;
-	this->_requestLine = other._requestLine;
 	this->_headers = other._headers;
 	this->_body = other._body;
 	return (*this);
@@ -62,7 +61,7 @@ error_t	Request::handleRequest(void)
 	// std::cerr << "Request: " << this->_buffer << std::endl;
 
 	// Parse request
-	if (this->_requestLine.empty()) {
+	if (this->_protocolVersion.empty()) {
 		ret = this->parseRequestLine();
 		if (ret == CONTINUE)
 			return (0);
@@ -95,32 +94,34 @@ error_t	Request::readSocket(void)
 
 status_t	Request::parseRequestLine(void)
 {
+	std::string	requestLine;
+
 	size_t	pos = this->_buffer.find("\r\n");
 	if (pos == std::string::npos) {
 		std::cerr << "Request too short" << std::endl;
 		return (CONTINUE);
 	}
-	this->_requestLine = this->_buffer.substr(0, pos);
+	requestLine = this->_buffer.substr(0, pos);
 	this->_buffer.erase(0, pos + 2);
-	std::cerr << "Request line: " << this->_requestLine << std::endl;
+	// std::cerr << "Request line: " << requestLine << std::endl;
 
 	// Parse request line
-	pos = this->_requestLine.find(' ');
+	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
-	this->_method = parseMethod(this->_requestLine.substr(0, pos));
-	this->_requestLine.erase(0, pos + 1);
-	pos = this->_requestLine.find(' ');
+	this->_method = parseMethod(requestLine.substr(0, pos));
+	requestLine.erase(0, pos + 1);
+	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
-	this->_url = this->_requestLine.substr(0, pos);
-	this->_requestLine.erase(0, pos + 1);
-	this->_protocolVersion = this->_requestLine;
-	std::cerr << "Method: " << this->_method << std::endl;
+	this->_url = requestLine.substr(0, pos);
+	requestLine.erase(0, pos + 1);
+	this->_protocolVersion = requestLine;
+	std::cerr << "Method: " << methodToString(this->_method) << std::endl;
 	std::cerr << "URL: " << this->_url << std::endl;
 	std::cerr << "Protocol version: " << this->_protocolVersion << std::endl;
 

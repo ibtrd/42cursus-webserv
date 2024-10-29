@@ -19,7 +19,6 @@ private:
 	std::string		_url;	
 	std::string		_protocolVersion;
 
-	std::string							_requestLine;
 	std::map<std::string, std::string>	_headers;
 	std::string							_body;
 
