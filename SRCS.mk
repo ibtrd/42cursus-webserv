@@ -4,5 +4,7 @@ SRC = \
 	Server \
 	Configuration \
 	signal \
+	Request \
+	utils \
 
 SRCS := $(addsuffix .cpp, $(SRC))

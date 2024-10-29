@@ -1,8 +1,7 @@
+#include <iostream>
 #include <csignal>
 
 extern int g_signal;
-
-#include <iostream>
 
 static void	sigHandler(int sig) {
 	std::cout << " Interrupt signal (" << sig << ") received.\n";
