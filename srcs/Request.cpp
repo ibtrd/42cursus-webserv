@@ -7,6 +7,7 @@
 
 #include "Request.hpp"
 
+char	Request::_readBuffer[REQ_BUFFER_SIZE];
 int32_t	Request::_epollFd = -1;
 
 /* CONSTRUCTORS ************************************************************* */
@@ -44,12 +45,92 @@ Request	&Request::operator=(const Request &other) {
 	this->_method = other._method;
 	this->_url = other._url;
 	this->_protocolVersion = other._protocolVersion;
+	this->_requestLine = other._requestLine;
 	this->_headers = other._headers;
 	this->_body = other._body;
 	return (*this);
 }
 
 /* ************************************************************************** */
+
+error_t	Request::handleRequest(void)
+{
+	error_t	ret = 0;
+	ret = this->readSocket();
+	if (ret)
+		return (ret);
+	// std::cerr << "Request: " << this->_buffer << std::endl;
+
+	// Parse request
+	if (this->_requestLine.empty()) {
+		ret = this->parseRequestLine();
+		if (ret == CONTINUE)
+			return (0);
+		if (ret == ERROR)
+		{
+			// Send 400 Bad Request
+			std::cerr << "400 Bad Request" << std::endl;
+			return (1);
+		}
+	}
+	return (0);
+}
+
+error_t	Request::readSocket(void)
+{
+	ssize_t	bytes;
+	bytes = recv(this->_socket, Request::_readBuffer, REQ_BUFFER_SIZE, 0);
+	if (bytes == 0) {
+		std::cerr << "Client disconnected" << std::endl;
+		return (1);
+	}
+	if (bytes == -1) {
+		std::cerr << "Client error" << std::endl;
+		return (1);
+	}
+	Request::_readBuffer[bytes] = '\0';
+	this->_buffer += Request::_readBuffer;
+	return (0);
+}
+
+status_t	Request::parseRequestLine(void)
+{
+	size_t	pos = this->_buffer.find("\r\n");
+	if (pos == std::string::npos) {
+		std::cerr << "Request too short" << std::endl;
+		return (CONTINUE);
+	}
+	this->_requestLine = this->_buffer.substr(0, pos);
+	this->_buffer.erase(0, pos + 2);
+	std::cerr << "Request line: " << this->_requestLine << std::endl;
+
+	// Parse request line
+	pos = this->_requestLine.find(' ');
+	if (pos == std::string::npos) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+	this->_method = parseMethod(this->_requestLine.substr(0, pos));
+	this->_requestLine.erase(0, pos + 1);
+	pos = this->_requestLine.find(' ');
+	if (pos == std::string::npos) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+	this->_url = this->_requestLine.substr(0, pos);
+	this->_requestLine.erase(0, pos + 1);
+	this->_protocolVersion = this->_requestLine;
+	std::cerr << "Method: " << this->_method << std::endl;
+	std::cerr << "URL: " << this->_url << std::endl;
+	std::cerr << "Protocol version: " << this->_protocolVersion << std::endl;
+
+	return (DONE);
+}
+
+error_t	Request::sendResponse(void)
+{
+	return (0);
+}
 
 /* GETTERS ****************************************************************** */
 

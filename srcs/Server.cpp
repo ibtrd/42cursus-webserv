@@ -85,15 +85,12 @@ void Server::routine(void)
 		if (fd == this->_serverSocket) {
 			this->_addConnection(fd);
 		} else {
-			char truc[1024];
-
-			// read(fd, truc, 1024);
-			recv(fd, truc, 1024, 0);
-			std::cout << truc << std::endl;
-			send(fd, "BITE", 4, 0);
-			this->_requests.erase(fd);
-			close(fd);
-
+			if (this->_requests[fd].handleRequest()) {
+				this->_requests.erase(fd);
+				close(fd);
+			}
+			// this->_requests.erase(fd);
+			// close(fd);
 		}
     }
 }

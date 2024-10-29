@@ -1,18 +1,11 @@
 #ifndef REQUEST_HPP
 # define REQUEST_HPP
 
-# include <stdint.h>
+# include "webdef.hpp"
 # include <string>
 # include <map>
 
 # define REQ_BUFFER_SIZE 1024
-
-typedef enum {
-	GET,
-	POST,
-	DELETE,
-	INVAL_METHOD
-} Method;
 
 class Request {
 private:
@@ -26,8 +19,11 @@ private:
 	std::string		_url;	
 	std::string		_protocolVersion;
 
+	std::string							_requestLine;
 	std::map<std::string, std::string>	_headers;
 	std::string							_body;
+
+	response_t	_response;
 
 public:
 	Request(void);
@@ -37,6 +33,11 @@ public:
 	~Request(void);
 
 	Request	&operator=(const Request &other);
+
+	error_t		handleRequest(void);
+	error_t		readSocket(void);
+	status_t	parseRequestLine(void);
+	error_t		sendResponse(void);
 
 	int32_t	socket(void) const;
 
