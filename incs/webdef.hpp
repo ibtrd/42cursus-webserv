@@ -7,9 +7,9 @@
 typedef int32_t error_t;
 
 typedef enum {
-	DONE,
-	CONTINUE,
-	ERROR
+	DONE,		// Request fully received
+	CONTINUE,	// Request not fully received
+	ERROR		// Error parsing request
 } status_t;
 
 typedef enum {

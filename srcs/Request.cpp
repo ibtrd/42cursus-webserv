@@ -96,6 +96,7 @@ status_t	Request::parseRequestLine(void)
 {
 	std::string	requestLine;
 
+	// Check at least one line is present
 	size_t	pos = this->_buffer.find("\r\n");
 	if (pos == std::string::npos) {
 		std::cerr << "Request too short" << std::endl;
@@ -103,27 +104,52 @@ status_t	Request::parseRequestLine(void)
 	}
 	requestLine = this->_buffer.substr(0, pos);
 	this->_buffer.erase(0, pos + 2);
-	// std::cerr << "Request line: " << requestLine << std::endl;
+	std::cerr << "Request line: |" << requestLine << "|" << std::endl;
 
 	// Parse request line
+
+	// Method
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
-	this->_method = parseMethod(requestLine.substr(0, pos));
-	requestLine.erase(0, pos + 1);
+	std::string	method = requestLine.substr(0, pos);
+	if (method.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+	this->_method = parseMethod(method);
+	requestLine.erase(0, pos + 1);	
+
+	// URL
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	this->_url = requestLine.substr(0, pos);
+	if (this->_url.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
 	requestLine.erase(0, pos + 1);
+
+	// Protocol version
+	// pos = requestLine.find_first_of("\010\011\012\013\014 ");	// Check for whitespace (stupid)
+	// if (pos != std::string::npos) {								//
+	// 	std::cerr << "Invalid request line" << std::endl;			//
+	// 	return (ERROR);												//
+	// }															//
 	this->_protocolVersion = requestLine;
-	std::cerr << "Method: " << methodToString(this->_method) << std::endl;
-	std::cerr << "URL: " << this->_url << std::endl;
-	std::cerr << "Protocol version: " << this->_protocolVersion << std::endl;
+	if (this->_protocolVersion.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+
+	std::cerr << "Method: |" << methodToString(this->_method) << "|" << std::endl;
+	std::cerr << "URL: |" << this->_url << "|" << std::endl;
+	std::cerr << "Protocol version: |" << this->_protocolVersion << "|" << std::endl;
 
 	return (DONE);
 }
