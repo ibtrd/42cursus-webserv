@@ -28,13 +28,13 @@ private:
 
 public:
 	Request(void);
-	Request(const int32_t serverSocket);
 	Request(const Request &other);
 
 	~Request(void);
 
 	Request	&operator=(const Request &other);
 
+	error_t		initRequest(const int32_t serverSocket);
 	error_t		handleRequest(void);
 	error_t		readSocket(void);
 	status_t	parseRequestLine(void);

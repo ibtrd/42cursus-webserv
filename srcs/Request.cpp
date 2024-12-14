@@ -56,6 +56,22 @@ Request	&Request::operator=(const Request &other)
 
 /* ************************************************************************** */
 
+error_t Request::initRequest(const int32_t serverSocket) {
+	this->_socket = accept(serverSocket, NULL, NULL);
+	if (this->_socket == -1) {
+		return (-1);
+	}
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+		close(this->_socket);
+		return (-1);
+	}
+	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+	return (0);
+}
+
 error_t	Request::handleRequest(void)
 {
 	std::cerr << "\nHandling request " << this->_readComplete << this->_protocolVersion.empty() << std::endl;
