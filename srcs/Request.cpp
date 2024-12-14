@@ -14,22 +14,22 @@ int32_t	Request::_epollFd = -1;
 
 Request::Request(void) {};
 
-Request::Request(const int32_t serverSocket)
-{
-	this->_socket = accept(serverSocket, NULL, NULL);
-	if (this->_socket == -1) {
-		throw std::runtime_error("connection failure");
-	}
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
-		throw std::runtime_error(strerror(errno));
-	}
-	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
-	std::cerr << "BOOL: " << this->_readComplete << std::endl;
-}
+// Request::Request(const int32_t serverSocket)
+// {
+// 	this->_socket = accept(serverSocket, NULL, NULL);
+// 	if (this->_socket == -1) {
+// 		throw std::runtime_error("connection failure");
+// 	}
+// 	struct epoll_event event;
+// 	event.events = EPOLLIN;
+// 	event.data.fd = this->_socket;
+// 	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+// 		close(this->_socket);
+// 		throw std::runtime_error(strerror(errno));
+// 	}
+// 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+// 	std::cerr << "BOOL: " << this->_readComplete << std::endl;
+// }
 
 Request::Request(const Request &other)
 {
