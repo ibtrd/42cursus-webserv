@@ -89,23 +89,19 @@ void Server::routine(void)
 				this->_requests.erase(fd);
 				close(fd);
 			}
-			// this->_requests.erase(fd);
-			// close(fd);
 		}
-    }
+	}
 }
 
 void Server::_init(void)
 {
 }
 
-void	Server::_addConnection(const int32_t socket) {
-	try {
-		Request	req(socket);
-		this->_requests[req.socket()] = req;
-	} catch (std::exception &e) {
-		std::cerr << e.what() << std::endl;
+error_t	Server::_addConnection(const int32_t socket) {
+	if ( -1 == this->_requests[socket].initRequest(socket)) {
+		return -1;
 	}
+	return 0;
 }
 
 int32_t	Server::epollFd(void) const { return (this->_epollFd); }

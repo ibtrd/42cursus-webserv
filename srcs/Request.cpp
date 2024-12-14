@@ -14,21 +14,6 @@ int32_t	Request::_epollFd = -1;
 
 Request::Request(void) {};
 
-Request::Request(const int32_t serverSocket) {
-	this->_socket = accept(serverSocket, NULL, NULL);
-	if (this->_socket == -1) {
-		throw std::runtime_error("connection failure");
-	}
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
-		throw std::runtime_error(strerror(errno));
-	}
-	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
-}
-
 Request::Request(const Request &other) {
 	*this = other;
 }
@@ -51,6 +36,22 @@ Request	&Request::operator=(const Request &other) {
 }
 
 /* ************************************************************************** */
+
+error_t Request::initRequest(const int32_t serverSocket) {
+	this->_socket = accept(serverSocket, NULL, NULL);
+	if (this->_socket == -1) {
+		return (-1);
+	}
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+		close(this->_socket);
+		return (-1);
+	}
+	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+	return (0);
+}
 
 error_t	Request::handleRequest(void)
 {
@@ -128,8 +129,7 @@ status_t	Request::parseRequestLine(void)
 	return (DONE);
 }
 
-error_t	Request::sendResponse(void)
-{
+error_t	Request::sendResponse(void) {
 	return (0);
 }
 
