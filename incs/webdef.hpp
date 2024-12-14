@@ -30,6 +30,7 @@ typedef enum {
 	INTERNAL_SERVER_ERROR = 500,
 	NOT_IMPLEMENTED = 501,
 	SERVICE_UNAVAILABLE = 503,
+	HTTP_VERSION_NOT_SUPPORTED = 505
 } StatusCode;
 
 typedef enum {
@@ -52,10 +53,12 @@ typedef struct
 	std::string status_line;
 	std::string headers;
 	std::string body;
-} response_t;
+	std::string response;
+} response_t;	// To simplify
 
 Method		parseMethod(const std::string &method);
 std::string	methodToString(const Method method);
-std::string	statusCodeToString(const StatusCode code);
+std::string	statusCodeToReason(const StatusCode code);
+std::string	numToStr(int num);
 
 #endif

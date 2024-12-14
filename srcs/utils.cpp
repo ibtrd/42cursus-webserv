@@ -2,6 +2,8 @@
 
 #include "webdef.hpp"
 
+#include <sstream>
+
 Method		parseMethod(const std::string &method)
 {
 	if (method == "GET")
@@ -28,7 +30,7 @@ std::string		methodToString(const Method method)
 	}
 }
 
-std::string		statusCodeToString(const StatusCode code)
+std::string		statusCodeToReason(const StatusCode code)
 {
 	switch (code)
 	{
@@ -66,7 +68,18 @@ std::string		statusCodeToString(const StatusCode code)
 			return ("Not Implemented");
 		case SERVICE_UNAVAILABLE:
 			return ("Service Unavailable");
+		case HTTP_VERSION_NOT_SUPPORTED:
+			return ("HTTP Version Not Supported");
 		default:
 			return ("Invalid Status Code");
 	}
+}
+
+std::string	numToStr(int num)
+{
+	std::string str;
+	std::stringstream ss;
+	ss << num;
+	ss >> str;
+	return (str);
 }
