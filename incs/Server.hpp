@@ -30,6 +30,7 @@ private:
 
 	void	_init(void);
 	error_t	_addConnection(const int32_t socket);
+	void	removeConnection(const int32_t socket);
 };
 
 #endif

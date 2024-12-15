@@ -34,8 +34,8 @@ public:
 
 	Request	&operator=(const Request &other);
 
-	error_t		initRequest(const int32_t serverSocket);
-	error_t		handleRequest(void);
+	error_t		init(const int32_t requestSocket);
+	error_t		handle(void);
 	error_t		readSocket(void);
 	status_t	parseRequestLine(void);
 	error_t		sendResponse(void);

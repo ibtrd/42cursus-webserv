@@ -12,7 +12,11 @@ int32_t	Request::_epollFd = -1;
 
 /* CONSTRUCTORS ************************************************************* */
 
-Request::Request(void) {};
+Request::Request(void)
+{
+	// std::cerr << "Request created" << std::endl;
+	// this->_socket = -42; // DEBUG
+};
 
 // Request::Request(const int32_t serverSocket)
 // {
@@ -33,15 +37,20 @@ Request::Request(void) {};
 
 Request::Request(const Request &other)
 {
+	// std::cerr << "Request copy" << std::endl;
 	*this = other;
 }
 
-Request::~Request(void) {std::cerr << "Request destroyed" << std::endl;}
+Request::~Request(void)
+{
+	// std::cerr << "Request destroyed" << std::endl;
+}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Request	&Request::operator=(const Request &other)
 {
+	// std::cerr << "Request assign" << std::endl;
 	if (this == &other)
 		return (*this);
 	this->_socket = other._socket;
@@ -51,16 +60,16 @@ Request	&Request::operator=(const Request &other)
 	this->_protocolVersion = other._protocolVersion;
 	this->_headers = other._headers;
 	this->_body = other._body;
+	this->_response = other._response;
+	this->_readComplete = other._readComplete;
 	return (*this);
 }
 
 /* ************************************************************************** */
 
-error_t Request::initRequest(const int32_t serverSocket) {
-	this->_socket = accept(serverSocket, NULL, NULL);
-	if (this->_socket == -1) {
-		return (-1);
-	}
+error_t Request::init(const int32_t requestSocket)
+{
+	this->_socket = requestSocket;
 	struct epoll_event event;
 	event.events = EPOLLIN;
 	event.data.fd = this->_socket;
@@ -69,10 +78,11 @@ error_t Request::initRequest(const int32_t serverSocket) {
 		return (-1);
 	}
 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+	this->_readComplete = false;
 	return (0);
 }
 
-error_t	Request::handleRequest(void)
+error_t	Request::handle(void)
 {
 	std::cerr << "\nHandling request " << this->_readComplete << this->_protocolVersion.empty() << std::endl;
 	error_t	ret = 0;
@@ -128,7 +138,7 @@ error_t	Request::readSocket(void)
 		return (1);
 	}
 	Request::_readBuffer[bytes] = '\0';
-	std::cerr << "Read:" << Request::_readBuffer << std::endl;
+	std::cerr << "Read:|" << Request::_readBuffer << "|" << std::endl;
 	this->_buffer += Request::_readBuffer;
 	Request::_readBuffer[0] = '\0';
 	return (0);
