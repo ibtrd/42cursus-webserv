@@ -38,6 +38,7 @@ en.subject.pdf
 .*
 cgi_tester
 client
+client.cpp
 tester
 ubuntu_cgi_tester
 ubuntu_tester

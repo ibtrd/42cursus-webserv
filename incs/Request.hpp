@@ -11,6 +11,8 @@ class Request {
 private:
 	static	char 	_readBuffer[REQ_BUFFER_SIZE];
 	static	int32_t _epollFd;
+
+	bool			_readComplete;
 	
 	int32_t			_socket;
 	std::string		_buffer;
@@ -26,17 +28,18 @@ private:
 
 public:
 	Request(void);
-	Request(const int32_t serverSocket);
 	Request(const Request &other);
 
 	~Request(void);
 
 	Request	&operator=(const Request &other);
 
-	error_t		handleRequest(void);
+	error_t		init(const int32_t requestSocket);
+	error_t		handle(void);
 	error_t		readSocket(void);
 	status_t	parseRequestLine(void);
 	error_t		sendResponse(void);
+	error_t		generateResponse(const StatusCode code, const std::string *body);
 
 	int32_t	socket(void) const;
 

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
+#    By: kchillon <kchillon@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2024/10/21 13:45:58 by ibertran         ###   ########lyon.fr    #
+#    Updated: 2024/12/14 16:09:49 by kchillon         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -75,7 +75,7 @@ $(NAME) : $(OBJS)
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 	@echo "$(MODE)" > $(MODE_TRACE)
 
-$(BUILD_DIR)%.o : $(SRCS_DIR)%.cpp
+$(BUILD_DIR)%.o : $(SRCS_DIR)%.cpp | MODE_CHECK
 	@mkdir -p $(@D)
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
@@ -108,8 +108,11 @@ print-% :
 	@echo $(patsubst print-%,%,$@)=
 	@echo $($(patsubst print-%,%,$@))
 
-.PHONY : FORCE
-FORCE :
+.PHONY : MODE_CHECK
+MODE_CHECK :
 ifeq ($(ERROR),MODE)
 	$(error Invalid mode: $(MODE))
 endif
+
+.PHONY : FORCE
+FORCE :

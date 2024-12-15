@@ -20,6 +20,8 @@ public:
 
 	int32_t	epollFd(void) const;
 
+	// std::vector<Truc> trucs;
+
 private:
 	int32_t 					_serverSocket;
 	int32_t 					_epollFd;
@@ -27,7 +29,8 @@ private:
 	std::map<int32_t, Request>	_requests;
 
 	void	_init(void);
-	void	_addConnection(const int32_t socket);
+	error_t	_addConnection(const int32_t socket);
+	void	removeConnection(const int32_t socket);
 };
 
 #endif

@@ -12,32 +12,45 @@ int32_t	Request::_epollFd = -1;
 
 /* CONSTRUCTORS ************************************************************* */
 
-Request::Request(void) {};
+Request::Request(void)
+{
+	// std::cerr << "Request created" << std::endl;
+	// this->_socket = -42; // DEBUG
+};
 
-Request::Request(const int32_t serverSocket) {
-	this->_socket = accept(serverSocket, NULL, NULL);
-	if (this->_socket == -1) {
-		throw std::runtime_error("connection failure");
-	}
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
-		throw std::runtime_error(strerror(errno));
-	}
-	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
-}
+// Request::Request(const int32_t serverSocket)
+// {
+// 	this->_socket = accept(serverSocket, NULL, NULL);
+// 	if (this->_socket == -1) {
+// 		throw std::runtime_error("connection failure");
+// 	}
+// 	struct epoll_event event;
+// 	event.events = EPOLLIN;
+// 	event.data.fd = this->_socket;
+// 	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+// 		close(this->_socket);
+// 		throw std::runtime_error(strerror(errno));
+// 	}
+// 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+// 	std::cerr << "BOOL: " << this->_readComplete << std::endl;
+// }
 
-Request::Request(const Request &other) {
+Request::Request(const Request &other)
+{
+	// std::cerr << "Request copy" << std::endl;
 	*this = other;
 }
 
-Request::~Request(void) {}
+Request::~Request(void)
+{
+	// std::cerr << "Request destroyed" << std::endl;
+}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-Request	&Request::operator=(const Request &other) {
+Request	&Request::operator=(const Request &other)
+{
+	// std::cerr << "Request assign" << std::endl;
 	if (this == &other)
 		return (*this);
 	this->_socket = other._socket;
@@ -47,17 +60,34 @@ Request	&Request::operator=(const Request &other) {
 	this->_protocolVersion = other._protocolVersion;
 	this->_headers = other._headers;
 	this->_body = other._body;
+	this->_response = other._response;
+	this->_readComplete = other._readComplete;
 	return (*this);
 }
 
 /* ************************************************************************** */
 
-error_t	Request::handleRequest(void)
+error_t Request::init(const int32_t requestSocket)
 {
+	this->_socket = requestSocket;
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+		close(this->_socket);
+		return (-1);
+	}
+	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
+	this->_readComplete = false;
+	return (0);
+}
+
+error_t	Request::handle(void)
+{
+	std::cerr << "\nHandling request " << this->_readComplete << this->_protocolVersion.empty() << std::endl;
 	error_t	ret = 0;
-	ret = this->readSocket();
-	if (ret)
-		return (ret);
+	if (this->readSocket())
+		return (1);
 	// std::cerr << "Request: " << this->_buffer << std::endl;
 
 	// Parse request
@@ -67,12 +97,32 @@ error_t	Request::handleRequest(void)
 			return (0);
 		if (ret == ERROR)
 		{
-			// Send 400 Bad Request
+			this->generateResponse(BAD_REQUEST, NULL);
 			std::cerr << "400 Bad Request" << std::endl;
-			return (1);
+		}
+		else if (this->_method == INVAL_METHOD)
+		{
+			this->generateResponse(METHOD_NOT_ALLOWED, NULL);
+			std::cerr << "405 Method Not Allowed" << std::endl;
+		}
+		else if (this->_url != "/")
+		{
+			this->generateResponse(NOT_FOUND, NULL);
+			std::cerr << "404 Not Found" << std::endl;
+		}
+		else if (this->_protocolVersion != "HTTP/1.1")
+		{
+			this->generateResponse(HTTP_VERSION_NOT_SUPPORTED, NULL);
+			std::cerr << "505 HTTP Version Not Supported" << std::endl;
+		}
+		else
+		{
+			this->generateResponse(OK, NULL);
+			std::cerr << "200 OK" << std::endl;
 		}
 	}
-	return (0);
+	ret = this->sendResponse();
+	return (1);
 }
 
 error_t	Request::readSocket(void)
@@ -88,7 +138,9 @@ error_t	Request::readSocket(void)
 		return (1);
 	}
 	Request::_readBuffer[bytes] = '\0';
+	std::cerr << "Read:|" << Request::_readBuffer << "|" << std::endl;
 	this->_buffer += Request::_readBuffer;
+	Request::_readBuffer[0] = '\0';
 	return (0);
 }
 
@@ -96,6 +148,7 @@ status_t	Request::parseRequestLine(void)
 {
 	std::string	requestLine;
 
+	// Check at least one line is present
 	size_t	pos = this->_buffer.find("\r\n");
 	if (pos == std::string::npos) {
 		std::cerr << "Request too short" << std::endl;
@@ -103,33 +156,90 @@ status_t	Request::parseRequestLine(void)
 	}
 	requestLine = this->_buffer.substr(0, pos);
 	this->_buffer.erase(0, pos + 2);
-	// std::cerr << "Request line: " << requestLine << std::endl;
+	std::cerr << "Request line: |" << requestLine << "|" << std::endl;
 
 	// Parse request line
+
+	// Method
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
-	this->_method = parseMethod(requestLine.substr(0, pos));
-	requestLine.erase(0, pos + 1);
+	std::string	method = requestLine.substr(0, pos);
+	if (method.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+	this->_method = parseMethod(method);
+	requestLine.erase(0, pos + 1);	
+
+	// URL
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos) {
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	this->_url = requestLine.substr(0, pos);
+	if (this->_url.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
 	requestLine.erase(0, pos + 1);
+
+	// Protocol version
+	// pos = requestLine.find_first_of("\010\011\012\013\014 ");	// Check for whitespace (stupid)
+	// if (pos != std::string::npos) {								//
+	// 	std::cerr << "Invalid request line" << std::endl;			//
+	// 	return (ERROR);												//
+	// }															//
 	this->_protocolVersion = requestLine;
-	std::cerr << "Method: " << methodToString(this->_method) << std::endl;
-	std::cerr << "URL: " << this->_url << std::endl;
-	std::cerr << "Protocol version: " << this->_protocolVersion << std::endl;
+	if (this->_protocolVersion.empty()) {
+		std::cerr << "Invalid request line" << std::endl;
+		return (ERROR);
+	}
+
+	std::cerr << "Method: |" << methodToString(this->_method) << "|" << std::endl;
+	std::cerr << "URL: |" << this->_url << "|" << std::endl;
+	std::cerr << "Protocol version: |" << this->_protocolVersion << "|" << std::endl;
 
 	return (DONE);
 }
 
 error_t	Request::sendResponse(void)
 {
+	std::cerr << "Sending response" << std::endl;
+	ssize_t	bytes;
+	bytes = send(this->_socket, this->_response.response.c_str(), this->_response.response.length(), 0);
+	if (bytes == -1) {
+		std::cerr << "Error: send: " << strerror(errno) << std::endl;
+		return (1);
+	}
+	std::cerr << "Response sent: " << bytes << " bytes" << std::endl;
+	// if (bytes < static_cast<ssize_t>(this->_response.response.length())) {
+	// 	this->_response.response.erase(0, bytes);
+	// 	return (CONTINUE);
+	// }
+	// this->_readComplete = true;
+	return (0);
+}
+
+error_t	Request::generateResponse(const StatusCode code, const std::string *body)
+{
+	this->_response.status_code = code;
+	this->_response.reason_phrase = statusCodeToReason(code);
+	this->_response.status_line = "HTTP/1.1 " + numToStr(code) + " " + this->_response.reason_phrase + "\r\n";
+	if (body)
+	{
+		this->_response.headers = "Content-Length: " + numToStr(body->length()) + "\r\n";
+		this->_response.body = *body;
+	}
+	else
+	{
+		this->_response.headers = "";
+		this->_response.body = "";
+	}
+	this->_response.response = this->_response.status_line + this->_response.headers + "\r\n" + this->_response.body;
 	return (0);
 }
 

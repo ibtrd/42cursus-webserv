@@ -85,27 +85,38 @@ void Server::routine(void)
 		if (fd == this->_serverSocket) {
 			this->_addConnection(fd);
 		} else {
-			if (this->_requests[fd].handleRequest()) {
-				this->_requests.erase(fd);
-				close(fd);
+			if (this->_requests[fd].handle()) {
+				std::cerr << "Close connection" << std::endl;
+				this->removeConnection(fd);
 			}
-			// this->_requests.erase(fd);
-			// close(fd);
 		}
-    }
+	}
 }
 
 void Server::_init(void)
 {
 }
 
-void	Server::_addConnection(const int32_t socket) {
-	try {
-		Request	req(socket);
-		this->_requests[req.socket()] = req;
-	} catch (std::exception &e) {
-		std::cerr << e.what() << std::endl;
+error_t	Server::_addConnection(const int32_t socket)
+{
+	std::cerr << "New connection" << std::endl;
+	int32_t requestSocket = accept(socket, NULL, NULL);
+	if (-1 == requestSocket)
+	{
+		return (-1);
 	}
+	if ( -1 == this->_requests[requestSocket].init(requestSocket))
+	{
+		return -1;
+	}
+	return 0;
+}
+
+void	Server::removeConnection(const int32_t socket)
+{
+	this->_requests.erase(socket);
+	close(socket);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
 }
 
 int32_t	Server::epollFd(void) const { return (this->_epollFd); }
