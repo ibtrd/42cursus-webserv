@@ -13,6 +13,8 @@ private:
 	static	int32_t _epollFd;
 
 	bool			_readComplete;
+	bool			_canWrite;
+	bool			_flag1;		// DEBUG (open EPOLLOUT)
 	
 	int32_t			_socket;
 	std::string		_buffer;

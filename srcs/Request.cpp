@@ -62,6 +62,8 @@ Request	&Request::operator=(const Request &other)
 	this->_body = other._body;
 	this->_response = other._response;
 	this->_readComplete = other._readComplete;
+	this->_canWrite = other._canWrite;
+	this->_flag1 = other._flag1;
 	return (*this);
 }
 
@@ -79,6 +81,8 @@ error_t Request::init(const int32_t requestSocket)
 	}
 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
 	this->_readComplete = false;
+	this->_canWrite = false;
+	this->_flag1 = true;
 	return (0);
 }
 
@@ -86,7 +90,7 @@ error_t	Request::handle(void)
 {
 	std::cerr << "\nHandling request " << this->_readComplete << this->_protocolVersion.empty() << std::endl;
 	error_t	ret = 0;
-	if (this->readSocket())
+	if (!this->_readComplete && this->readSocket())
 		return (1);
 	// std::cerr << "Request: " << this->_buffer << std::endl;
 
@@ -95,6 +99,17 @@ error_t	Request::handle(void)
 		ret = this->parseRequestLine();
 		if (ret == CONTINUE)
 			return (0);
+		this->_readComplete = true;
+		this->_canWrite = true;
+
+		// struct epoll_event event;
+		// event.events = EPOLLIN | EPOLLOUT;
+		// event.data.fd = this->_socket;
+		// if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event)) {
+		// 	close(this->_socket);
+		// 	return (-1);
+		// }
+
 		if (ret == ERROR)
 		{
 			this->generateResponse(BAD_REQUEST, NULL);
@@ -110,6 +125,12 @@ error_t	Request::handle(void)
 			this->generateResponse(NOT_FOUND, NULL);
 			std::cerr << "404 Not Found" << std::endl;
 		}
+		else if (this->_url != "/chat")
+		{
+			std::string body = "Hello, World!aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+			this->generateResponse(OK, &body);
+			std::cerr << "200 Chat" << std::endl;
+		}
 		else if (this->_protocolVersion != "HTTP/1.1")
 		{
 			this->generateResponse(HTTP_VERSION_NOT_SUPPORTED, NULL);
@@ -121,7 +142,28 @@ error_t	Request::handle(void)
 			std::cerr << "200 OK" << std::endl;
 		}
 	}
-	ret = this->sendResponse();
+
+	// Send response
+	if (this->_canWrite)
+	{
+		if (this->_flag1)
+		{
+			this->_flag1 = false;
+			struct epoll_event event;
+			event.events = EPOLLIN | EPOLLOUT;
+			event.data.fd = this->_socket;
+			if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event)) {
+				close(this->_socket);
+				return (-1);
+			}
+		}
+		ret = this->sendResponse();
+		if (ret == CONTINUE)
+		{
+			return (0);
+		}
+		std::cerr << "Done responding" << std::endl;
+	}
 	return (1);
 }
 
@@ -208,20 +250,21 @@ status_t	Request::parseRequestLine(void)
 
 error_t	Request::sendResponse(void)
 {
-	std::cerr << "Sending response" << std::endl;
+	std::cerr << "Sending response..." << std::endl;
 	ssize_t	bytes;
-	bytes = send(this->_socket, this->_response.response.c_str(), this->_response.response.length(), 0);
+	bytes = REQ_BUFFER_SIZE > this->_response.response.length() ? this->_response.response.length() : REQ_BUFFER_SIZE;
+	bytes = send(this->_socket, this->_response.response.c_str(), bytes, 0);
 	if (bytes == -1) {
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-		return (1);
+		return (ERROR);
 	}
-	std::cerr << "Response sent: " << bytes << " bytes" << std::endl;
-	// if (bytes < static_cast<ssize_t>(this->_response.response.length())) {
-	// 	this->_response.response.erase(0, bytes);
-	// 	return (CONTINUE);
-	// }
-	// this->_readComplete = true;
-	return (0);
+	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+	this->_response.response.erase(0, bytes);
+	if (this->_response.response.length())
+	{
+		return (CONTINUE);
+	}
+	return (DONE);
 }
 
 error_t	Request::generateResponse(const StatusCode code, const std::string *body)
