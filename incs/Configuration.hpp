@@ -1,15 +1,18 @@
 #ifndef CONFIGURATION_HPP
 # define CONFIGURATION_HPP
 
-#include <stdint.h>
-#include <string>
-#include <exception>
+# include <stdint.h>
+# include <string>
+# include <exception>
+# include <vector>
+# include <map>
 
-class Configuration {
-private:
-	int32_t		_port;
-	int32_t		_backlog;
-	
+# include "ServerBlock.hpp"
+
+# define DEFAULT_CONF_FILEPATH "./conf/default.conf"
+# define DEFAULT_BACKLOG 511
+
+class Configuration {	
 public:
 	Configuration(void);
 	Configuration(const Configuration &other);
@@ -19,14 +22,27 @@ public:
 
 	Configuration	&operator=(const Configuration &other);
 
-	int32_t				port(void) const;
+	// GETTERS
 	int32_t 			backlog(void) const;
-	// const std::string	&name(void) const;
 
-	void	setPort(const int32_t port);
+	// SETTERS
 	void	setBacklog(const int32_t backlog);
-	// void	setName(const std::string &name);
 
+private:
+
+	int32_t						_backlog;
+	std::vector<ServerBlock>	_blocks;
+
+	void	_parseFile(const char *filepath);
+
+	void	_serverDirective(void);
+
+
+	typedef std::map<std::string, void (Configuration::*)()> DirectiveMap;
+
+	static const DirectiveMap	directives;
+
+	static DirectiveMap	_initializeDirectives(void);
 };
 
 #endif /* ******************************************************************* */

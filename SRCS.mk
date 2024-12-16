@@ -1,10 +1,11 @@
 SRCS_DIR = srcs/
 SRC = \
-	main \
-	Server \
 	Configuration \
-	signal \
+	main \
 	Request \
+	Server \
+	ServerBlock \
+	signal \
 	utils \
 
 SRCS := $(addsuffix .cpp, $(SRC))

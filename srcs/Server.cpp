@@ -38,7 +38,7 @@ void	Server::configure(const Configuration &config) {
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(config.port());
+	addr.sin_port = htons(8080); // PLACEHOLDER VALUE
 	socklen_t addrlen = sizeof(addr);
 
 
