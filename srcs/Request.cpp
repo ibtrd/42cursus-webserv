@@ -63,7 +63,6 @@ Request	&Request::operator=(const Request &other)
 	this->_response = other._response;
 	this->_readComplete = other._readComplete;
 	this->_canWrite = other._canWrite;
-	this->_flag1 = other._flag1;
 	return (*this);
 }
 
@@ -82,7 +81,6 @@ error_t Request::init(const int32_t requestSocket)
 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
 	this->_readComplete = false;
 	this->_canWrite = false;
-	this->_flag1 = true;
 	return (0);
 }
 
@@ -100,15 +98,6 @@ error_t	Request::handle(void)
 		if (ret == CONTINUE)
 			return (0);
 		this->_readComplete = true;
-		this->_canWrite = true;
-
-		// struct epoll_event event;
-		// event.events = EPOLLIN | EPOLLOUT;
-		// event.data.fd = this->_socket;
-		// if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event)) {
-		// 	close(this->_socket);
-		// 	return (-1);
-		// }
 
 		if (ret == ERROR)
 		{
@@ -143,23 +132,23 @@ error_t	Request::handle(void)
 		}
 	}
 
+	// Switch to write mode
+	if (this->_readComplete && !this->_canWrite)
+	{
+		if (this->switchToWrite())
+		{
+			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
+			return (1);
+		}
+	}
+
 	// Send response
 	if (this->_canWrite)
 	{
-		if (this->_flag1)
-		{
-			this->_flag1 = false;
-			struct epoll_event event;
-			event.events = EPOLLIN | EPOLLOUT;
-			event.data.fd = this->_socket;
-			if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event)) {
-				close(this->_socket);
-				return (-1);
-			}
-		}
 		ret = this->sendResponse();
 		if (ret == CONTINUE)
 		{
+			usleep(500000); // DEBUG
 			return (0);
 		}
 		std::cerr << "Done responding" << std::endl;
@@ -171,11 +160,13 @@ error_t	Request::readSocket(void)
 {
 	ssize_t	bytes;
 	bytes = recv(this->_socket, Request::_readBuffer, REQ_BUFFER_SIZE, 0);
-	if (bytes == 0) {
+	if (bytes == 0)
+	{
 		std::cerr << "Client disconnected" << std::endl;
 		return (1);
 	}
-	if (bytes == -1) {
+	if (bytes == -1)
+	{
 		std::cerr << "Client error" << std::endl;
 		return (1);
 	}
@@ -192,7 +183,8 @@ status_t	Request::parseRequestLine(void)
 
 	// Check at least one line is present
 	size_t	pos = this->_buffer.find("\r\n");
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Request too short" << std::endl;
 		return (CONTINUE);
 	}
@@ -204,12 +196,14 @@ status_t	Request::parseRequestLine(void)
 
 	// Method
 	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	std::string	method = requestLine.substr(0, pos);
-	if (method.empty()) {
+	if (method.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -218,12 +212,14 @@ status_t	Request::parseRequestLine(void)
 
 	// URL
 	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	this->_url = requestLine.substr(0, pos);
-	if (this->_url.empty()) {
+	if (this->_url.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -231,12 +227,14 @@ status_t	Request::parseRequestLine(void)
 
 	// Protocol version
 	// pos = requestLine.find_first_of("\010\011\012\013\014 ");	// Check for whitespace (stupid)
-	// if (pos != std::string::npos) {								//
+	// if (pos != std::string::npos)								//
+	// {															//
 	// 	std::cerr << "Invalid request line" << std::endl;			//
 	// 	return (ERROR);												//
 	// }															//
 	this->_protocolVersion = requestLine;
-	if (this->_protocolVersion.empty()) {
+	if (this->_protocolVersion.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -246,6 +244,20 @@ status_t	Request::parseRequestLine(void)
 	std::cerr << "Protocol version: |" << this->_protocolVersion << "|" << std::endl;
 
 	return (DONE);
+}
+
+error_t Request::switchToWrite(void)
+{
+	struct epoll_event event;
+	event.events = EPOLLOUT;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event))
+	{
+		close(this->_socket);
+		return (-1);
+	}
+	this->_canWrite = true;
+	return (0);
 }
 
 error_t	Request::sendResponse(void)
