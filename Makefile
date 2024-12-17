@@ -6,7 +6,7 @@
 #    By: kchillon <kchillon@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2024/12/14 16:09:49 by kchillon         ###   ########lyon.fr    #
+#    Updated: 2024/12/15 16:23:02 by kchillon         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -72,12 +72,14 @@ endif
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@echo "$(BOLD)$(CXX) $(YELLOW)$(CXXFLAGS) $(CYAN)$(OBJS) $(WHITE)-o $(NAME)$(RESET)"
+	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 	@echo "$(MODE)" > $(MODE_TRACE)
 
 $(BUILD_DIR)%.o : $(SRCS_DIR)%.cpp | MODE_CHECK
 	@mkdir -p $(@D)
-	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
+	@echo "$(BOLD)$(CXX) $(YELLOW)$(CXXFLAGS) $(CPPFLAGS) $(BLUE)-c $< $(CYAN)-o $@$(RESET)"
+	@$(CXX) $(CXXFLAGS) $(CPPFLAGS) -c $< -o $@
 
 .PHONY : debug
 debug :
@@ -116,3 +118,21 @@ endif
 
 .PHONY : FORCE
 FORCE :
+
+# *** FANCY STUFF ************************************************************ #
+
+RESET	=	\e[0m
+ERASE	=	\033[2K\r
+BOLD	=	\033[1m
+UNDER	=	\033[4m
+SUR		=	\033[7m
+GREY	=	\033[30m
+RED		=	\033[31m
+GREEN	=	\033[32m
+YELLOW	=	\033[33m
+BLUE	=	\033[34m
+PURPLE	=	\033[35m
+CYAN	=	\033[36m
+WHITE	=	\033[37m
+C12		=	\033[39m
+C13		=	\033[43m
