@@ -94,42 +94,19 @@ error_t	Request::handle(void)
 
 	// Parse request
 	if (this->_protocolVersion.empty()) {
-		ret = this->parseRequestLine();
-		if (ret == CONTINUE)
+		StatusCode parseStatus = this->parseRequestLine();
+		if (parseStatus == CONTINUE)
 			return (0);
 		this->_readComplete = true;
-
-		if (ret == ERROR)
+		if (parseStatus == ERROR)
 		{
-			this->generateResponse(BAD_REQUEST, NULL);
-			std::cerr << "400 Bad Request" << std::endl;
+			std::cerr << "Error something went wrong parsing the request" << std::endl;
+			return (1);
 		}
-		else if (this->_method == INVAL_METHOD)
-		{
-			this->generateResponse(METHOD_NOT_ALLOWED, NULL);
-			std::cerr << "405 Method Not Allowed" << std::endl;
-		}
-		else if (this->_url != "/")
-		{
-			this->generateResponse(NOT_FOUND, NULL);
-			std::cerr << "404 Not Found" << std::endl;
-		}
-		else if (this->_url != "/chat")
-		{
-			std::string body = "Hello, World!aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-			this->generateResponse(OK, &body);
-			std::cerr << "200 Chat" << std::endl;
-		}
-		else if (this->_protocolVersion != "HTTP/1.1")
-		{
-			this->generateResponse(HTTP_VERSION_NOT_SUPPORTED, NULL);
-			std::cerr << "505 HTTP Version Not Supported" << std::endl;
-		}
-		else
-		{
-			this->generateResponse(OK, NULL);
-			std::cerr << "200 OK" << std::endl;
-		}
+		if (parseStatus != DONE)
+			this->_response.setStatusCode(parseStatus);
+		else	// DEBUG
+			this->_response.setStatusCode(OK);
 	}
 
 	// Switch to write mode
@@ -140,6 +117,7 @@ error_t	Request::handle(void)
 			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
 			return (1);
 		}
+		this->_responseBuffer = this->_response.response();
 	}
 
 	// Send response
@@ -177,7 +155,7 @@ error_t	Request::readSocket(void)
 	return (0);
 }
 
-status_t	Request::parseRequestLine(void)
+StatusCode	Request::parseRequestLine(void)
 {
 	std::string	requestLine;
 
@@ -197,32 +175,22 @@ status_t	Request::parseRequestLine(void)
 	// Method
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
-	{
-		std::cerr << "Invalid request line" << std::endl;
-		return (ERROR);
-	}
+		return (BAD_REQUEST);
 	std::string	method = requestLine.substr(0, pos);
 	if (method.empty())
-	{
-		std::cerr << "Invalid request line" << std::endl;
-		return (ERROR);
-	}
+		return (BAD_REQUEST);
 	this->_method = parseMethod(method);
-	requestLine.erase(0, pos + 1);	
+	requestLine.erase(0, pos + 1);
+	if (this->_method == INVAL_METHOD)
+		return (METHOD_NOT_ALLOWED);
 
 	// URL
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
-	{
-		std::cerr << "Invalid request line" << std::endl;
-		return (ERROR);
-	}
+		return (BAD_REQUEST);
 	this->_url = requestLine.substr(0, pos);
 	if (this->_url.empty())
-	{
-		std::cerr << "Invalid request line" << std::endl;
-		return (ERROR);
-	}
+		return (BAD_REQUEST);
 	requestLine.erase(0, pos + 1);
 
 	// Protocol version
@@ -234,10 +202,9 @@ status_t	Request::parseRequestLine(void)
 	// }															//
 	this->_protocolVersion = requestLine;
 	if (this->_protocolVersion.empty())
-	{
-		std::cerr << "Invalid request line" << std::endl;
-		return (ERROR);
-	}
+		return (BAD_REQUEST);
+	if (this->_protocolVersion != "HTTP/1.1")
+		return (HTTP_VERSION_NOT_SUPPORTED);
 
 	std::cerr << "Method: |" << methodToString(this->_method) << "|" << std::endl;
 	std::cerr << "URL: |" << this->_url << "|" << std::endl;
@@ -264,38 +231,19 @@ error_t	Request::sendResponse(void)
 {
 	std::cerr << "Sending response..." << std::endl;
 	ssize_t	bytes;
-	bytes = REQ_BUFFER_SIZE > this->_response.response.length() ? this->_response.response.length() : REQ_BUFFER_SIZE;
-	bytes = send(this->_socket, this->_response.response.c_str(), bytes, 0);
+	bytes = REQ_BUFFER_SIZE > this->_responseBuffer.length() ? this->_responseBuffer.length() : REQ_BUFFER_SIZE;
+	bytes = send(this->_socket, this->_responseBuffer.c_str(), bytes, 0);
 	if (bytes == -1) {
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
 		return (ERROR);
 	}
 	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
-	this->_response.response.erase(0, bytes);
-	if (this->_response.response.length())
+	this->_responseBuffer.erase(0, bytes);
+	if (this->_responseBuffer.length())
 	{
 		return (CONTINUE);
 	}
 	return (DONE);
-}
-
-error_t	Request::generateResponse(const StatusCode code, const std::string *body)
-{
-	this->_response.status_code = code;
-	this->_response.reason_phrase = statusCodeToReason(code);
-	this->_response.status_line = "HTTP/1.1 " + numToStr(code) + " " + this->_response.reason_phrase + "\r\n";
-	if (body)
-	{
-		this->_response.headers = "Content-Length: " + numToStr(body->length()) + "\r\n";
-		this->_response.body = *body;
-	}
-	else
-	{
-		this->_response.headers = "";
-		this->_response.body = "";
-	}
-	this->_response.response = this->_response.status_line + this->_response.headers + "\r\n" + this->_response.body;
-	return (0);
 }
 
 /* GETTERS ****************************************************************** */
