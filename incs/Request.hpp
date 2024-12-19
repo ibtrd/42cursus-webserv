@@ -17,6 +17,7 @@ private:
 	bool			_canWrite;
 	
 	int32_t			_socket;
+	// Truc			&_truc;		// Server rules (reference or pointer)
 	std::string		_buffer;
 
 	Method			_method;
@@ -26,7 +27,6 @@ private:
 	std::map<std::string, std::string>	_headers;
 	std::string							_body;
 
-	// response_t	_response;
 	Response		_response;
 	std::string		_responseBuffer;
 

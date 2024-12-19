@@ -31,7 +31,6 @@ public:
 	std::string	response(void) const;
 
 	void		setStatusCode(const StatusCode &code);
-	// void		setReasonPhrase(const std::string phrase);
 	void		setHeader(const std::string &key, const std::string &value);
 	void		setBody(const std::string &body);
 

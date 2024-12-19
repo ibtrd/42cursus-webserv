@@ -76,8 +76,6 @@ std::string	Response::response(void) const
 	{
 		response += it->first + ": " + it->second + "\r\n";
 	}
-	// if (this->_body.length())
-	// 	response += "Content-Length: " + numToStr(this->_body.length()) + "\r\n";
 	response += "\r\n";
 	response += this->_body;
 	return (response);
@@ -90,11 +88,6 @@ void	Response::setStatusCode(const StatusCode &code)
 	this->_statusCode = code;
 	this->_reasonPhrase = statusCodeToReason(code);
 }
-
-// void	Response::setReasonPhrase(const std::string phrase)
-// {
-// 	this->_reasonPhrase = phrase;
-// }
 
 void	Response::setHeader(const std::string &key, const std::string &value)
 {

@@ -15,25 +15,7 @@ int32_t	Request::_epollFd = -1;
 Request::Request(void)
 {
 	// std::cerr << "Request created" << std::endl;
-	// this->_socket = -42; // DEBUG
 };
-
-// Request::Request(const int32_t serverSocket)
-// {
-// 	this->_socket = accept(serverSocket, NULL, NULL);
-// 	if (this->_socket == -1) {
-// 		throw std::runtime_error("connection failure");
-// 	}
-// 	struct epoll_event event;
-// 	event.events = EPOLLIN;
-// 	event.data.fd = this->_socket;
-// 	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-// 		close(this->_socket);
-// 		throw std::runtime_error(strerror(errno));
-// 	}
-// 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
-// 	std::cerr << "BOOL: " << this->_readComplete << std::endl;
-// }
 
 Request::Request(const Request &other)
 {
@@ -106,7 +88,10 @@ error_t	Request::handle(void)
 		if (parseStatus != DONE)
 			this->_response.setStatusCode(parseStatus);
 		else	// DEBUG
+		{
 			this->_response.setStatusCode(OK);
+			this->_response.setBody("Hello, World!");
+		}
 	}
 
 	// Switch to write mode
@@ -193,13 +178,6 @@ StatusCode	Request::parseRequestLine(void)
 		return (BAD_REQUEST);
 	requestLine.erase(0, pos + 1);
 
-	// Protocol version
-	// pos = requestLine.find_first_of("\010\011\012\013\014 ");	// Check for whitespace (stupid)
-	// if (pos != std::string::npos)								//
-	// {															//
-	// 	std::cerr << "Invalid request line" << std::endl;			//
-	// 	return (ERROR);												//
-	// }															//
 	this->_protocolVersion = requestLine;
 	if (this->_protocolVersion.empty())
 		return (BAD_REQUEST);
