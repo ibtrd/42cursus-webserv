@@ -15,12 +15,40 @@ ServerBlock::~ServerBlock(void) {}
 ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 	if (this == &other)
 		return (*this);
-	// Copy instructions
+	this->_hosts = other._hosts;
+	this->_names = other._names;
+	this->_locations = other._locations;
 	return (*this);
 }
 
 /* ************************************************************************** */
 
 /* GETTERS ****************************************************************** */
+
+const std::vector<std::pair<in_addr_t, in_port_t> >	&ServerBlock::getHosts(void) const {
+	return this->_hosts;
+}
+
+const std::vector<std::string>	&ServerBlock::getNames(void) const {
+	return this->_names;
+}
+
+const std::vector<LocationBlock> &ServerBlock::getLocations(void) const {
+	return this->_locations;
+}
+
+/* SETTERS ****************************************************************** */
+
+void ServerBlock::addHost(const std::pair<in_addr_t, in_port_t> host) {
+	this->_hosts.push_back(host);
+}
+
+void ServerBlock::addName(const std::string &name) {
+	this->_names.push_back(name);
+}
+
+void ServerBlock::addLocation(const LocationBlock &location) {
+	this->_locations.push_back(location);
+}
 
 /* EXCEPTIONS *************************************************************** */

@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: kchillon <kchillon@student.42lyon.fr>      +#+  +:+       +#+         #
+#    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2024/12/15 16:23:02 by kchillon         ###   ########lyon.fr    #
+#    Updated: 2024/12/27 21:41:27 by ibertran         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -39,7 +39,7 @@ DEFINES		=
 
 CPPFLAGS 	=	$(addprefix -I, $(INCS)) \
 				$(addprefix -D, $(DEFINES)) \
-				-MMD -MP \
+				-MD -MP \
 
 MAKEFLAGS	=	--no-print-directory
 
@@ -72,8 +72,8 @@ endif
 all : $(NAME)
 
 $(NAME) : $(OBJS)
-	@echo "$(BOLD)$(CXX) $(YELLOW)$(CXXFLAGS) $(CYAN)$(OBJS) $(WHITE)-o $(NAME)$(RESET)"
-	@$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
+	@echo "$(BOLD)$(CXX) $(CYAN)$(OBJS) $(WHITE)-o $(NAME)$(RESET)"
+	@$(CXX) $(OBJS) -o $(NAME)
 	@echo "$(MODE)" > $(MODE_TRACE)
 
 $(BUILD_DIR)%.o : $(SRCS_DIR)%.cpp | MODE_CHECK
