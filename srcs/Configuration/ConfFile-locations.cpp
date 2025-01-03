@@ -31,7 +31,7 @@ void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token,
 	server.addLocation(location);
 }
 
-void	ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
 	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (*token == ';') {
@@ -52,7 +52,7 @@ void	ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, Loc
 	}
 }
 
-void	ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
 	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (*token == ';') {
@@ -75,7 +75,7 @@ void	ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, Lo
 	}
 }
 
-void	ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
 	const uint32_t									n = this->_countArgs(token);
 	const std::vector<ConfToken>::const_iterator	directive = token++;
 	
@@ -89,3 +89,17 @@ void	ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterato
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 }
+
+void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+	const uint32_t									n = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
+
+	if (1 != n) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	if (false == location.setDirListing(token->str())) {
+		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token, "on", "off"));
+	}
+	++token;
+}
+

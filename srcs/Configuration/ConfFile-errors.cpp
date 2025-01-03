@@ -65,3 +65,12 @@ std::string ConfFile::_invalidValue(const ConfToken &directive, const ConfToken 
 		<< this->_path << ":" << inval.line();
 	return ss.str();
 }
+
+std::string ConfFile::_invalidValue(const ConfToken &directive, const ConfToken &inval, const std::string &expected1, const std::string &expected2) const {
+	std::stringstream ss;
+	ss << "invalid value " << ft::quoted(inval.str())
+		<< " in " << ft::quoted(directive.str()) << " directive, it must be "
+		<< ft::quoted(expected1) << " or " << ft::quoted(expected2)
+		<< " in " << this->_path << ":" << inval.line();
+	return ss.str();
+}

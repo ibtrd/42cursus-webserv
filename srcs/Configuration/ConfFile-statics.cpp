@@ -38,7 +38,7 @@ ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	map["root"] = &ConfFile::_rootDirective;
 	map["allow"] = &ConfFile::_allowDirective;
 	map["client_max_body_size"] = &ConfFile::_clientMaxBodySizeDirective;
+	map["autoindex"] = &ConfFile::_autoindexDirective;
 	// map["cgi_exe"] = &ConfFile::_cgiExeDirective;
-	// map["autoindex"] = &ConfFile::_autoindexDirective;
 	return map;
 }
