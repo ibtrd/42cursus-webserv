@@ -10,7 +10,7 @@ void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token,
 		throw Configuration::ConfigurationException(this->_missingOpening(*directive, BLOCK_OPEN));
 	}
 
-	LocationBlock	location;
+	LocationBlock	location(token->str());
 
 	while (++token != this->_tokens.end() && !token->isMetatoken()) {
 		locationDirectives::const_iterator dir = _locationDirectives.find(token->str());
