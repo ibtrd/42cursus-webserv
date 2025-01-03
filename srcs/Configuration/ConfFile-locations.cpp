@@ -1,5 +1,6 @@
 #include "ConfFile.hpp"
 #include "Configuration.hpp"
+#include "ft.hpp"
 
 void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
 	const std::vector<ConfToken>::const_iterator directive = token++;
@@ -71,5 +72,20 @@ void	ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, Lo
 		throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';'));
 	} else if (*token != ';') {
 		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
+	}
+}
+
+void	ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+	const uint32_t									n = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
+	
+	if (1 != n) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	try {
+		location.setMaxBodySize(ft::stoi<uint32_t>(token->str()));
+		++token;
+	} catch (std::invalid_argument &e) {
+		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 }

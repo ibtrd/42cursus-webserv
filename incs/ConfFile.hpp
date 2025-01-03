@@ -37,16 +37,19 @@ private:
 
 	void	_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
+	void	_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 
+	uint32_t	_countArgs(const std::vector<ConfToken>::const_iterator &directive) const;
 
-	std::string _unkwownDirective(const ConfToken &error);
-	std::string _missingOpening(const ConfToken &error, const char c);
-	std::string _invalidArgumentNumber(const ConfToken &error);
-	std::string _unexpectedEOF(const ConfToken &error, const char c);
-	std::string _unexpectedEOF(const ConfToken &error, const char c1, const char c2);
-	std::string _unexpectedToken(const ConfToken &error);
-	std::string _hostNotFound(const ConfToken &error, const ConfToken &host);
-	std::string _invalidMethod(const ConfToken &method);
+	std::string _unkwownDirective(const ConfToken &error) const;
+	std::string _missingOpening(const ConfToken &error, const char c) const;
+	std::string _invalidArgumentNumber(const ConfToken &error) const;
+	std::string _unexpectedEOF(const ConfToken &error, const char c) const;
+	std::string _unexpectedEOF(const ConfToken &error, const char c1, const char c2) const;
+	std::string _unexpectedToken(const ConfToken &error) const;
+	std::string _hostNotFound(const ConfToken &error, const ConfToken &host) const;
+	std::string _invalidMethod(const ConfToken &method) const;
+	std::string _invalidValue(const ConfToken &directive, const ConfToken &value) const;
 
 	// STATICS
 	static bool _isMetachar(int c);

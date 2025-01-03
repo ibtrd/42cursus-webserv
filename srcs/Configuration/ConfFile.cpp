@@ -138,6 +138,21 @@ void ConfFile::_serverNameDirective(std::vector<ConfToken>::const_iterator &toke
 	}
 }
 
+uint32_t ConfFile::_countArgs(const std::vector<ConfToken>::const_iterator &directive) const {
+	std::vector<ConfToken>::const_iterator	token = directive;
+	uint32_t 								args = 0;
+
+	while (++token != this->_tokens.end()) {
+		if (*token == ';' ) {
+			return args;
+		} else if (token->isMetatoken()) {
+			throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
+		}
+		args++;
+	}
+	throw Configuration::ConfigurationException(this->_unexpectedEOF(*directive, ';'));
+}
+
 /* GETTERS ****************************************************************** */
 
 const std::string &ConfFile::path(void) const {
