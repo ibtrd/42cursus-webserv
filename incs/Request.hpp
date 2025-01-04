@@ -13,6 +13,7 @@ private:
 	static	int32_t _epollFd;
 
 	bool			_readComplete;
+	bool			_canWrite;
 	
 	int32_t			_socket;
 	std::string		_buffer;
@@ -38,6 +39,7 @@ public:
 	error_t		handle(void);
 	error_t		readSocket(void);
 	status_t	parseRequestLine(void);
+	error_t		switchToWrite(void);
 	error_t		sendResponse(void);
 	error_t		generateResponse(const StatusCode code, const std::string *body);
 

@@ -62,6 +62,7 @@ Request	&Request::operator=(const Request &other)
 	this->_body = other._body;
 	this->_response = other._response;
 	this->_readComplete = other._readComplete;
+	this->_canWrite = other._canWrite;
 	return (*this);
 }
 
@@ -79,6 +80,7 @@ error_t Request::init(const int32_t requestSocket)
 	}
 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
 	this->_readComplete = false;
+	this->_canWrite = false;
 	return (0);
 }
 
@@ -86,7 +88,7 @@ error_t	Request::handle(void)
 {
 	std::cerr << "\nHandling request " << this->_readComplete << this->_protocolVersion.empty() << std::endl;
 	error_t	ret = 0;
-	if (this->readSocket())
+	if (!this->_readComplete && this->readSocket())
 		return (1);
 	// std::cerr << "Request: " << this->_buffer << std::endl;
 
@@ -95,6 +97,8 @@ error_t	Request::handle(void)
 		ret = this->parseRequestLine();
 		if (ret == CONTINUE)
 			return (0);
+		this->_readComplete = true;
+
 		if (ret == ERROR)
 		{
 			this->generateResponse(BAD_REQUEST, NULL);
@@ -110,6 +114,12 @@ error_t	Request::handle(void)
 			this->generateResponse(NOT_FOUND, NULL);
 			std::cerr << "404 Not Found" << std::endl;
 		}
+		else if (this->_url != "/chat")
+		{
+			std::string body = "Hello, World!aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+			this->generateResponse(OK, &body);
+			std::cerr << "200 Chat" << std::endl;
+		}
 		else if (this->_protocolVersion != "HTTP/1.1")
 		{
 			this->generateResponse(HTTP_VERSION_NOT_SUPPORTED, NULL);
@@ -121,7 +131,28 @@ error_t	Request::handle(void)
 			std::cerr << "200 OK" << std::endl;
 		}
 	}
-	ret = this->sendResponse();
+
+	// Switch to write mode
+	if (this->_readComplete && !this->_canWrite)
+	{
+		if (this->switchToWrite())
+		{
+			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
+			return (1);
+		}
+	}
+
+	// Send response
+	if (this->_canWrite)
+	{
+		ret = this->sendResponse();
+		if (ret == CONTINUE)
+		{
+			usleep(500000); // DEBUG
+			return (0);
+		}
+		std::cerr << "Done responding" << std::endl;
+	}
 	return (1);
 }
 
@@ -129,11 +160,13 @@ error_t	Request::readSocket(void)
 {
 	ssize_t	bytes;
 	bytes = recv(this->_socket, Request::_readBuffer, REQ_BUFFER_SIZE, 0);
-	if (bytes == 0) {
+	if (bytes == 0)
+	{
 		std::cerr << "Client disconnected" << std::endl;
 		return (1);
 	}
-	if (bytes == -1) {
+	if (bytes == -1)
+	{
 		std::cerr << "Client error" << std::endl;
 		return (1);
 	}
@@ -150,7 +183,8 @@ status_t	Request::parseRequestLine(void)
 
 	// Check at least one line is present
 	size_t	pos = this->_buffer.find("\r\n");
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Request too short" << std::endl;
 		return (CONTINUE);
 	}
@@ -162,12 +196,14 @@ status_t	Request::parseRequestLine(void)
 
 	// Method
 	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	std::string	method = requestLine.substr(0, pos);
-	if (method.empty()) {
+	if (method.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -176,12 +212,14 @@ status_t	Request::parseRequestLine(void)
 
 	// URL
 	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
+	if (pos == std::string::npos)
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
 	this->_url = requestLine.substr(0, pos);
-	if (this->_url.empty()) {
+	if (this->_url.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -189,12 +227,14 @@ status_t	Request::parseRequestLine(void)
 
 	// Protocol version
 	// pos = requestLine.find_first_of("\010\011\012\013\014 ");	// Check for whitespace (stupid)
-	// if (pos != std::string::npos) {								//
+	// if (pos != std::string::npos)								//
+	// {															//
 	// 	std::cerr << "Invalid request line" << std::endl;			//
 	// 	return (ERROR);												//
 	// }															//
 	this->_protocolVersion = requestLine;
-	if (this->_protocolVersion.empty()) {
+	if (this->_protocolVersion.empty())
+	{
 		std::cerr << "Invalid request line" << std::endl;
 		return (ERROR);
 	}
@@ -206,22 +246,37 @@ status_t	Request::parseRequestLine(void)
 	return (DONE);
 }
 
+error_t Request::switchToWrite(void)
+{
+	struct epoll_event event;
+	event.events = EPOLLOUT;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Request::_epollFd, EPOLL_CTL_MOD, this->_socket, &event))
+	{
+		close(this->_socket);
+		return (-1);
+	}
+	this->_canWrite = true;
+	return (0);
+}
+
 error_t	Request::sendResponse(void)
 {
-	std::cerr << "Sending response" << std::endl;
+	std::cerr << "Sending response..." << std::endl;
 	ssize_t	bytes;
-	bytes = send(this->_socket, this->_response.response.c_str(), this->_response.response.length(), 0);
+	bytes = REQ_BUFFER_SIZE > this->_response.response.length() ? this->_response.response.length() : REQ_BUFFER_SIZE;
+	bytes = send(this->_socket, this->_response.response.c_str(), bytes, 0);
 	if (bytes == -1) {
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-		return (1);
+		return (ERROR);
 	}
-	std::cerr << "Response sent: " << bytes << " bytes" << std::endl;
-	// if (bytes < static_cast<ssize_t>(this->_response.response.length())) {
-	// 	this->_response.response.erase(0, bytes);
-	// 	return (CONTINUE);
-	// }
-	// this->_readComplete = true;
-	return (0);
+	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+	this->_response.response.erase(0, bytes);
+	if (this->_response.response.length())
+	{
+		return (CONTINUE);
+	}
+	return (DONE);
 }
 
 error_t	Request::generateResponse(const StatusCode code, const std::string *body)
