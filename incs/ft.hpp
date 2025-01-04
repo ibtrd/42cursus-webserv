@@ -27,6 +27,9 @@ namespace ft {
 		ss << '"' << element << '"';
 		return ss.str();
 	}
+
+	bool		is_dir(char *path);
+	std::string	numToStr(int num);
 }
 
 #endif

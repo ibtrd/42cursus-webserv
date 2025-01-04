@@ -7,6 +7,9 @@
 # include <map>
 
 # define REQ_BUFFER_SIZE 1024
+# define REQ_CONTINUE 0	// Request not fully received
+# define REQ_DONE 1		// Request fully received
+# define REQ_ERROR 2	// Program error
 
 class Request {
 private:
@@ -14,6 +17,7 @@ private:
 	static	int32_t _epollFd;
 
 	bool			_readComplete;
+	bool			_writeComplete;
 	bool			_canWrite;
 	
 	int32_t			_socket;
@@ -21,7 +25,7 @@ private:
 	std::string		_buffer;
 
 	Method			_method;
-	std::string		_url;	
+	std::string		_target;	
 	std::string		_protocolVersion;
 
 	std::map<std::string, std::string>	_headers;
@@ -41,9 +45,11 @@ public:
 	error_t		init(const int32_t requestSocket);
 	error_t		handle(void);
 	error_t		readSocket(void);
-	StatusCode	parseRequestLine(void);
+	error_t		parseRequestLine(void);
+	error_t		parseHeaders(void);
 	error_t		switchToWrite(void);
 	error_t		sendResponse(void);
+	error_t		readFile(void);
 
 	int32_t	socket(void) const;
 

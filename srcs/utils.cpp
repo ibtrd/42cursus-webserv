@@ -74,12 +74,3 @@ std::string		statusCodeToReason(const StatusCode code)
 			return ("Invalid Status Code");
 	}
 }
-
-std::string	numToStr(int num)
-{
-	std::string str;
-	std::stringstream ss;
-	ss << num;
-	ss >> str;
-	return (str);
-}

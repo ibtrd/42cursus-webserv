@@ -1,5 +1,6 @@
 SRCS_DIR = srcs/
 SRC = \
+	ft \
 	main \
 	Request \
 	Response \
