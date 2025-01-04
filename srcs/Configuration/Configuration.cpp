@@ -4,8 +4,7 @@
 
 Configuration::Configuration(int argc, char *argv[]) :
 	_conf(&_blocks),
-	_options(DEFAULT_OPTIONS),
-	_backlog(DEFAULT_BACKLOG)
+	_options(DEFAULT_OPTIONS)
 {
 	for (int i = 1; i < argc; ++i) {
 		if (_isOption(argv[i])) {
@@ -42,10 +41,6 @@ void Configuration::_parseOption(const std::string arg) {
 
 /* GETTERS ****************************************************************** */
 
-int32_t	Configuration::backlog(void) const {
-	return this->_backlog;
-}
-
 bool	Configuration::noRun(void) const {
 	if (this->_options & NORUN_OPTION) {
 		std::cout << "Success: the configuration file " << this->file() << " syntax is ok" << std::endl;
@@ -56,6 +51,10 @@ bool	Configuration::noRun(void) const {
 
 const std::string &Configuration::file(void) const {
 	return (this->_conf.path());
+}
+
+const std::vector<ServerBlock> &Configuration::blocks(void) const {
+	return this->_blocks;
 }
 
 /* STATICS ****************************************************************** */

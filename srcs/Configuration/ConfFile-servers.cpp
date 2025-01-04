@@ -1,5 +1,6 @@
 #include <arpa/inet.h>
 #include <stdexcept>
+#include <cstring>
 
 #include "ConfFile.hpp"
 #include "Configuration.hpp"
@@ -37,18 +38,19 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	
-	std::pair<in_addr_t, in_port_t> host;
-
+	struct sockaddr_in host;
+	std::memset(&host, 0, sizeof(host));
+	host.sin_family = AF_INET;
 	try {
 		std::size_t sep = token->str().find(':');
 		if (std::string::npos != sep) {
-			if (0 >= inet_pton(AF_INET, token->str().substr(0, sep).c_str(), &host.first)) {
+			if (0 >= inet_pton(AF_INET, token->str().substr(0, sep).c_str(), &host.sin_addr.s_addr)) {
 				throw std::invalid_argument("");
 			}
-			host.second = ft::stoi<in_addr_t>(token->str().substr(sep + 1));
+			host.sin_port = htons(ft::stoi<in_addr_t>(token->str().substr(sep + 1)));
 		} else {
-			host.first = INADDR_ANY;
-			host.second = ft::stoi<in_addr_t>(token->str());
+			host.sin_addr.s_addr = INADDR_ANY;
+			host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
 		}
 	} catch (std::invalid_argument &e) {
 		throw Configuration::ConfigurationException(this->_hostNotFound(*directive, *token));

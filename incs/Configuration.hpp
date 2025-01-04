@@ -15,9 +15,10 @@ public:
 	~Configuration(void);
 
 	// GETTERS
-	int32_t				backlog(void) const;
-	bool				noRun(void) const;
-	const std::string	&file(void) const;
+	bool	noRun(void) const;
+
+	const std::string				&file(void) const;
+	const std::vector<ServerBlock> &blocks(void) const;
 
 	// EXCEPTION
 	class ConfigurationException : public std::exception {
@@ -34,7 +35,6 @@ public:
 private:
 	ConfFile					_conf;
 	uint8_t						_options;
-	int32_t						_backlog;
 	std::vector<ServerBlock>	_blocks;
 
 	void	_parseOption(const std::string arg);

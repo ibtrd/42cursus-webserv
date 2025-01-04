@@ -25,11 +25,11 @@ ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 
 /* GETTERS ****************************************************************** */
 
-const std::vector<std::pair<in_addr_t, in_port_t> >	&ServerBlock::getHosts(void) const {
+const std::vector<struct sockaddr_in> &ServerBlock::getHosts(void) const {
 	return this->_hosts;
 }
 
-const std::vector<std::string>	&ServerBlock::getNames(void) const {
+const std::vector<std::string> &ServerBlock::getNames(void) const {
 	return this->_names;
 }
 
@@ -39,7 +39,7 @@ const std::vector<LocationBlock> &ServerBlock::getLocations(void) const {
 
 /* SETTERS ****************************************************************** */
 
-void ServerBlock::addHost(const std::pair<in_addr_t, in_port_t> host) {
+void ServerBlock::addHost(const struct sockaddr_in &host) {
 	this->_hosts.push_back(host);
 }
 
