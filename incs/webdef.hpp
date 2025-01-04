@@ -3,8 +3,15 @@
 
 # include <stdint.h>
 # include <string>
+# include <map>
+# include <vector>
+
+# include "ServerBlock.hpp"
 
 typedef int32_t error_t;
+typedef int fd_t;
+typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
+typedef std::map<fd_t, std::vector<struct sockaddr_in> > bindmap_t;
 
 typedef enum {
 	NONE = 0,

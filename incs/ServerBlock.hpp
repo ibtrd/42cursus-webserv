@@ -15,19 +15,19 @@ public:
 	ServerBlock	&operator=(const ServerBlock &other);
 
 	// GETTERS
-	const std::vector<std::pair<in_addr_t, in_port_t> > &getHosts(void) const;
-	const std::vector<std::string>						&getNames(void) const;
-	const std::vector<LocationBlock>					&getLocations(void) const;
+	const std::vector<struct sockaddr_in>	&getHosts(void) const;
+	const std::vector<std::string>			&getNames(void) const;
+	const std::vector<LocationBlock>		&getLocations(void) const;
 
 	// SETTERS
-	void	addHost(const std::pair<in_addr_t, in_port_t> host);
+	void	addHost(const struct sockaddr_in &host);
 	void	addName(const std::string &name);
 	void	addLocation(const LocationBlock &location);
 
 private:
-	std::vector<std::pair<in_addr_t, in_port_t> >	_hosts;
-	std::vector<std::string>						_names;
-	std::vector<LocationBlock>						_locations;
+	std::vector<struct sockaddr_in>	_hosts;
+	std::vector<std::string>		_names;
+	std::vector<LocationBlock>		_locations;
 };
 
 #endif /* ******************************************************************* */

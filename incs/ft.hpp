@@ -2,6 +2,7 @@
 # define FT_HPP
 
 # include <string>
+# include <cstring>
 # include <sstream>
 # include <stdexcept>
 
@@ -27,6 +28,18 @@ namespace ft {
 		ss << '"' << element << '"';
 		return ss.str();
 	}
+
+	template<typename KEY, typename VAL>
+	typename std::map<KEY, std::vector<VAL> >::const_iterator isBound(std::map<KEY, std::vector<VAL> > &haystack, const VAL &needle) {
+	for(typename std::map<KEY, std::vector<VAL> >::const_iterator it = haystack.begin(); it != haystack.end(); ++it) {
+		for (typename std::vector<VAL>::const_iterator cmp = it->second.begin(); cmp != it->second.end(); ++cmp) {
+			if (0 == std::memcmp(&needle, &(*cmp), sizeof(VAL))) {
+				return it;
+			}
+		}
+	}
+	return haystack.end();
+}
 
 	bool		is_dir(char *path);
 	std::string	numToStr(int num);
