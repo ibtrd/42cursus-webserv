@@ -7,18 +7,14 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 
-Server::Server()
-{
-}
+Server::Server() : _serverSocket(-1), _epollFd(-1) {}
 
 Server::~Server()
 {
-	close(this->_serverSocket);
-	close(this->_epollFd);
-	// for (std::map<int, t_client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it)
-	// {
-	// 	close(it->first);
-	// }
+	if (this->_serverSocket != -1)
+		close(this->_serverSocket);
+	if (this->_epollFd != -1)
+		close(this->_epollFd);
 }
 
 void	Server::configure(const Configuration &config) {
@@ -38,10 +34,8 @@ void	Server::configure(const Configuration &config) {
 	struct sockaddr_in addr;
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = INADDR_ANY;
-	addr.sin_port = htons(config.port());
+	addr.sin_port = htons(8080); // PLACEHOLDER VALUE
 	socklen_t addrlen = sizeof(addr);
-
-
 
 	if (bind(this->_serverSocket, (struct sockaddr *)&addr, addrlen) == -1)
 	{

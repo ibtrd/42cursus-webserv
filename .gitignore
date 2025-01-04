@@ -43,3 +43,5 @@ tester
 ubuntu_cgi_tester
 ubuntu_tester
 rfc*
+conf/noperm.conf
+YoupiBanane/

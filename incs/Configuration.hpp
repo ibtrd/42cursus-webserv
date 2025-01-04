@@ -1,32 +1,45 @@
 #ifndef CONFIGURATION_HPP
 # define CONFIGURATION_HPP
 
-#include <stdint.h>
-#include <string>
-#include <exception>
+# include "ConfFile.hpp"
 
-class Configuration {
-private:
-	int32_t		_port;
-	int32_t		_backlog;
-	
+# define DEFAULT_CONF_FILEPATH "./conf/default.conf"
+# define DEFAULT_BACKLOG 511
+# define DEFAULT_OPTIONS 0
+
+# define NORUN_OPTION (1 << 0)
+
+class Configuration {	
 public:
-	Configuration(void);
-	Configuration(const Configuration &other);
 	Configuration(int argc, char *argv[]);
-
 	~Configuration(void);
 
-	Configuration	&operator=(const Configuration &other);
+	// GETTERS
+	int32_t				backlog(void) const;
+	bool				noRun(void) const;
+	const std::string	&file(void) const;
 
-	int32_t				port(void) const;
-	int32_t 			backlog(void) const;
-	// const std::string	&name(void) const;
+	// EXCEPTION
+	class ConfigurationException : public std::exception {
+	public:
+		ConfigurationException(const std::string& message) : _message(message) {}
+		virtual ~ConfigurationException() throw() {}
 
-	void	setPort(const int32_t port);
-	void	setBacklog(const int32_t backlog);
-	// void	setName(const std::string &name);
+		const char* what() const throw() { return _message.c_str(); }
 
+	private:
+		std::string _message;
+	};
+
+private:
+	ConfFile					_conf;
+	uint8_t						_options;
+	int32_t						_backlog;
+	std::vector<ServerBlock>	_blocks;
+
+	void	_parseOption(const std::string arg);
+
+	static bool	_isOption(const char *str);
 };
 
 #endif /* ******************************************************************* */
