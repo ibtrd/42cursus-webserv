@@ -1,9 +1,28 @@
-#include <fstream>
-#include <cstring>
-#include <arpa/inet.h>
+#include <iostream>
 
 #include "Configuration.hpp"
-#include "ft.hpp"
+
+Configuration::Configuration(int argc, char *argv[]) :
+	_conf(&_blocks),
+	_options(DEFAULT_OPTIONS),
+	_backlog(DEFAULT_BACKLOG)
+{
+	for (int i = 1; i < argc; ++i) {
+		if (_isOption(argv[i])) {
+			this->_parseOption(argv[i]);
+		} else if (this->_conf.path().empty()) {
+			this->_conf.setPath(argv[i]);
+		} else {
+			throw std::invalid_argument("too many arguments");
+		}
+	}
+	if (this->_conf.path().empty()) {
+		this->_conf.setPath(DEFAULT_CONF_FILEPATH);
+	}
+	this->_conf.parse();
+}
+
+Configuration::~Configuration(void) {}
 
 void Configuration::_parseOption(const std::string arg) {
 	const std::string identifiers = "t";
@@ -19,6 +38,24 @@ void Configuration::_parseOption(const std::string arg) {
 			throw std::invalid_argument(message);
 		}
 	}
+}
+
+/* GETTERS ****************************************************************** */
+
+int32_t	Configuration::backlog(void) const {
+	return this->_backlog;
+}
+
+bool	Configuration::noRun(void) const {
+	if (this->_options & NORUN_OPTION) {
+		std::cout << "Success: the configuration file " << this->file() << " syntax is ok" << std::endl;
+		return true;
+	}
+	return false;
+}
+
+const std::string &Configuration::file(void) const {
+	return (this->_conf.path());
 }
 
 /* STATICS ****************************************************************** */

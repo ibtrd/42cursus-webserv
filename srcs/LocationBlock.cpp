@@ -39,10 +39,7 @@ LocationBlock	&LocationBlock::operator=(const LocationBlock &other) {
 /* SETTERS ****************************************************************** */
 
 bool LocationBlock::allowMethod(const std::string &str) {
-	std::vector<std::string> methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
+	const std::vector<std::string> &methods = LocationBlock::_methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(str)) {
@@ -91,10 +88,7 @@ const std::string &LocationBlock::getRoot(void) const {
 }
 
 bool LocationBlock::isAllowedMethod(const std::string &str) const {
-	std::vector<std::string> methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
+	const std::vector<std::string> &methods = LocationBlock::_methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(str)) {
@@ -104,5 +98,14 @@ bool LocationBlock::isAllowedMethod(const std::string &str) const {
 	return false;
 }
 
+/* STATICS ****************************************************************** */
 
-/* EXCEPTIONS *************************************************************** */
+const std::vector<std::string> LocationBlock::_methods = LocationBlock::_initMethods();
+
+std::vector<std::string> LocationBlock::_initMethods(void) {
+	std::vector<std::string>	methods;
+	methods.push_back("GET");
+	methods.push_back("POST");
+	methods.push_back("DELETE");
+	return methods;
+}

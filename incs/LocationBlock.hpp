@@ -36,12 +36,18 @@ public:
 	int32_t				getMaxBodySize(void) const;
 	const std::string 	&getRoot(void) const;
 
+
 private:
 	std::string	_path;
 	bool		_dirListing;
 	int32_t		_maxBodySize;
 	std::string	_root;
 	uint8_t		_allowedMethods;
+
+	// STATICS
+	static const std::vector<std::string>	_methods;
+
+	static std::vector<std::string>	_initMethods(void);
 };
 
 #endif /* ******************************************************************* */

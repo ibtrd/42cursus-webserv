@@ -12,13 +12,12 @@ SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/
 
 CONFIGURATION_SRC = \
-	Configuration \
-	Configuration-construction \
-	Configuration-getters \
-	ConfToken \
 	ConfFile \
 	ConfFile-errors \
-	ConfFile-statics \
 	ConfFile-locations \
+	ConfFile-servers \
+	ConfFile-statics \
+	Configuration \
+	ConfToken \
 
 SRCS := $(addsuffix .cpp, $(SRC))

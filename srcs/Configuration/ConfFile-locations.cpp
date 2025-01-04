@@ -32,24 +32,14 @@ void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token,
 }
 
 void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const std::vector<ConfToken>::const_iterator directive = token++;
+	const uint32_t									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
 
-	if (*token == ';') {
+	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
-	} else if (token->isMetatoken()) {
-		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
 	}
 	location.setRoot(token->str());
 	++token;
-	if (token == this->_tokens.end()) {
-		throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';'));
-	} else if (*token == ';') {
-		return;
-	} else if (token->isMetatoken()) {
-		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
-	} else {
-
-	}
 }
 
 void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
@@ -102,4 +92,3 @@ void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token
 	}
 	++token;
 }
-
