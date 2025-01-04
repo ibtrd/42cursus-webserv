@@ -2,6 +2,7 @@
 # define REQUEST_HPP
 
 # include "webdef.hpp"
+# include "Response.hpp"
 # include <string>
 # include <map>
 
@@ -16,6 +17,7 @@ private:
 	bool			_canWrite;
 	
 	int32_t			_socket;
+	// Truc			&_truc;		// Server rules (reference or pointer)
 	std::string		_buffer;
 
 	Method			_method;
@@ -25,7 +27,8 @@ private:
 	std::map<std::string, std::string>	_headers;
 	std::string							_body;
 
-	response_t	_response;
+	Response		_response;
+	std::string		_responseBuffer;
 
 public:
 	Request(void);
@@ -38,10 +41,9 @@ public:
 	error_t		init(const int32_t requestSocket);
 	error_t		handle(void);
 	error_t		readSocket(void);
-	status_t	parseRequestLine(void);
+	StatusCode	parseRequestLine(void);
 	error_t		switchToWrite(void);
 	error_t		sendResponse(void);
-	error_t		generateResponse(const StatusCode code, const std::string *body);
 
 	int32_t	socket(void) const;
 

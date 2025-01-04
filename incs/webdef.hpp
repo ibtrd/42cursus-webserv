@@ -6,13 +6,16 @@
 
 typedef int32_t error_t;
 
-typedef enum {
-	DONE,		// Request fully received
-	CONTINUE,	// Request not fully received
-	ERROR		// Error parsing request
-} status_t;
+// typedef enum {
+// 	DONE = 0,		// Request fully received
+// 	CONTINUE = 1,	// Request not fully received
+// 	ERROR = 2		// Error parsing request
+// } status_t;
 
 typedef enum {
+	DONE = 0,		// Request fully received
+	CONTINUE = 1,	// Request not fully received
+	ERROR = 2,		// Program error
 	OK = 200,
 	CREATED = 201,
 	BAD_REQUEST = 400,
@@ -46,15 +49,15 @@ typedef enum {
 // 	CONTENT_TYPE
 // } Header;
 
-typedef struct
-{
-	StatusCode	status_code;
-	std::string	reason_phrase;
-	std::string status_line;
-	std::string headers;
-	std::string body;
-	std::string response;
-} response_t;	// To simplify
+// typedef struct
+// {
+// 	StatusCode	status_code;
+// 	std::string	reason_phrase;
+// 	std::string	status_line;
+// 	std::string	headers;
+// 	std::string	body;
+// 	std::string	response;
+// } response_t;	// To simplify
 
 Method		parseMethod(const std::string &method);
 std::string	methodToString(const Method method);

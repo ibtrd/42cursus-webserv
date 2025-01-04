@@ -2,6 +2,7 @@ SRCS_DIR = srcs/
 SRC = \
 	main \
 	Request \
+	Response \
 	Server \
 	ServerBlock \
 	signal \
