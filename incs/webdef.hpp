@@ -48,7 +48,7 @@ typedef enum {
 // 	CONTENT_TYPE
 // } Header;
 
-Method		parseMethod(const std::string &method);
+Method		stringToMethod(const std::string &method);
 std::string	methodToString(const Method method);
 std::string	statusCodeToReason(const StatusCode code);
 

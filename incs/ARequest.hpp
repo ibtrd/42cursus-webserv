@@ -1,5 +1,5 @@
-#ifndef REQUEST_HPP
-# define REQUEST_HPP
+#ifndef AREQUEST_HPP
+# define AREQUEST_HPP
 
 # include "webdef.hpp"
 # include "Response.hpp"
@@ -7,15 +7,15 @@
 # include <map>
 
 # define REQ_BUFFER_SIZE 1024
-# define REQ_CONTINUE 0	// Request not fully received
-# define REQ_DONE 1		// Request fully received
+# define REQ_CONTINUE 0	// ARequest not fully received
+# define REQ_DONE 1		// ARequest fully received
 # define REQ_ERROR 2	// Program error
+# define REQ_TRANSFER 3	// Transfer to specialised request handler
 
 # define REQ_STATE_NONE							0x00000000
 # define REQ_STATE_READ_REQUEST_LINE_COMPLETE	0x00000001
 # define REQ_STATE_READ_HEADERS_COMPLETE		0x00000002
 # define REQ_STATE_READ_BODY_COMPLETE			0x00000004
-# define REQ_STATE_READ_WRITE_COMPLETE			0x00000008
 # define REQ_STATE_READ_COMPLETE				0x0000000F
 # define REQ_STATE_CAN_WRITE					0x00000020
 # define REQ_STATE_WRITE_COMPLETE				0x00000040
@@ -34,10 +34,12 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
-class Request {
-private:
+class ARequest {
+protected:
 	static	char 	_readBuffer[REQ_BUFFER_SIZE];
 	static	int32_t _epollFd;
+
+	bool			_trans;
 
 	uint32_t		_requestState;	// will replace _readComplete, _writeComplete, _canWrite and more
 	
@@ -59,24 +61,19 @@ private:
 	const std::string		_requestStateStr(void) const;
 
 public:
-	Request(void);
-	Request(const Request &other);
+	ARequest(void);
+	ARequest(const ARequest &other);
 
-	~Request(void);
+	virtual ~ARequest(void);
 
-	Request	&operator=(const Request &other);
+	ARequest	&operator=(const ARequest &other);
 
-	error_t		init(const int32_t requestSocket);
-	error_t		handle(void);
+	virtual error_t		init(const int32_t requestSocket);
+	virtual error_t		handle(void) = 0;
 	error_t		readSocket(void);
-	error_t		parseRequestLine(void);
-	error_t		parseHeaders(void);
-	error_t		parseBody(void);
-	error_t		switchToWrite(void);
-	error_t		sendResponse(void);
-	error_t		readFile(void);
 
 	int32_t	socket(void) const;
+	Method	method(void) const;
 
 	static int32_t	epollFd(void);
 

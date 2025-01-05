@@ -3,7 +3,6 @@ SRC = \
 	ft \
 	LocationBlock \
 	main \
-	Request \
 	Response \
 	Server \
 	ServerBlock \
@@ -21,5 +20,13 @@ CONFIGURATION_SRC = \
 	ConfFile-statics \
 	Configuration \
 	ConfToken \
+
+SRC += $(addprefix $(REQUEST_DIR), $(REQUEST_SRC))
+REQUEST_DIR=Request/
+
+REQUEST_SRC = \
+	ARequest \
+	RequestGET \
+	RequestMaster \
 
 SRCS := $(addsuffix .cpp, $(SRC))

@@ -18,6 +18,9 @@ Server::~Server() {
 	for (servermap_t::const_iterator it = this->_serverBlocks.begin(); it != this->_serverBlocks.end(); ++it) {
 		close(it->first);
 	}
+	for (std::map<int32_t, ARequest *>::const_iterator it = this->_requests.begin(); it != this->_requests.end(); ++it) {
+		delete it->second;
+	}
 }
 
 void Server::configure(const Configuration &config) {
@@ -26,7 +29,7 @@ void Server::configure(const Configuration &config) {
 		std::string err = "epoll_create: ";
 		throw std::runtime_error((err + strerror(errno)).c_str());
 	}
-	Request::setEpollFd(this->_epollFd);
+	ARequest::setEpollFd(this->_epollFd);
 
 	bindmap_t	bound;
 	const std::vector<ServerBlock> &blocks = config.blocks();
@@ -54,9 +57,32 @@ void Server::routine(void) {
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
 			this->_addConnection(fd);
 		} else {
-			if (this->_requests[fd].handle()) {
-				std::cerr << "Close connection" << std::endl;
+			transfer:
+			error_t ret = this->_requests[fd]->handle();
+			// if (ret == REQ_ERROR) {
+			// 	std::cerr << "Close connection" << std::endl;
+			// 	this->_removeConnection(fd);
+			// }
+			switch (ret)
+			{
+			case REQ_ERROR:
+				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
+				break;
+
+			case REQ_DONE:
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+				
+			case REQ_TRANSFER:
+				std::cerr << "Transform request" << std::endl;
+				this->_transformRequest(fd);
+				goto transfer;
+				break;
+
+			default:
+				break;
 			}
 		}
 	}
@@ -119,16 +145,47 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return (-1);
 	}
-	if (-1 == this->_requests[requestSocket].init(requestSocket)) {
+	ARequest *request = new RequestMaster();
+	if (-1 == request->init(requestSocket)) {
+		delete request;
 		return -1;
 	}
+	this->_requests[requestSocket] = request;
 	return 0;
 }
 
 void Server::_removeConnection(const int32_t socket) {
+	delete this->_requests[socket];
 	this->_requests.erase(socket);
 	close(socket);
 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
+}
+
+error_t	Server::_transformRequest(const int32_t socket) {
+	ARequest *requestOld = this->_requests[socket];
+	ARequest *requestNew = NULL;
+
+	switch (requestOld->method())
+	{
+	case GET:
+		requestNew = new RequestGET();
+		*requestNew = *requestOld;
+		delete requestOld;
+		this->_requests[socket] = requestNew;
+		std::cerr << "Transformed to GET " << this->_requests[socket]->method() << std::endl;
+		break;
+
+	// case POST:
+	// 	break;
+
+	// case DELETE:
+	// 	break;
+	
+	default:
+		std::cerr << "Error: couldn't transform: invalid method ()" << std::endl;
+		break;
+	}
+	return (0);
 }
 
 int32_t	Server::epollFd(void) const {

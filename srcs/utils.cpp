@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-Method		parseMethod(const std::string &method)
+Method		stringToMethod(const std::string &method)
 {
 	if (method == "GET")
 		return (GET);
