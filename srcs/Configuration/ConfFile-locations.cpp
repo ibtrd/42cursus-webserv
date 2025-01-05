@@ -43,25 +43,17 @@ void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, Loc
 }
 
 void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const std::vector<ConfToken>::const_iterator directive = token++;
+	const uint32_t									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
 
-	if (*token == ';') {
+	if (0 == args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
-	} else if (token->isMetatoken()) {
-		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
 	}
-
-	while (token != this->_tokens.end() && !token->isMetatoken()) {
-		if (false == location.allowMethod(token->str())) {
+	for (uint32_t i = 0; i < args; ++i) {
+		if (0 != location.allowMethod(token->str())) {
 			throw Configuration::ConfigurationException(this->_invalidMethod(*token));
 		}
 		++token;
-	}
-
-	if (token == this->_tokens.end()) {
-		throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';'));
-	} else if (*token != ';') {
-		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
 	}
 }
 
@@ -87,8 +79,25 @@ void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token
 	if (1 != n) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
-	if (false == location.setDirListing(token->str())) {
+	if (0 != location.setDirListing(token->str())) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token, "on", "off"));
 	}
 	++token;
+}
+
+void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+	const uint32_t									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
+
+	if (2 != args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	try {
+		uint16_t status = ft::stoi<uint16_t>(token->str());
+		++token;
+		location.setRedirect(status, token->str());
+		++token;
+	} catch (std::invalid_argument &e) {
+		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
+	}
 }

@@ -1,4 +1,7 @@
+#include <stdexcept>
+
 #include "LocationBlock.hpp"
+#include "webdef.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -23,7 +26,7 @@ LocationBlock::~LocationBlock(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-LocationBlock	&LocationBlock::operator=(const LocationBlock &other) {
+LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	if (this == &other)
 		return (*this);
 	this->_path = other._path;
@@ -31,6 +34,7 @@ LocationBlock	&LocationBlock::operator=(const LocationBlock &other) {
 	this->_maxBodySize = other._maxBodySize;
 	this->_root = other._root;
 	this->_allowedMethods = other._allowedMethods;
+	this->_redirection = other._redirection;
 	return (*this);
 }
 
@@ -38,35 +42,53 @@ LocationBlock	&LocationBlock::operator=(const LocationBlock &other) {
 
 /* SETTERS ****************************************************************** */
 
-bool LocationBlock::allowMethod(const std::string &str) {
+error_t LocationBlock::allowMethod(const std::string &str) {
 	const std::vector<std::string> &methods = LocationBlock::_methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(str)) {
 			this->_allowedMethods |= (1 << i);
-			return true;
+			return 0;
 		}
 	}
-	return false;
+	return -1;
 }
 
-bool	LocationBlock::setDirListing(const std::string &str) {
+error_t LocationBlock::setDirListing(const std::string &str) {
 	if (0 == str.compare("on")) {
 		this->_dirListing = true;
-		return true;
-	} else if (0 == str.compare("off")) {
-		this->_dirListing = false;
-		return true;
+		return 0;
 	}
-	return false;
+	if (0 == str.compare("off")) {
+		this->_dirListing = false;
+		return 0;
+	}
+	return -1;
 }
 
-void	LocationBlock::setMaxBodySize(const int32_t size) {
+void LocationBlock::setMaxBodySize(const int32_t size) {
 	this->_maxBodySize = size;
 }
 
-void	LocationBlock::setRoot(const std::string &str) {
+void LocationBlock::setRoot(const std::string &str) {
 	this->_root = str;
+}
+
+void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
+	switch (status) {
+		case MULTIPLE_CHOICES:
+		case MOVED_PERMANENTLY:
+		case FOUND:
+		case SEE_OTHER:
+		case NOT_MODIFIED:
+		case TEMPORARY_REDIRECT:
+		case PERMANENT_REDIRECT:
+			this->_redirection.first = status;
+			break;
+		default:
+			throw std::invalid_argument("invalid redirection status");
+	}
+	this->_redirection.second = body;
 }
 
 /* GETTERS ****************************************************************** */
@@ -85,6 +107,10 @@ int32_t LocationBlock::getMaxBodySize(void) const {
 
 const std::string &LocationBlock::getRoot(void) const {
 	return this->_root;
+}
+
+const redirect_t &LocationBlock::getRedirect(void) const {
+	return this->_redirection;
 }
 
 bool LocationBlock::isAllowedMethod(const std::string &str) const {
