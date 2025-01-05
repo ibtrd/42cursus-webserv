@@ -1,6 +1,7 @@
 SRCS_DIR = srcs/
 SRC = \
 	ft \
+	LocationBlock \
 	main \
 	Request \
 	Response \
@@ -8,7 +9,6 @@ SRC = \
 	ServerBlock \
 	signal \
 	utils \
-	LocationBlock \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/

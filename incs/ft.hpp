@@ -5,6 +5,8 @@
 # include <cstring>
 # include <sstream>
 # include <stdexcept>
+# include <map>
+# include <vector>
 
 namespace ft {
 	template<typename T>

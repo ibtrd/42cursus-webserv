@@ -14,6 +14,8 @@ Response::Response(void)
 {
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode = NONE;
+	this->_reasonPhrase = "";
+	this->_headers["Server"] = "webserv/1.0";
 };
 
 Response::Response(const Response &other)
