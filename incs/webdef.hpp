@@ -3,15 +3,9 @@
 
 # include <stdint.h>
 # include <string>
-# include <map>
-# include <vector>
-
-# include "ServerBlock.hpp"
 
 typedef int32_t error_t;
 typedef int fd_t;
-typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
-typedef std::map<fd_t, std::vector<struct sockaddr_in> > bindmap_t;
 
 // typedef enum {
 // 	DONE = 0,		// Request fully received
@@ -25,6 +19,13 @@ typedef enum {
 	ERROR = 2,		// Program error
 	OK = 200,
 	CREATED = 201,
+	MULTIPLE_CHOICES = 300,
+	MOVED_PERMANENTLY = 301,
+	FOUND = 302,
+	SEE_OTHER = 303,
+	NOT_MODIFIED = 304,
+	TEMPORARY_REDIRECT = 307,
+	PERMANENT_REDIRECT = 308,
 	BAD_REQUEST = 400,
 	UNAUTHORIZED = 401,
 	FORBIDDEN = 403,
