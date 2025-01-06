@@ -14,6 +14,7 @@ public:
 
 	RequestGET	&operator=(const RequestGET &other);
 
+	ARequest	*clone(void) const;
 	error_t		handle(void);
 	error_t		parseRequest(void);
 	error_t		parseBody(void);
@@ -21,5 +22,7 @@ public:
 	error_t		sendResponse(void);
 	error_t		readFile(void);
 };
+
+ARequest	*createRequestGET(void);
 
 #endif /* ******************************************************************* */

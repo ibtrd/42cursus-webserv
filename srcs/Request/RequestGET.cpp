@@ -59,6 +59,12 @@ RequestGET	&RequestGET::operator=(const RequestGET &other)
 
 /* ************************************************************************** */
 
+ARequest	*RequestGET::clone(void) const
+{
+	std::cerr << "RequestGET clone" << std::endl;
+	return (new RequestGET(*this));
+}
+
 error_t	RequestGET::handle(void)
 {
 	std::cerr << "\nHandling request " << this->_requestStateStr() << std::endl;
@@ -266,3 +272,10 @@ error_t	RequestGET::sendResponse(void)
 /* SETTERS ****************************************************************** */
 
 /* EXCEPTIONS *************************************************************** */
+
+/* OTHERS *********************************************************************/
+
+ARequest	*createRequestGET(void)
+{
+	return (new RequestGET());
+}

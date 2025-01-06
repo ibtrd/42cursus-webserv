@@ -129,15 +129,7 @@ const std::string ARequest::_requestStateStr(void) const
 
 /* GETTERS ****************************************************************** */
 
-int32_t	ARequest::socket(void) const { return (this->_socket); }
-
-Method	ARequest::method(void) const { return (this->_method); }
-
-int32_t	ARequest::epollFd(void) { return (ARequest::_epollFd); }
-
 /* SETTERS ****************************************************************** */
-
-// void	ARequest::skipNextRead(void) { this->_skipNextRead = true; }
 
 void	ARequest::setEpollFd(const int32_t fd) { ARequest::_epollFd = fd; }
 

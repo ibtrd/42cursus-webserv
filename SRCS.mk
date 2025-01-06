@@ -1,5 +1,6 @@
 SRCS_DIR = srcs/
 SRC = \
+	Client \
 	ft \
 	LocationBlock \
 	main \
@@ -27,6 +28,5 @@ REQUEST_DIR=Request/
 REQUEST_SRC = \
 	ARequest \
 	RequestGET \
-	RequestMaster \
 
 SRCS := $(addsuffix .cpp, $(SRC))

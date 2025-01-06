@@ -18,7 +18,7 @@ public:
 	bool	noRun(void) const;
 
 	const std::string				&file(void) const;
-	const std::vector<ServerBlock> &blocks(void) const;
+	const std::vector<ServerBlock>	&blocks(void) const;
 
 	// EXCEPTION
 	class ConfigurationException : public std::exception {
