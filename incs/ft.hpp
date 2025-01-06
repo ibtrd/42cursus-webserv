@@ -5,6 +5,8 @@
 # include <cstring>
 # include <sstream>
 # include <stdexcept>
+# include <map>
+# include <vector>
 
 namespace ft {
 	template<typename T>
@@ -40,6 +42,9 @@ namespace ft {
 	}
 	return haystack.end();
 }
+
+	bool		is_dir(char *path);
+	std::string	numToStr(int num);
 }
 
 #endif

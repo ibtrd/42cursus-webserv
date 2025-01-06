@@ -26,7 +26,7 @@ void Server::configure(const Configuration &config) {
 		std::string err = "epoll_create: ";
 		throw std::runtime_error((err + strerror(errno)).c_str());
 	}
-	Request::setEpollFd(this->_epollFd);
+	Client::setEpollFd(this->_epollFd);
 
 	bindmap_t	bound;
 	const std::vector<ServerBlock> &blocks = config.blocks();
@@ -54,9 +54,20 @@ void Server::routine(void) {
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
 			this->_addConnection(fd);
 		} else {
-			if (this->_requests[fd].handle()) {
-				std::cerr << "Close connection" << std::endl;
+			switch (this->_clients[fd].handle())
+			{
+			case REQ_ERROR:
+				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
+				break;
+
+			case REQ_DONE:
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+
+			default:
+				break;
 			}
 		}
 	}
@@ -119,17 +130,44 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	if (-1 == this->_requests[requestSocket].init(requestSocket)) {
+	if (-1 == this->_clients[requestSocket].init(requestSocket)) {
 		return -1;
 	}
 	return 0;
 }
 
 void Server::_removeConnection(const int32_t socket) {
-	this->_requests.erase(socket);
+	this->_clients.erase(socket);
 	close(socket);
 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
 }
+
+// error_t	Server::_transformRequest(const int32_t socket) {
+// 	ClientrequestOld = this->_clients[socket];
+// 	ClientrequestNew = NULL;
+
+// 	switch (requestOld->method())
+// 	{
+// 	case GET:
+// 		requestNew = new RequestGET();
+// 		*requestNew = *requestOld;
+// 		delete requestOld;
+// 		this->_clients[socket] = requestNew;
+// 		std::cerr << "Transformed to GET " << this->_clients[socket]->method() << std::endl;
+// 		break;
+
+// 	// case POST:
+// 	// 	break;
+
+// 	// case DELETE:
+// 	// 	break;
+	
+// 	default:
+// 		std::cerr << "Error: couldn't transform: invalid method ()" << std::endl;
+// 		break;
+// 	}
+// 	return (0);
+// }
 
 int32_t	Server::epollFd(void) const {
 	return (this->_epollFd);

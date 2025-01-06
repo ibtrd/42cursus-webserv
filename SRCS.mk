@@ -1,13 +1,14 @@
 SRCS_DIR = srcs/
 SRC = \
+	Client \
+	ft \
+	LocationBlock \
 	main \
-	Request \
 	Response \
 	Server \
 	ServerBlock \
 	signal \
 	utils \
-	LocationBlock \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/
@@ -20,5 +21,14 @@ CONFIGURATION_SRC = \
 	ConfFile-statics \
 	Configuration \
 	ConfToken \
+
+SRC += $(addprefix $(REQUEST_DIR), $(REQUEST_SRC))
+REQUEST_DIR=Request/
+
+REQUEST_SRC = \
+	ARequest \
+	RequestGET \
+	RequestPOST \
+	RequestDELETE \
 
 SRCS := $(addsuffix .cpp, $(SRC))

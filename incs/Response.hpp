@@ -5,8 +5,6 @@
 # include <string>
 # include <map>
 
-# define REQ_BUFFER_SIZE 1024
-
 class Response {
 private:
 	StatusCode	_statusCode;
