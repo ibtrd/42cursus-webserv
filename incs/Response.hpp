@@ -9,7 +9,6 @@ class Response {
 private:
 	StatusCode	_statusCode;
 	std::string	_reasonPhrase;
-	// std::string	_statusLine;
 	std::map<std::string, std::string>	_headers;
 	std::string	_body;
 

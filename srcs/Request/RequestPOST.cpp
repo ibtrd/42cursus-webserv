@@ -10,12 +10,17 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-RequestPOST::RequestPOST(void)
+// RequestPOST::RequestPOST(void)
+// {
+// 	// std::cerr << "RequestPOST created" << std::endl;
+// }
+
+RequestPOST::RequestPOST(Client &client) : ARequest(client)
 {
-	// std::cerr << "RequestPOST created" << std::endl;
+	std::cerr << "RequestPOST created" << std::endl;
 }
 
-RequestPOST::RequestPOST(const RequestPOST &other)
+RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other)
 {
 	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
@@ -37,6 +42,12 @@ RequestPOST	&RequestPOST::operator=(const RequestPOST &other)
 
 /* ************************************************************************** */
 
+error_t	RequestPOST::process(void)
+{
+	std::cerr << "RequestPOST process" << std::endl;
+	return (REQ_DONE);
+}
+
 ARequest	*RequestPOST::clone(void) const
 {
 	std::cerr << "RequestPOST clone" << std::endl;
@@ -51,8 +62,8 @@ ARequest	*RequestPOST::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestPOST(void)
+ARequest	*createRequestPOST(Client &client)
 {
 	std::cerr << "createRequestPOST" << std::endl;
-	return (new RequestPOST());
+	return (new RequestPOST(client));
 }

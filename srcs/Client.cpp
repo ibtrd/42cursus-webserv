@@ -13,7 +13,7 @@
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 int32_t	Client::_epollFd = -1;
-ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(void) = {
+ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(Client &) = {
 	createRequestGET,
 	createRequestPOST,
 	createRequestDELETE
@@ -49,7 +49,6 @@ Client	&Client::operator=(const Client &other)
 	if (this == &other)
 		return (*this);
 
-	// this->_request = other._request;
 	if (this->_request)
 		delete this->_request;
 	if (other._request)
@@ -66,8 +65,6 @@ Client	&Client::operator=(const Client &other)
 	this->_protocolVersion = other._protocolVersion;
 
 	this->_headers = other._headers;
-
-	// this->_body = other._body;
 
 	this->_response = other._response;
 	this->_responseBuffer = other._responseBuffer;
@@ -95,8 +92,18 @@ const std::string Client::_requestStateStr(void) const
 		str += "1";
 	else
 		str += "0";
+	str += ", clientRead: ";
+	if (IS_REQ_CLIENT_READ_COMPLETE(this->_requestState))
+		str += "1";
+	else
+		str += "0";
 	str += ", read: ";
 	if (IS_REQ_READ_COMPLETE(this->_requestState))
+		str += "1";
+	else
+		str += "0";
+	str += ", process: ";
+	if (IS_REQ_PROCESS_COMPLETE(this->_requestState))
 		str += "1";
 	else
 		str += "0";
@@ -156,9 +163,14 @@ error_t Client::_parseRequest(void)
 
 	SET_REQ_CLIENT_READ_COMPLETE(this->_requestState);
 	if (this->_response.statusCode() != NONE)
-		SET_REQ_READ_COMPLETE(this->_requestState);
+	{
+		SET_REQ_READ_COMPLETE(this->_requestState); // probably not needed
+		SET_REQ_PROCESS_COMPLETE(this->_requestState);
+		this->switchToWrite();
+		this->_responseBuffer = this->_response.response();
+	}
 	else
-		this->_request = Client::_requestsBuilder[this->_method]();
+		this->_request = Client::_requestsBuilder[this->_method](*this);
 	return (REQ_DONE);
 }
 
@@ -170,12 +182,12 @@ error_t Client::_parseRequestLine(void)
 	size_t	pos = this->_buffer.find("\r\n");
 	if (pos == std::string::npos)
 	{
-		std::cerr << "RequestMaster too short" << std::endl;
+		std::cerr << "RequestLine too short" << std::endl;
 		return (REQ_CONTINUE);
 	}
 	requestLine = this->_buffer.substr(0, pos);
 	this->_buffer.erase(0, pos + 2);
-	std::cerr << "RequestMaster line: |" << requestLine << "|" << std::endl;
+	std::cerr << "RequestLine line: |" << requestLine << "|" << std::endl;
 
 	// Parse request line
 
@@ -310,10 +322,75 @@ error_t	Client::handle(void)
 	if (!IS_REQ_CLIENT_READ_COMPLETE(this->_requestState)
 		&& (ret = this->_parseRequest()) != REQ_DONE)
 		return (ret);
-	
-	/* stuff */
 
-	return (REQ_DONE);	// END
+	// Handle request
+	if (this->_request && !IS_REQ_PROCESS_COMPLETE(this->_requestState))
+	{
+		ret = this->_request->process();
+		if (ret != REQ_DONE)
+			return (ret);
+		// debug start
+		this->_response.setStatusCode(OK);
+		this->_response.setBody("Hello, World!");
+		this->_responseBuffer = this->_response.response();
+		SET_REQ_PROCESS_COMPLETE(this->_requestState);
+		this->switchToWrite();
+		// debug end
+	}
+
+	if (IS_REQ_CAN_WRITE(this->_requestState))	// possibly not needed
+	{
+		if ((ret = this->sendResponse()) != REQ_DONE)
+			return (ret);
+	}
+
+	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
+
+	// if (IS_REQ_WRITE_COMPLETE(this->_requestState))
+	// {
+		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
+		{
+			close(this->_socket);
+			return (REQ_ERROR);
+		}
+		close(this->_socket);
+		return (REQ_DONE);
+	// }
+	// return (REQ_CONTINUE);
+}
+
+error_t Client::switchToWrite(void)
+{
+	struct epoll_event event;
+	event.events = EPOLLOUT;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_socket, &event))
+	{
+		close(this->_socket);
+		return (-1);
+	}
+	SET_REQ_CAN_WRITE(this->_requestState);
+	return (0);
+}
+
+error_t	Client::sendResponse(void)
+{
+	std::cerr << "Sending response..." << std::endl;
+	ssize_t	bytes;
+	bytes = REQ_BUFFER_SIZE > this->_responseBuffer.length() ? this->_responseBuffer.length() : REQ_BUFFER_SIZE;
+	bytes = send(this->_socket, this->_responseBuffer.c_str(), bytes, 0);
+	if (bytes == -1) {
+		std::cerr << "Error: send: " << strerror(errno) << std::endl;
+		return (REQ_ERROR);
+	}
+	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+	this->_responseBuffer.erase(0, bytes);
+	if (this->_responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_requestState))
+	{
+		std::cerr << "Response not fully sent" << std::endl;
+		return (REQ_CONTINUE);
+	}
+	return (REQ_DONE);
 }
 
 /* GETTERS ****************************************************************** */

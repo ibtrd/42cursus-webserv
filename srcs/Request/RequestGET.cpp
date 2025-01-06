@@ -7,15 +7,21 @@
 
 #include "RequestGET.hpp"
 #include "ft.hpp"
+#include "Client.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
-RequestGET::RequestGET(void)
+// RequestGET::RequestGET(void)
+// {
+// 	// std::cerr << "RequestGET created" << std::endl;
+// }
+
+RequestGET::RequestGET(Client &client) : ARequest(client)
 {
-	// std::cerr << "RequestGET created" << std::endl;
+	std::cerr << "RequestGET created" << std::endl;
 }
 
-RequestGET::RequestGET(const RequestGET &other)
+RequestGET::RequestGET(const RequestGET &other) : ARequest(other)
 {
 	// std::cerr << "RequestGET copy" << std::endl;
 	*this = other;
@@ -37,6 +43,12 @@ RequestGET	&RequestGET::operator=(const RequestGET &other)
 
 /* ************************************************************************** */
 
+error_t	RequestGET::process(void)
+{
+	std::cerr << "RequestGET process" << std::endl;
+	return (REQ_DONE);
+}
+
 ARequest	*RequestGET::clone(void) const
 {
 	std::cerr << "RequestGET clone" << std::endl;
@@ -51,8 +63,9 @@ ARequest	*RequestGET::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestGET(void)
+ARequest	*createRequestGET(Client &client)
 {
+	(void)client;
 	std::cerr << "createRequestGET" << std::endl;
-	return (new RequestGET());
+	return (new RequestGET(client));
 }
