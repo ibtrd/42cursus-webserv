@@ -128,7 +128,7 @@ error_t	Server::_addConnection(const int32_t socket) {
 	std::cerr << "New connection" << std::endl;
 	int32_t requestSocket = accept(socket, NULL, NULL);
 	if (-1 == requestSocket) {
-		return (-1);
+		return -1;
 	}
 	if (-1 == this->_clients[requestSocket].init(requestSocket)) {
 		return -1;
