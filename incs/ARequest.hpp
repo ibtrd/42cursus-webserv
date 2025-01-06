@@ -46,6 +46,7 @@ protected:
 	int32_t			_socket;
 	// Truc			&_truc;		// Server rules (reference or pointer)
 	std::string		_buffer;
+	bool			_skipNextRead;
 
 	Method			_method;
 	std::string		_target;	
@@ -70,12 +71,15 @@ public:
 
 	virtual error_t		init(const int32_t requestSocket);
 	virtual error_t		handle(void) = 0;
-	error_t		readSocket(void);
+	error_t				readSocket(void);
+	virtual error_t		parseRequest(void) = 0;
 
 	int32_t	socket(void) const;
 	Method	method(void) const;
 
 	static int32_t	epollFd(void);
+
+	// void	skipNextRead(void);
 
 	static void	setEpollFd(const int32_t fd);
 };

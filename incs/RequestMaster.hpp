@@ -16,6 +16,7 @@ public:
 
 	error_t		init(const int32_t requestSocket);
 	error_t		handle(void);
+	error_t		parseRequest(void);
 	error_t		parseRequestLine(void);
 	error_t		parseHeaders(void);
 	error_t		switchToWrite(void);

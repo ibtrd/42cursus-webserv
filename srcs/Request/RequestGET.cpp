@@ -31,27 +31,29 @@ RequestGET::~RequestGET(void)
 
 RequestGET	&RequestGET::operator=(const RequestGET &other)
 {
-	// std::cerr << "RequestGET assign" << std::endl;
-	if (this == &other)
-		return (*this);
+	std::cerr << "RequestGET assign" << std::endl;
+	(void)other;
+	// if (this == &other)
+	// 	return (*this);
 
-	this->_trans = other._trans;
+	// this->_trans = other._trans;
 
-	this->_requestState = other._requestState;
+	// this->_requestState = other._requestState;
 
-	this->_socket = other._socket;
-	this->_buffer = other._buffer;
+	// this->_socket = other._socket;
+	// this->_buffer = other._buffer;
+	// this->_skipNextRead = other._skipNextRead;
 
-	this->_method = other._method;
-	this->_target = other._target;
-	this->_protocolVersion = other._protocolVersion;
+	// this->_method = other._method;
+	// this->_target = other._target;
+	// this->_protocolVersion = other._protocolVersion;
 
-	this->_headers = other._headers;
+	// this->_headers = other._headers;
 
-	this->_body = other._body;
+	// this->_body = other._body;
 
-	this->_response = other._response;
-	this->_responseBuffer = other._responseBuffer;
+	// this->_response = other._response;
+	// this->_responseBuffer = other._responseBuffer;
 	return (*this);
 }
 
@@ -62,6 +64,7 @@ error_t	RequestGET::handle(void)
 	std::cerr << "\nHandling request " << this->_requestStateStr() << std::endl;
 	
 	error_t	ret = 0;
+	/*
 	if (!IS_REQ_READ_COMPLETE(this->_requestState) && this->readSocket())
 		return (REQ_ERROR);
 	// std::cerr << "RequestGET: " << this->_buffer << std::endl;
@@ -85,7 +88,7 @@ error_t	RequestGET::handle(void)
 		{
 			this->_response.setStatusCode(OK);
 			this->_response.setBody("GET request");
-			/*	// DEBUG (kécekecé moche 🤮)
+			/ *	// DEBUG (kécekecé moche 🤮)
 			// if (this->_method == GET)
 			// {
 			// 	std::string path = "/home/kchillon/42cursus/42cursus-webserv/" + this->_target;
@@ -142,7 +145,33 @@ error_t	RequestGET::handle(void)
 			// {
 			// 	this->_response.setBody("DELETE request");
 			// }
-			*/
+			* /
+		}
+	}
+	*/
+
+	if (!IS_REQ_READ_COMPLETE(this->_requestState))
+	{
+		if (!this->_skipNextRead && (ret = this->readSocket()) != REQ_CONTINUE)
+			return (ret);
+		this->_skipNextRead = false;
+
+		switch (this->parseRequest())
+		{
+		case REQ_CONTINUE:
+			return (REQ_CONTINUE);
+
+		case REQ_ERROR:
+			std::cerr << "Error something went wrong parsing the request" << std::endl;
+			return (REQ_ERROR);
+		
+		case REQ_TRANSFER:
+			std::cerr << "Transfer to specialised request handler" << std::endl;
+			this->_skipNextRead = true;
+			return (REQ_TRANSFER);
+		
+		default:
+			break;
 		}
 	}
 
@@ -167,12 +196,35 @@ error_t	RequestGET::handle(void)
 		ret = this->sendResponse();
 		if (ret == REQ_CONTINUE)
 		{
-			usleep(500000); // DEBUG
+			// usleep(500000); // DEBUG
 			return (REQ_CONTINUE);
 		}
 		std::cerr << "Done responding" << std::endl;
 	}
 	std::cerr << "RequestGET handled " << this->_requestStateStr() << std::endl;
+	return (REQ_DONE);
+}
+
+error_t	RequestGET::parseRequest(void)
+{
+	// Parse body
+	// if (!IS_REQ_READ_BODY_COMPLETE(this->_requestState))
+	// {
+	// 	ret = this->parseBody();
+	// 	if (ret == REQ_CONTINUE)
+	// 		return (0);
+	// 	if (ret == REQ_ERROR)
+	// 	{
+	// 		std::cerr << "Error something went wrong parsing the body" << std::endl;
+	// 		return (1);
+	// 	}
+	// }
+
+	if (this->_response.statusCode() == NONE)	// DEBUG
+	{
+		this->_response.setStatusCode(OK);
+		this->_response.setBody("GET request");
+	}
 	return (REQ_DONE);
 }
 

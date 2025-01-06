@@ -33,7 +33,7 @@ ARequest::~ARequest(void)
 
 ARequest	&ARequest::operator=(const ARequest &other)
 {
-	// std::cerr << "ARequest assign" << std::endl;
+	std::cerr << "ARequest assign" << std::endl;
 	if (this == &other)
 		return (*this);
 	
@@ -43,6 +43,7 @@ ARequest	&ARequest::operator=(const ARequest &other)
 
 	this->_socket = other._socket;
 	this->_buffer = other._buffer;
+	this->_skipNextRead = other._skipNextRead;
 
 	this->_method = other._method;
 	this->_target = other._target;
@@ -61,9 +62,7 @@ ARequest	&ARequest::operator=(const ARequest &other)
 
 error_t	ARequest::init(const int32_t requestSocket)
 {
-	this->_trans = false;
-	this->_requestState = REQ_STATE_NONE;
-	this->_socket = requestSocket;
+	(void)requestSocket;
 	return (0);
 }
 
@@ -74,18 +73,18 @@ error_t	ARequest::readSocket(void)
 	if (bytes == 0)
 	{
 		std::cerr << "Client disconnected" << std::endl;
-		return (1);
+		return (REQ_DONE);
 	}
 	if (bytes == -1)
 	{
 		std::cerr << "Client error" << std::endl;
-		return (1);
+		return (REQ_ERROR);
 	}
 	ARequest::_readBuffer[bytes] = '\0';
 	std::cerr << "Read:|" << ARequest::_readBuffer << "|" << std::endl;
 	this->_buffer += ARequest::_readBuffer;
 	ARequest::_readBuffer[0] = '\0';
-	return (0);
+	return (REQ_CONTINUE);
 }
 
 /* ************************************************************************** */
@@ -137,6 +136,8 @@ Method	ARequest::method(void) const { return (this->_method); }
 int32_t	ARequest::epollFd(void) { return (ARequest::_epollFd); }
 
 /* SETTERS ****************************************************************** */
+
+// void	ARequest::skipNextRead(void) { this->_skipNextRead = true; }
 
 void	ARequest::setEpollFd(const int32_t fd) { ARequest::_epollFd = fd; }
 

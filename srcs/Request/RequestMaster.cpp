@@ -31,27 +31,29 @@ RequestMaster::~RequestMaster(void)
 
 RequestMaster	&RequestMaster::operator=(const RequestMaster &other)
 {
-	// std::cerr << "RequestMaster assign" << std::endl;
-	if (this == &other)
-		return (*this);
+	std::cerr << "RequestMaster assign" << std::endl;
+	(void)other;
+	// if (this == &other)
+	// 	return (*this);
 
-	this->_trans = other._trans;
+	// this->_trans = other._trans;
 
-	this->_requestState = other._requestState;
+	// this->_requestState = other._requestState;
 
-	this->_socket = other._socket;
-	this->_buffer = other._buffer;
+	// this->_socket = other._socket;
+	// this->_buffer = other._buffer;
+	// this->_skipNextRead = other._skipNextRead;
 
-	this->_method = other._method;
-	this->_target = other._target;
-	this->_protocolVersion = other._protocolVersion;
+	// this->_method = other._method;
+	// this->_target = other._target;
+	// this->_protocolVersion = other._protocolVersion;
 
-	this->_headers = other._headers;
+	// this->_headers = other._headers;
 
-	this->_body = other._body;
+	// this->_body = other._body;
 
-	this->_response = other._response;
-	this->_responseBuffer = other._responseBuffer;
+	// this->_response = other._response;
+	// this->_responseBuffer = other._responseBuffer;
 	return (*this);
 }
 
@@ -70,6 +72,7 @@ error_t RequestMaster::init(const int32_t requestSocket)
 	std::cerr << "Client accepted! fd=" << this->socket() << std::endl;
 	this->_trans = false;
 	this->_requestState = REQ_STATE_NONE;
+	this->_skipNextRead = false;
 	return (0);
 }
 
@@ -78,44 +81,69 @@ error_t	RequestMaster::handle(void)
 	std::cerr << "\nHandling request " << this->_requestStateStr() << std::endl;
 	
 	error_t	ret = 0;
-	if (!IS_REQ_READ_COMPLETE(this->_requestState) && this->readSocket())
-		return (REQ_ERROR);
-	// std::cerr << "RequestMaster: " << this->_buffer << std::endl;
+	// if (!IS_REQ_READ_COMPLETE(this->_requestState) && this->readSocket())
+	// 	return (REQ_ERROR);
+	// // std::cerr << "RequestMaster: " << this->_buffer << std::endl;
+
+	// if (!IS_REQ_READ_COMPLETE(this->_requestState))
+	// {
+	// 	// Parse request
+	// 	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState)) {
+	// 		ret = this->parseRequestLine();
+	// 		if (ret == REQ_CONTINUE)
+	// 			return (REQ_CONTINUE);
+	// 		if (ret == REQ_ERROR)
+	// 		{
+	// 			std::cerr << "Error something went wrong parsing the request" << std::endl;
+	// 			return (REQ_ERROR);
+	// 		}
+	// 		// if (this->_response.statusCode() != NONE)	// DEBUG
+	// 		// {
+	// 		// 	std::cout << "Response status code: " << this->_response.statusCode() << std::endl;
+	// 		// }
+	// 	}
+	// 	// Parse headers
+	// 	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_requestState))
+	// 	{
+	// 		ret = this->parseHeaders();
+	// 		if (ret == REQ_CONTINUE)
+	// 			return (REQ_CONTINUE);
+	// 		if (ret == REQ_ERROR)
+	// 		{
+	// 			std::cerr << "Error something went wrong parsing the headers" << std::endl;
+	// 			return (REQ_ERROR);
+	// 		}
+	// 	}
+
+	// 	if (this->_response.statusCode() == NONE)	// If no error occured until now transfer to specialised request handler
+	// 	{
+	// 		std::cerr << "Transfer to specialised request handler" << std::endl;
+	// 		return (REQ_TRANSFER);
+	// 	}
+	// }
 
 	if (!IS_REQ_READ_COMPLETE(this->_requestState))
 	{
-		// Parse request
-		if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState)) {
-			ret = this->parseRequestLine();
-			if (ret == REQ_CONTINUE)
-				return (REQ_CONTINUE);
-			if (ret == REQ_ERROR)
-			{
-				std::cerr << "Error something went wrong parsing the request" << std::endl;
-				return (REQ_ERROR);
-			}
-			// if (this->_response.statusCode() != NONE)	// DEBUG
-			// {
-			// 	std::cout << "Response status code: " << this->_response.statusCode() << std::endl;
-			// }
-		}
-		// Parse headers
-		if (!IS_REQ_READ_HEADERS_COMPLETE(this->_requestState))
-		{
-			ret = this->parseHeaders();
-			if (ret == REQ_CONTINUE)
-				return (REQ_CONTINUE);
-			if (ret == REQ_ERROR)
-			{
-				std::cerr << "Error something went wrong parsing the headers" << std::endl;
-				return (REQ_ERROR);
-			}
-		}
+		if (!this->_skipNextRead && (ret = this->readSocket()) != REQ_CONTINUE)
+			return (ret);
+		this->_skipNextRead = false;
 
-		if (this->_response.statusCode() == NONE)	// If no error occured until now transfer to specialised request handler
+		switch (this->parseRequest())
 		{
+		case REQ_CONTINUE:
+			return (REQ_CONTINUE);
+
+		case REQ_ERROR:
+			std::cerr << "Error something went wrong parsing the request" << std::endl;
+			return (REQ_ERROR);
+		
+		case REQ_TRANSFER:
 			std::cerr << "Transfer to specialised request handler" << std::endl;
+			this->_skipNextRead = true;
 			return (REQ_TRANSFER);
+		
+		default:
+			break;
 		}
 	}
 
@@ -140,12 +168,40 @@ error_t	RequestMaster::handle(void)
 		ret = this->sendResponse();
 		if (ret == REQ_CONTINUE)
 		{
-			usleep(500000); // DEBUG
+			// usleep(500000); // DEBUG
 			return (REQ_CONTINUE);
 		}
 		std::cerr << "Done responding" << std::endl;
 	}
 	std::cerr << "RequestMaster handled " << this->_requestStateStr() << std::endl;
+	return (REQ_DONE);
+}
+
+error_t RequestMaster::parseRequest(void)
+{
+	error_t	ret;
+
+	// Parse request line
+	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState)) {
+		ret = this->parseRequestLine();
+		if (ret != REQ_DONE)
+			return (ret);
+	}
+
+	// Parse headers
+	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_requestState))
+	{
+		ret = this->parseHeaders();
+		if (ret != REQ_DONE)
+			return (ret);
+	}
+
+	// If no error occured until now transfer to specialised request handler
+	if (this->_response.statusCode() == NONE)
+	{
+		std::cerr << "Transfer to specialised request handler" << std::endl;
+		return (REQ_TRANSFER);
+	}
 	return (REQ_DONE);
 }
 
