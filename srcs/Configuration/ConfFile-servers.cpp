@@ -28,6 +28,9 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 	if (token == this->_tokens.end()) {
 		throw Configuration::ConfigurationException(this->_unexpectedEOF(*(token - 1), BLOCK_CLOSE));
 	}
+	if (0 == server.hosts().size()) {
+		server.addHost(_defaultHost);
+	}
 	this->_blocks->push_back(server);
 }
 
@@ -38,9 +41,7 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	
-	struct sockaddr_in host;
-	std::memset(&host, 0, sizeof(host));
-	host.sin_family = AF_INET;
+	struct sockaddr_in host = _defaultHost;
 	try {
 		std::size_t sep = token->str().find(':');
 		if (std::string::npos != sep) {
@@ -49,7 +50,6 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 			}
 			host.sin_port = htons(ft::stoi<in_addr_t>(token->str().substr(sep + 1)));
 		} else {
-			host.sin_addr.s_addr = INADDR_ANY;
 			host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
 		}
 	} catch (std::invalid_argument &e) {

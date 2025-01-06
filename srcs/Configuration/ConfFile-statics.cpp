@@ -1,5 +1,7 @@
 #include "ConfFile.hpp"
 
+#include <cstring>
+
 /* STATICS ****************************************************************** */
 
 bool	ConfFile::_isMetachar(int c) {
@@ -8,6 +10,17 @@ bool	ConfFile::_isMetachar(int c) {
 
 bool	ConfFile::_isComment(int c) {
 	return (c == '#');
+}
+
+const struct sockaddr_in ConfFile::_defaultHost = ConfFile::_initDefaultHost();
+
+struct sockaddr_in ConfFile::_initDefaultHost(void) {
+	struct sockaddr_in host;
+	std::memset(&host, 0, sizeof(host));
+	host.sin_family = AF_INET;
+	host.sin_addr.s_addr = INADDR_ANY;
+	host.sin_port = htons(80);
+	return host;
 }
 
 const ConfFile::directives ConfFile::_directives = ConfFile::_initializeDirectives();

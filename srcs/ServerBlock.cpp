@@ -25,16 +25,34 @@ ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 
 /* GETTERS ****************************************************************** */
 
-const std::vector<struct sockaddr_in> &ServerBlock::getHosts(void) const {
+const std::vector<struct sockaddr_in> &ServerBlock::hosts(void) const {
 	return this->_hosts;
 }
 
-const std::vector<std::string> &ServerBlock::getNames(void) const {
+const std::vector<std::string> &ServerBlock::names(void) const {
 	return this->_names;
 }
 
-const std::vector<LocationBlock> &ServerBlock::getLocations(void) const {
+const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
+}
+
+const LocationBlock &ServerBlock::fetchLocationBlock(const Path &target) const {
+	const std::vector<LocationBlock>	&locations = this->_locations;
+	const LocationBlock						*selected = NULL;
+	int32_t							best = 0;
+
+	for (uint32_t i = 0; i < locations.size(); ++i) {
+		const int32_t match = locations[i].match(target);
+		if (match > best) {
+			best = match;
+			selected = &locations[i];
+		}
+	}
+
+	if (!selected)
+		throw std::string("404");
+	return *selected;
 }
 
 /* SETTERS ****************************************************************** */

@@ -5,11 +5,8 @@
 # include <string>
 # include <vector>
 
+# include "Path.hpp"
 # include "webdef.hpp"
-
-# define GET_MASK (1 << 0)
-# define POST_MASK (1 << 1)
-# define DELETE_MASK (1 << 2)
 
 # define DEFAULT_METHODS 0
 # define DEFAULT_DIRLISTING false
@@ -21,34 +18,35 @@ class LocationBlock {
 public:
 	LocationBlock(void);
 	LocationBlock(const LocationBlock &other);
-	LocationBlock(const std::string &path);
+	LocationBlock(const Path &path);
 
 	~LocationBlock(void);
 
 	LocationBlock	&operator=(const LocationBlock &other);
 
+	int32_t	match(const Path &target) const;
+
 	// SETTERS
 	error_t	allowMethod(const std::string &str);
 	error_t	setDirListing(const std::string &str);
 	void	setMaxBodySize(const int32_t size);
-	void	setRoot(const std::string &str);
+	error_t	setRoot(const std::string &str);
 	void	setRedirect(const uint16_t status, const std::string &body);
 
 	// GETTERS
 	const std::string	&path(void) const;
-	bool				isAllowedMethod(const std::string &str) const;
+	bool				isAllowed(const std::string &method) const;
 	bool				isDirListing(void) const;
 	int32_t				getMaxBodySize(void) const;
-	const std::string 	&getRoot(void) const;
+	const Path		 	&getRoot(void) const;
 	const redirect_t 	&getRedirect(void) const;
 
-
 private:
-	std::string	_path;
+	Path		_path;
 	bool		_dirListing;
 	int32_t		_maxBodySize;
-	std::string	_root;
-	uint8_t		_allowedMethods;
+	Path		_root;
+	uint8_t		_allowed;
 	redirect_t	_redirection;
 
 	// STATICS

@@ -68,10 +68,10 @@ void ConfFile::_tokenize(const std::string &line, const uint32_t index) {
 
 uint32_t ConfFile::_countArgs(const std::vector<ConfToken>::const_iterator &directive) const {
 	std::vector<ConfToken>::const_iterator	token = directive;
-	uint32_t 								args = 0;
+	uint32_t								args = 0;
 
 	while (++token != this->_tokens.end()) {
-		if (*token == ';' ) {
+		if (*token == ';') {
 			return args;
 		} else if (token->isMetatoken()) {
 			throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
@@ -79,6 +79,21 @@ uint32_t ConfFile::_countArgs(const std::vector<ConfToken>::const_iterator &dire
 		args++;
 	}
 	throw Configuration::ConfigurationException(this->_unexpectedEOF(*directive, ';'));
+}
+
+uint32_t ConfFile::_countBlockArgs(const std::vector<ConfToken>::const_iterator &directive) const {
+	std::vector<ConfToken>::const_iterator	token = directive;
+	uint32_t								args = 0;
+
+	while (++token != this->_tokens.end()) {
+		if (*token == BLOCK_OPEN) {
+			return args;
+		} else if (token->isMetatoken()) {
+			throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
+		}
+		args++;
+	}
+	throw Configuration::ConfigurationException(this->_missingOpening(*directive, BLOCK_OPEN));
 }
 
 /* GETTERS ****************************************************************** */

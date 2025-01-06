@@ -42,6 +42,7 @@ private:
 	void	_redirectionDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 
 	uint32_t	_countArgs(const std::vector<ConfToken>::const_iterator &directive) const;
+	uint32_t	_countBlockArgs(const std::vector<ConfToken>::const_iterator &directive) const;
 
 	std::string _unkwownDirective(const ConfToken &error) const;
 	std::string _missingOpening(const ConfToken &error, const char c) const;
@@ -53,10 +54,14 @@ private:
 	std::string _invalidMethod(const ConfToken &method) const;
 	std::string _invalidValue(const ConfToken &directive, const ConfToken &value) const;
 	std::string _invalidValue(const ConfToken &directive, const ConfToken &inval, const std::string &expected1, const std::string &expected2) const;
+	std::string _invalidPath(const ConfToken &directive, const ConfToken &path) const;
 
 	// STATICS
 	static bool _isMetachar(int c);
 	static bool _isComment(int c);
+	
+	static const struct sockaddr_in	_defaultHost;
+	static struct sockaddr_in		_initDefaultHost(void);
 
 	typedef std::map<const std::string, void (ConfFile::*)(std::vector<ConfToken>::const_iterator &token)> directives;
 	static const directives	_directives;

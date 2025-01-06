@@ -74,3 +74,11 @@ std::string ConfFile::_invalidValue(const ConfToken &directive, const ConfToken 
 		<< " in " << this->_path << ":" << inval.line();
 	return ss.str();
 }
+
+std::string ConfFile::_invalidPath(const ConfToken &directive, const ConfToken &path) const {
+	std::stringstream ss;
+	ss << "invalid path " << ft::quoted(path.str())
+		<< " in " << ft::quoted(directive.str()) << " directive, it must start with "
+		<< ft::quoted('/') << " in " << this->_path << ":" << path.line();
+	return ss.str();
+}
