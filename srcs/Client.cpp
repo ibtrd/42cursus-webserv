@@ -8,13 +8,15 @@
 
 #include "Client.hpp"
 #include "RequestGET.hpp"
+#include "RequestPOST.hpp"
+#include "RequestDELETE.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 int32_t	Client::_epollFd = -1;
 ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(void) = {
 	createRequestGET,
-	NULL,
-	NULL
+	createRequestPOST,
+	createRequestDELETE
 };
 
 /* CONSTRUCTORS ************************************************************* */

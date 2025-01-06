@@ -28,5 +28,7 @@ REQUEST_DIR=Request/
 REQUEST_SRC = \
 	ARequest \
 	RequestGET \
+	RequestPOST \
+	RequestDELETE \
 
 SRCS := $(addsuffix .cpp, $(SRC))

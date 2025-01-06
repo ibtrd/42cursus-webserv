@@ -5,42 +5,42 @@
 #include <cerrno>
 #include <cstring>
 
-#include "RequestGET.hpp"
+#include "RequestDELETE.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
-RequestGET::RequestGET(void)
+RequestDELETE::RequestDELETE(void)
 {
-	// std::cerr << "RequestGET created" << std::endl;
+	// std::cerr << "RequestDELETE created" << std::endl;
 }
 
-RequestGET::RequestGET(const RequestGET &other)
+RequestDELETE::RequestDELETE(const RequestDELETE &other)
 {
-	// std::cerr << "RequestGET copy" << std::endl;
+	// std::cerr << "RequestDELETE copy" << std::endl;
 	*this = other;
 }
 
-RequestGET::~RequestGET(void)
+RequestDELETE::~RequestDELETE(void)
 {
-	// std::cerr << "RequestGET destroyed" << std::endl;
+	// std::cerr << "RequestDELETE destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-RequestGET	&RequestGET::operator=(const RequestGET &other)
+RequestDELETE	&RequestDELETE::operator=(const RequestDELETE &other)
 {
-	std::cerr << "RequestGET assign" << std::endl;
+	std::cerr << "RequestDELETE assign" << std::endl;
 	(void)other;
 	return (*this);
 }
 
 /* ************************************************************************** */
 
-ARequest	*RequestGET::clone(void) const
+ARequest	*RequestDELETE::clone(void) const
 {
-	std::cerr << "RequestGET clone" << std::endl;
-	return (new RequestGET(*this));
+	std::cerr << "RequestDELETE clone" << std::endl;
+	return (new RequestDELETE(*this));
 }
 
 /* GETTERS ****************************************************************** */
@@ -51,8 +51,8 @@ ARequest	*RequestGET::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestGET(void)
+ARequest	*createRequestDELETE(void)
 {
-	std::cerr << "createRequestGET" << std::endl;
-	return (new RequestGET());
+	std::cerr << "createRequestDELETE" << std::endl;
+	return (new RequestDELETE());
 }

@@ -36,30 +36,6 @@
 
 class ARequest {
 protected:
-	static	char 	_readBuffer[REQ_BUFFER_SIZE];
-	static	int32_t _epollFd;
-
-	bool			_trans;
-
-	uint32_t		_requestState;	// will replace _readComplete, _writeComplete, _canWrite and more
-	
-	int32_t			_socket;
-	// Truc			&_truc;		// Server rules (reference or pointer)
-	std::string		_buffer;
-	bool			_skipNextRead;
-
-	Method			_method;
-	std::string		_target;	
-	std::string		_protocolVersion;
-
-	std::map<std::string, std::string>	_headers;
-
-	std::string							_body;
-
-	Response		_response;
-	std::string		_responseBuffer;
-
-	const std::string		_requestStateStr(void) const;
 
 public:
 	ARequest(void);
@@ -70,14 +46,6 @@ public:
 	ARequest	&operator=(const ARequest &other);
 
 	virtual ARequest	*clone(void) const = 0;
-	virtual error_t		init(const int32_t requestSocket);
-	virtual error_t		handle(void) = 0;
-	error_t				readSocket(void);
-	virtual error_t		parseRequest(void) = 0;
-
-	// void	skipNextRead(void);
-
-	static void	setEpollFd(const int32_t fd);
 };
 
 #endif /* ******************************************************************* */
