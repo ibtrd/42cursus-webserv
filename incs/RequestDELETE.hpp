@@ -7,17 +7,18 @@ class RequestDELETE : public ARequest {
 private:
 
 public:
-	RequestDELETE(Client &client);
+	RequestDELETE(RequestContext_t &context);
 	RequestDELETE(const RequestDELETE &other);
 
 	~RequestDELETE(void);
 
 	RequestDELETE	&operator=(const RequestDELETE &other);
 
+	error_t		parse(void);
 	error_t		process(void);
 	ARequest	*clone(void) const;
 };
 
-ARequest	*createRequestDELETE(Client &client);
+ARequest	*createRequestDELETE(RequestContext_t &context);
 
 #endif /* ******************************************************************* */

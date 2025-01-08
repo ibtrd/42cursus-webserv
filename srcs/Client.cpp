@@ -13,7 +13,7 @@
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 int32_t	Client::_epollFd = -1;
-ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(Client &) = {
+ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
 	createRequestPOST,
 	createRequestDELETE
@@ -55,19 +55,9 @@ Client	&Client::operator=(const Client &other)
 		this->_request = other._request->clone();
 	else
 		this->_request = NULL;
-	this->_requestState = other._requestState;
 
 	this->_socket = other._socket;
-	this->_buffer = other._buffer;
-
-	this->_method = other._method;
-	this->_target = other._target;
-	this->_protocolVersion = other._protocolVersion;
-
-	this->_headers = other._headers;
-
-	this->_response = other._response;
-	this->_responseBuffer = other._responseBuffer;
+	this->_context = other._context;
 	return (*this);
 }
 
@@ -78,42 +68,42 @@ const std::string Client::_requestStateStr(void) const
 	std::string	str("{");
 
 	str += "requestLine: ";
-	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState))
+	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", headers: ";
-	if (IS_REQ_READ_HEADERS_COMPLETE(this->_requestState))
+	if (IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", body: ";
-	if (IS_REQ_READ_BODY_COMPLETE(this->_requestState))
+	if (IS_REQ_READ_BODY_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", clientRead: ";
-	if (IS_REQ_CLIENT_READ_COMPLETE(this->_requestState))
+	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", read: ";
-	if (IS_REQ_READ_COMPLETE(this->_requestState))
+	if (IS_REQ_READ_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", process: ";
-	if (IS_REQ_PROCESS_COMPLETE(this->_requestState))
+	if (IS_REQ_PROCESS_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", writing: ";
-	if (IS_REQ_CAN_WRITE(this->_requestState))
+	if (IS_REQ_CAN_WRITE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
 	str += ", writeComplete: ";
-	if (IS_REQ_WRITE_COMPLETE(this->_requestState))
+	if (IS_REQ_WRITE_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
@@ -137,7 +127,7 @@ error_t	Client::_readSocket(void)
 	}
 	Client::_readBuffer[bytes] = '\0';
 	std::cerr << "Read:|" << Client::_readBuffer << "|" << std::endl;
-	this->_buffer += Client::_readBuffer;
+	this->_context.buffer += Client::_readBuffer;
 	Client::_readBuffer[0] = '\0';
 	return (REQ_CONTINUE);
 }
@@ -147,30 +137,30 @@ error_t Client::_parseRequest(void)
 	error_t ret;
 
 	// Parse request line
-	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState)) {
+	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState)) {
 		ret = this->_parseRequestLine();
 		if (ret != REQ_DONE)
 			return (ret);
 	}
 
 	// Parse headers
-	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_requestState))
+	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState))
 	{
 		ret = this->_parseHeaders();
 		if (ret != REQ_DONE)
 			return (ret);
 	}
 
-	SET_REQ_CLIENT_READ_COMPLETE(this->_requestState);
-	if (this->_response.statusCode() != NONE)
+	SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
+	if (this->_context.response.statusCode() != NONE)
 	{
-		SET_REQ_READ_COMPLETE(this->_requestState); // probably not needed
-		SET_REQ_PROCESS_COMPLETE(this->_requestState);
-		this->switchToWrite();
-		this->_responseBuffer = this->_response.response();
+		SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
+		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+		this->_switchToWrite();
+		this->_context.responseBuffer = this->_context.response.response();
 	}
 	else
-		this->_request = Client::_requestsBuilder[this->_method](*this);
+		this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
 	return (REQ_DONE);
 }
 
@@ -179,14 +169,14 @@ error_t Client::_parseRequestLine(void)
 	std::string	requestLine;
 
 	// Check at least one line is present
-	size_t	pos = this->_buffer.find("\r\n");
+	size_t	pos = this->_context.buffer.find("\r\n");
 	if (pos == std::string::npos)
 	{
 		std::cerr << "RequestLine too short" << std::endl;
 		return (REQ_CONTINUE);
 	}
-	requestLine = this->_buffer.substr(0, pos);
-	this->_buffer.erase(0, pos + 2);
+	requestLine = this->_context.buffer.substr(0, pos);
+	this->_context.buffer.erase(0, pos + 2);
 	std::cerr << "RequestLine line: |" << requestLine << "|" << std::endl;
 
 	// Parse request line
@@ -195,23 +185,23 @@ error_t Client::_parseRequestLine(void)
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
-		this->_response.setStatusCode(BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(BAD_REQUEST);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	std::string	method = requestLine.substr(0, pos);
 	if (method.empty())
 	{
-		this->_response.setStatusCode(BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(BAD_REQUEST);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	this->_method = stringToMethod(method);
+	this->_context.method = stringToMethod(method);
 	requestLine.erase(0, pos + 1);
-	if (this->_method == INVAL_METHOD)
+	if (this->_context.method == INVAL_METHOD)
 	{
-		this->_response.setStatusCode(METHOD_NOT_ALLOWED);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 
@@ -219,39 +209,39 @@ error_t Client::_parseRequestLine(void)
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
-		this->_response.setStatusCode(BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(BAD_REQUEST);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	this->_target = requestLine.substr(0, pos);
-	if (this->_target.empty())
+	this->_context.target = requestLine.substr(0, pos);
+	if (this->_context.target.empty())
 	{
-		this->_response.setStatusCode(BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(BAD_REQUEST);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	requestLine.erase(0, pos + 1);
 
 	// Protocol version
-	this->_protocolVersion = requestLine;
-	if (this->_protocolVersion.empty())
+	this->_context.protocolVersion = requestLine;
+	if (this->_context.protocolVersion.empty())
 	{
-		this->_response.setStatusCode(BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(BAD_REQUEST);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (this->_protocolVersion != "HTTP/1.1")
+	if (this->_context.protocolVersion != "HTTP/1.1")
 	{
-		this->_response.setStatusCode(HTTP_VERSION_NOT_SUPPORTED);
-		SET_REQ_READ_COMPLETE(this->_requestState);
+		this->_context.response.setStatusCode(HTTP_VERSION_NOT_SUPPORTED);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 
-	std::cerr << "Method: |" << methodToString(this->_method) << "|" << std::endl;
-	std::cerr << "Target: |" << this->_target << "|" << std::endl;
-	std::cerr << "Protocol version: |" << this->_protocolVersion << "|" << std::endl;
+	std::cerr << "Method: |" << methodToString(this->_context.method) << "|" << std::endl;
+	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
-	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_requestState);
+	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
 	return (REQ_DONE);
 }
@@ -264,33 +254,83 @@ error_t Client::_parseHeaders(void)
 	std::string	value;
 
 	std::cerr << "Parsing headers..." << std::endl;
-	while ((pos = this->_buffer.find("\r\n")) != std::string::npos)
+	while ((pos = this->_context.buffer.find("\r\n")) != std::string::npos)
 	{
-		line = this->_buffer.substr(0, pos);
-		this->_buffer.erase(0, pos + 2);
+		line = this->_context.buffer.substr(0, pos);
+		this->_context.buffer.erase(0, pos + 2);
 		if (line.empty())
 		{
-			if (this->_headers.find("Host") == this->_headers.end())
+			if (this->_context.headers.find("Host") == this->_context.headers.end())
 			{
-				this->_response.setStatusCode(BAD_REQUEST);
-				SET_REQ_READ_COMPLETE(this->_requestState);
+				this->_context.response.setStatusCode(BAD_REQUEST);
+				SET_REQ_READ_COMPLETE(this->_context.requestState);
 			}
 			else
-				SET_REQ_READ_HEADERS_COMPLETE(this->_requestState);
+				SET_REQ_READ_HEADERS_COMPLETE(this->_context.requestState);
 			return (REQ_DONE);
 		}
 		pos = line.find(": ");
 		if (pos == std::string::npos)
 		{
-			this->_response.setStatusCode(BAD_REQUEST);
-			SET_REQ_READ_COMPLETE(this->_requestState);
+			this->_context.response.setStatusCode(BAD_REQUEST);
+			SET_REQ_READ_COMPLETE(this->_context.requestState);
 			return (REQ_DONE);
 		}
 		key = line.substr(0, pos);
 		value = line.substr(pos + 2);
-		this->_headers[key] = value;
+		this->_context.headers[key] = value;
 		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
+	return (REQ_CONTINUE);
+}
+
+error_t	Client::_process(void)
+{
+	error_t	ret;
+
+	ret = this->_request->parse();
+	if (ret != REQ_DONE)
+		return (ret);
+
+	ret = this->_request->process();
+	if (ret != REQ_ERROR)
+		return (ret);
+
+	return (REQ_DONE);
+}
+
+error_t Client::_switchToWrite(void)
+{
+	struct epoll_event event;
+	event.events = EPOLLOUT;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_socket, &event))
+	{
+		close(this->_socket);
+		return (-1);
+	}
+	SET_REQ_CAN_WRITE(this->_context.requestState);
+	return (0);
+}
+
+error_t	Client::_sendResponse(void)
+{
+	std::cerr << "Sending response..." << std::endl;
+	ssize_t	bytes;
+
+	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
+	bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, 0);
+	if (bytes == -1) {
+		std::cerr << "Error: send: " << strerror(errno) << std::endl;
+		return (REQ_ERROR);
+	}
+	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+	this->_context.responseBuffer.erase(0, bytes);
+
+	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
+		return (REQ_DONE);
+	}
+	std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -307,7 +347,7 @@ error_t	Client::init(const int32_t requestSocket)
 		return (-1);
 	}
 	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
-	this->_requestState = REQ_STATE_NONE;
+	this->_context.requestState = REQ_STATE_NONE;
 	return (0);
 }
 
@@ -315,34 +355,32 @@ error_t	Client::handle(void)
 {
 	error_t	ret;
 
-	if (!IS_REQ_READ_COMPLETE(this->_requestState)
+	if (!IS_REQ_READ_COMPLETE(this->_context.requestState)
 		&& (ret = this->_readSocket()) != REQ_CONTINUE)
 		return (ret);
 	
-	if (!IS_REQ_CLIENT_READ_COMPLETE(this->_requestState)
+	if (!IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState)
 		&& (ret = this->_parseRequest()) != REQ_DONE)
 		return (ret);
 
 	// Handle request
-	if (this->_request && !IS_REQ_PROCESS_COMPLETE(this->_requestState))
-	{
-		ret = this->_request->process();
+	if (this->_request && !IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
+		ret = this->_process();
 		if (ret != REQ_DONE)
 			return (ret);
-		// debug start
-		this->_response.setStatusCode(OK);
-		this->_response.setBody("Hello, World!");
-		this->_responseBuffer = this->_response.response();
-		SET_REQ_PROCESS_COMPLETE(this->_requestState);
-		this->switchToWrite();
-		// debug end
 	}
 
-	if (IS_REQ_CAN_WRITE(this->_requestState))	// possibly not needed
+	if (!IS_REQ_CAN_WRITE(this->_context.requestState))
 	{
-		if ((ret = this->sendResponse()) != REQ_DONE)
-			return (ret);
+		if (this->_switchToWrite() == -1)
+			return (REQ_ERROR);
 	}
+
+	// if (IS_REQ_CAN_WRITE(this->_context.requestState))	// possibly not needed
+	// {
+		if ((ret = this->_sendResponse()) != REQ_DONE)
+			return (ret);
+	// }
 
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 
@@ -357,40 +395,6 @@ error_t	Client::handle(void)
 		return (REQ_DONE);
 	// }
 	// return (REQ_CONTINUE);
-}
-
-error_t Client::switchToWrite(void)
-{
-	struct epoll_event event;
-	event.events = EPOLLOUT;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_socket, &event))
-	{
-		close(this->_socket);
-		return (-1);
-	}
-	SET_REQ_CAN_WRITE(this->_requestState);
-	return (0);
-}
-
-error_t	Client::sendResponse(void)
-{
-	std::cerr << "Sending response..." << std::endl;
-	ssize_t	bytes;
-	bytes = REQ_BUFFER_SIZE > this->_responseBuffer.length() ? this->_responseBuffer.length() : REQ_BUFFER_SIZE;
-	bytes = send(this->_socket, this->_responseBuffer.c_str(), bytes, 0);
-	if (bytes == -1) {
-		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-		return (REQ_ERROR);
-	}
-	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
-	this->_responseBuffer.erase(0, bytes);
-	if (this->_responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_requestState))
-	{
-		std::cerr << "Response not fully sent" << std::endl;
-		return (REQ_CONTINUE);
-	}
-	return (REQ_DONE);
 }
 
 /* GETTERS ****************************************************************** */

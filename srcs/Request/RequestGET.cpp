@@ -16,7 +16,7 @@
 // 	// std::cerr << "RequestGET created" << std::endl;
 // }
 
-RequestGET::RequestGET(Client &client) : ARequest(client)
+RequestGET::RequestGET(RequestContext_t &context) : ARequest(context)
 {
 	std::cerr << "RequestGET created" << std::endl;
 }
@@ -43,9 +43,31 @@ RequestGET	&RequestGET::operator=(const RequestGET &other)
 
 /* ************************************************************************** */
 
+error_t	RequestGET::parse(void)
+{
+	std::cerr << "RequestGET parse" << std::endl;
+
+	return (REQ_DONE);
+}
+
 error_t	RequestGET::process(void)
 {
 	std::cerr << "RequestGET process" << std::endl;
+
+	// debug 418 start
+	this->_context.response.setStatusCode(I_AM_A_TEAPOT);
+	// this->_context.response.setBody("Hello, World!");
+	this->_context.responseBuffer = this->_context.response.response();
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// debug end
+
+	// // debug 200 start
+	// this->_context.response.setStatusCode(OK);
+	// this->_context.response.setBody("Hello, World!");
+	// this->_context.responseBuffer = this->_context.response.response();
+	// SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// // debug end
+
 	return (REQ_DONE);
 }
 
@@ -63,9 +85,8 @@ ARequest	*RequestGET::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestGET(Client &client)
+ARequest	*createRequestGET(RequestContext_t &context)
 {
-	(void)client;
 	std::cerr << "createRequestGET" << std::endl;
-	return (new RequestGET(client));
+	return (new RequestGET(context));
 }

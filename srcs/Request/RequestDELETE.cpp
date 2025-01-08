@@ -15,7 +15,7 @@
 // 	// std::cerr << "RequestDELETE created" << std::endl;
 // }
 
-RequestDELETE::RequestDELETE(Client &client) : ARequest(client)
+RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context)
 {
 	std::cerr << "RequestDELETE created" << std::endl;
 }
@@ -42,9 +42,21 @@ RequestDELETE	&RequestDELETE::operator=(const RequestDELETE &other)
 
 /* ************************************************************************** */
 
+error_t	RequestDELETE::parse(void)
+{
+	std::cerr << "RequestDELETE parse" << std::endl;
+	return (REQ_DONE);
+}
+
 error_t	RequestDELETE::process(void)
 {
 	std::cerr << "RequestDELETE process" << std::endl;
+	// debug start
+	this->_context.response.setStatusCode(OK);
+	this->_context.response.setBody("Hello, World!");
+	this->_context.responseBuffer = this->_context.response.response();
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// debug end
 	return (REQ_DONE);
 }
 
@@ -62,8 +74,8 @@ ARequest	*RequestDELETE::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestDELETE(Client &client)
+ARequest	*createRequestDELETE(RequestContext_t &context)
 {
 	std::cerr << "createRequestDELETE" << std::endl;
-	return (new RequestDELETE(client));
+	return (new RequestDELETE(context));
 }

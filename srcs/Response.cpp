@@ -15,7 +15,7 @@ Response::Response(void)
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode = NONE;
 	this->_reasonPhrase = "";
-	this->_headers["Server"] = "webserv/1.0";
+	this->_headers["Server"] = "webserv/0.5";
 };
 
 Response::Response(const Response &other)
@@ -76,7 +76,7 @@ std::string	Response::body(void) const
 std::string	Response::response(void) const
 {
 	std::string	response = this->statusLine();
-	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
+	for (headers_t::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
 	{
 		response += it->first + ": " + it->second + "\r\n";
 	}

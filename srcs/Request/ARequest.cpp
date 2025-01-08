@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "ARequest.hpp"
+#include "Client.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -14,15 +15,14 @@
 // 	// std::cerr << "ARequest created" << std::endl;
 // }
 
-ARequest::ARequest(Client &client) : _client(client)
+ARequest::ARequest(RequestContext_t &context) : _context(context)
 {
 	// std::cerr << "ARequest created" << std::endl;
 }
 
-ARequest::ARequest(const ARequest &other) : _client(other._client)
+ARequest::ARequest(const ARequest &other) : _context(other._context)
 {
 	// std::cerr << "ARequest copy" << std::endl;
-	*this = other;
 }
 
 ARequest::~ARequest(void)
@@ -37,6 +37,7 @@ ARequest	&ARequest::operator=(const ARequest &other)
 	std::cerr << "ARequest assign" << std::endl;
 	if (this == &other)
 		return (*this);
+	this->_context = other._context;
 	return (*this);
 }
 

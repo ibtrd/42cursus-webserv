@@ -3,9 +3,12 @@
 
 # include <stdint.h>
 # include <string>
+# include <map>
 
 typedef int32_t error_t;
 typedef int fd_t;
+
+typedef std::map<std::string, std::string>	headers_t;
 
 typedef enum {
 	NONE = 0,

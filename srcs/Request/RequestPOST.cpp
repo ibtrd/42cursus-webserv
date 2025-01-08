@@ -15,7 +15,7 @@
 // 	// std::cerr << "RequestPOST created" << std::endl;
 // }
 
-RequestPOST::RequestPOST(Client &client) : ARequest(client)
+RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context)
 {
 	std::cerr << "RequestPOST created" << std::endl;
 }
@@ -42,9 +42,21 @@ RequestPOST	&RequestPOST::operator=(const RequestPOST &other)
 
 /* ************************************************************************** */
 
+error_t	RequestPOST::parse(void)
+{
+	std::cerr << "RequestPOST parse" << std::endl;
+	return (REQ_DONE);
+}
+
 error_t	RequestPOST::process(void)
 {
 	std::cerr << "RequestPOST process" << std::endl;
+	// debug start
+	this->_context.response.setStatusCode(OK);
+	this->_context.response.setBody("Hello, World!");
+	this->_context.responseBuffer = this->_context.response.response();
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// debug end
 	return (REQ_DONE);
 }
 
@@ -62,8 +74,8 @@ ARequest	*RequestPOST::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestPOST(Client &client)
+ARequest	*createRequestPOST(RequestContext_t &context)
 {
 	std::cerr << "createRequestPOST" << std::endl;
-	return (new RequestPOST(client));
+	return (new RequestPOST(context));
 }
