@@ -6,7 +6,7 @@
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowedMethods = DEFAULT_METHODS;
+	this->_allowed = DEFAULT_METHODS;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 }
@@ -15,9 +15,8 @@ LocationBlock::LocationBlock(const LocationBlock &other) {
 	*this = other;
 }
 
-LocationBlock::LocationBlock(const std::string &path) {
-	this->_path = path;
-	this->_allowedMethods = DEFAULT_METHODS;
+LocationBlock::LocationBlock(const Path &path) : _path(path) {
+	this->_allowed = DEFAULT_METHODS;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 }
@@ -33,12 +32,16 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_dirListing = other._dirListing;
 	this->_maxBodySize = other._maxBodySize;
 	this->_root = other._root;
-	this->_allowedMethods = other._allowedMethods;
+	this->_allowed = other._allowed;
 	this->_redirection = other._redirection;
 	return (*this);
 }
 
 /* ************************************************************************** */
+
+bool LocationBlock::match(const Path &target) const {
+	return this->_path.prefixMatch(target);
+}
 
 /* SETTERS ****************************************************************** */
 
@@ -47,7 +50,7 @@ error_t LocationBlock::allowMethod(const std::string &str) {
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(str)) {
-			this->_allowedMethods |= (1 << i);
+			this->_allowed |= (1 << i);
 			return 0;
 		}
 	}
@@ -70,8 +73,14 @@ void LocationBlock::setMaxBodySize(const int32_t size) {
 	this->_maxBodySize = size;
 }
 
-void LocationBlock::setRoot(const std::string &str) {
-	this->_root = str;
+error_t LocationBlock::setRoot(const std::string &str) {
+	Path path(str);
+
+	if (!path.isOriginForm()) {
+		return -1;
+	}
+	this->_root = path;
+	return 0;
 }
 
 void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
@@ -93,7 +102,7 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 
 /* GETTERS ****************************************************************** */
 
-const std::string &LocationBlock::path(void) const {
+const Path &LocationBlock::path(void) const {
 	return this->_path;
 }
 
@@ -105,7 +114,7 @@ int32_t LocationBlock::getMaxBodySize(void) const {
 	return this->_maxBodySize;
 }
 
-const std::string &LocationBlock::getRoot(void) const {
+const Path &LocationBlock::getRoot(void) const {
 	return this->_root;
 }
 
@@ -113,12 +122,12 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 	return this->_redirection;
 }
 
-bool LocationBlock::isAllowedMethod(const std::string &str) const {
+bool LocationBlock::isAllowed(const std::string &method) const {
 	const std::vector<std::string> &methods = LocationBlock::_methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
-		if (0 == methods[i].compare(str)) {
-			return this->_allowedMethods & (1 << i);
+		if (0 == methods[i].compare(method)) {
+			return this->_allowed & (1 << i);
 		}
 	}
 	return false;

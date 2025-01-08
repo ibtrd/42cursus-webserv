@@ -9,6 +9,7 @@ SRC = \
 	ServerBlock \
 	signal \
 	utils \
+	Path \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/

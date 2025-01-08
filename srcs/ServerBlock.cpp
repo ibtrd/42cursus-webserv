@@ -25,16 +25,40 @@ ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 
 /* GETTERS ****************************************************************** */
 
-const std::vector<struct sockaddr_in> &ServerBlock::getHosts(void) const {
+const std::vector<struct sockaddr_in> &ServerBlock::hosts(void) const {
 	return this->_hosts;
 }
 
-const std::vector<std::string> &ServerBlock::getNames(void) const {
+const std::vector<std::string> &ServerBlock::names(void) const {
 	return this->_names;
 }
 
-const std::vector<LocationBlock> &ServerBlock::getLocations(void) const {
+const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
+}
+
+const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
+	const std::vector<LocationBlock>	&locations = this->_locations;
+	const LocationBlock					*selected = NULL;
+	uint32_t							bestMatch = 0;
+
+	for (uint32_t i = 0; i < locations.size(); ++i) {
+		const Path &path = locations[i].path();
+		if (path.length() > target.length()) {
+			continue;
+		}
+		if (locations[i].match(target)) {
+			if (path.prefixLength() == target.prefixLength()) {
+				return locations[i];
+			} else if (path.prefixLength() > bestMatch || !selected){
+				bestMatch = path.prefixLength();
+				selected = &locations[i];
+			}
+		}
+	}
+	if (!selected)
+		throw std::string("404"); // TODO: change to std::exeption
+	return *selected;
 }
 
 /* SETTERS ****************************************************************** */

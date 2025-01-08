@@ -45,3 +45,5 @@ ubuntu_tester
 rfc*
 conf/noperm.conf
 YoupiBanane/
+test.cpp
+bin/

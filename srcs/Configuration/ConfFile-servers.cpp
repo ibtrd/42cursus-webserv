@@ -13,20 +13,28 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 		throw Configuration::ConfigurationException(this->_missingOpening(*directive, BLOCK_OPEN));	
 	}
 	
-	ServerBlock	server;
+	ServerBlock		server;
+	LocationBlock	globalLocation;
 
 	while (++token != this->_tokens.end() && *token != BLOCK_CLOSE) {
-		serverDirectives::const_iterator dir = _serverDirectives.find(token->str());
-		if (dir != _serverDirectives.end() && token + 1 != this->_tokens.end()) {
-			(this->*(dir->second))(token, server);
-		} else if (dir == _serverDirectives.end()) {
-			throw Configuration::ConfigurationException(this->_unkwownDirective(*token));
+		if (token + 1 == this->_tokens.end()) {
+			throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));
+		}
+		serverDirectives::const_iterator srvdir = _serverDirectives.find(token->str());
+		locationDirectives::const_iterator locdir = _locationDirectives.find(token->str());
+		if (srvdir != _serverDirectives.end()) {
+			(this->*(srvdir->second))(token, server);
+		} else if (locdir != _locationDirectives.end()) {
+			(this->*(locdir->second))(token, globalLocation);
 		} else {
-			throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';', '}'));
+			throw Configuration::ConfigurationException(this->_unkwownDirective(*token));
 		}
 	}
 	if (token == this->_tokens.end()) {
 		throw Configuration::ConfigurationException(this->_unexpectedEOF(*(token - 1), BLOCK_CLOSE));
+	}
+	if (0 == server.hosts().size()) {
+		server.addHost(_defaultHost);
 	}
 	this->_blocks->push_back(server);
 }
@@ -38,9 +46,7 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	
-	struct sockaddr_in host;
-	std::memset(&host, 0, sizeof(host));
-	host.sin_family = AF_INET;
+	struct sockaddr_in host = _defaultHost;
 	try {
 		std::size_t sep = token->str().find(':');
 		if (std::string::npos != sep) {
@@ -49,7 +55,6 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 			}
 			host.sin_port = htons(ft::stoi<in_addr_t>(token->str().substr(sep + 1)));
 		} else {
-			host.sin_addr.s_addr = INADDR_ANY;
 			host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
 		}
 	} catch (std::invalid_argument &e) {

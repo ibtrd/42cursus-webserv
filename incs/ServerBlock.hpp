@@ -15,9 +15,11 @@ public:
 	ServerBlock	&operator=(const ServerBlock &other);
 
 	// GETTERS
-	const std::vector<struct sockaddr_in>	&getHosts(void) const;
-	const std::vector<std::string>			&getNames(void) const;
-	const std::vector<LocationBlock>		&getLocations(void) const;
+	const std::vector<struct sockaddr_in>	&hosts(void) const;
+	const std::vector<std::string>			&names(void) const;
+	const std::vector<LocationBlock>		&locations(void) const;
+
+	const LocationBlock &findLocationBlock(const Path &target) const;
 
 	// SETTERS
 	void	addHost(const struct sockaddr_in &host);
