@@ -39,10 +39,8 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 
 /* ************************************************************************** */
 
-int32_t LocationBlock::match(const Path &target) const {
-	int32_t match = this->_path.match(target);
-
-	return match;
+bool LocationBlock::match(const Path &target) const {
+	return this->_path.prefixMatch(target);
 }
 
 /* SETTERS ****************************************************************** */
@@ -104,8 +102,8 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 
 /* GETTERS ****************************************************************** */
 
-const std::string &LocationBlock::path(void) const {
-	return this->_path.string();
+const Path &LocationBlock::path(void) const {
+	return this->_path;
 }
 
 bool LocationBlock::isDirListing(void) const {

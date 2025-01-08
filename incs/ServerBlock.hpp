@@ -19,7 +19,7 @@ public:
 	const std::vector<std::string>			&names(void) const;
 	const std::vector<LocationBlock>		&locations(void) const;
 
-	const LocationBlock &fetchLocationBlock(const Path &target) const;
+	const LocationBlock &findLocationBlock(const Path &target) const;
 
 	// SETTERS
 	void	addHost(const struct sockaddr_in &host);

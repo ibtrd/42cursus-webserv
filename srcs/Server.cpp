@@ -5,9 +5,12 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <algorithm>
+#include <csignal>
 
 #include "Server.hpp"
 #include "ft.hpp"
+
+extern int g_signal;
 
 Server::Server() : _epollFd(-1) {}
 
@@ -46,7 +49,8 @@ void Server::configure(const Configuration &config) {
 void Server::routine(void) {
 	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, 50000);
 	if (nfds == -1) {
-		std::cerr << "error: epoll_wait: " << strerror(errno) << std::endl;
+		if (g_signal != SIGQUIT)
+			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
 		return ;
 	}
 	for(int i = 0; i < nfds; i++) {
@@ -62,7 +66,7 @@ void Server::routine(void) {
 	}
 }
 
-const ServerBlock &Server::fetchServerBlock(fd_t fd, const std::string &host) const {
+const ServerBlock &Server::findServerBlock(fd_t fd, const std::string &host) const {
 	const std::vector<ServerBlock> &blocks = this->_serverBlocks.at(fd);
 	for (uint32_t i = 0; i < blocks.size(); ++i) {
 		const std::vector<std::string> &names = blocks[i].names();

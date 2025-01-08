@@ -45,7 +45,7 @@ void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, Loc
 	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
-	if (0 != location.setRoot(token->str())) {
+	if (0 != location.setRoot(token->str() + '/')) {
 		throw Configuration::ConfigurationException(this->_invalidPath(*directive, *token));
 	}
 	++token;

@@ -5,9 +5,6 @@
 #include <vector>
 #include <stdint.h>
 
-#define DIR_MATCH -1
-#define FILE_MATCH -2
-
 class Path {
 public:
 	Path(void);
@@ -26,7 +23,8 @@ public:
 	bool	isDir(void) const;
 
 	uint32_t	length(void) const;
-	int32_t		match(const Path &other) const;
+	uint32_t	prefixLength(void) const;
+	bool		prefixMatch(const Path &other) const;
 
 private:
 	std::string					_str;

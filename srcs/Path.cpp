@@ -42,21 +42,27 @@ Path &Path::operator=(const Path &other) {
 
 /* ************************************************************************** */
 
-#include <iostream>
-
 uint32_t Path::length(void) const {
 	return this->_chunks.size();
 }
 
-int32_t Path::match(const Path &other) const {
-	uint32_t i = 0;
-	while (i < this->_chunks.size() && i < other._chunks.size() && this->_chunks[i] == other._chunks[i]) {
-		i++;
+uint32_t Path::prefixLength(void) const {
+	if (this->isDir()) {
+		return this->_chunks.size();
 	}
-	// if (this->isDir() && other.isDir())
-	// 	i--;
-	
-	return i;
+	return this->_chunks.size() == 0 ? 0 : this->_chunks.size() - 1;
+}
+
+bool Path::prefixMatch(const Path &other) const {
+	if (this->_chunks.size() > other._chunks.size()) {
+		return false;
+	}
+	for (uint32_t i = 0; i < this->_chunks.size(); ++i) {
+		if (this->_chunks[i] != other._chunks[i]) {
+			return false;
+		}
+	}
+	return true;
 }
 
 bool Path::isOriginForm(void) const {
@@ -73,8 +79,8 @@ bool Path::isDir(void) const {
 
 std::string Path::extension(void) const {
 	const std::string &src = this->_chunks.back();
-	const std::size_t pos = src.find('.');
-	if (pos != std::string::npos) {
+	const std::size_t pos = src.find_last_of('.');
+	if (pos != std::string::npos && pos != src.size() - 1) {
 		return src.substr(pos);
 	}
 	return std::string();

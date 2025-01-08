@@ -37,21 +37,27 @@ const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
 }
 
-const LocationBlock &ServerBlock::fetchLocationBlock(const Path &target) const {
+const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
 	const std::vector<LocationBlock>	&locations = this->_locations;
-	const LocationBlock						*selected = NULL;
-	int32_t							best = 0;
+	const LocationBlock					*selected = NULL;
+	uint32_t							bestMatch = 0;
 
 	for (uint32_t i = 0; i < locations.size(); ++i) {
-		const int32_t match = locations[i].match(target);
-		if (match > best) {
-			best = match;
-			selected = &locations[i];
+		const Path &path = locations[i].path();
+		if (path.length() > target.length()) {
+			continue;
+		}
+		if (locations[i].match(target)) {
+			if (path.prefixLength() == target.prefixLength()) {
+				return locations[i];
+			} else if (path.prefixLength() > bestMatch || !selected){
+				bestMatch = path.prefixLength();
+				selected = &locations[i];
+			}
 		}
 	}
-
 	if (!selected)
-		throw std::string("404");
+		throw std::string("404"); // TODO: change to std::exeption
 	return *selected;
 }
 

@@ -1,9 +1,6 @@
 #ifndef LOCATIONBLOCK_HPP
 # define LOCATIONBLOCK_HPP
 
-# include <stdint.h>
-# include <string>
-# include <vector>
 
 # include "Path.hpp"
 # include "webdef.hpp"
@@ -24,7 +21,7 @@ public:
 
 	LocationBlock	&operator=(const LocationBlock &other);
 
-	int32_t	match(const Path &target) const;
+	bool	match(const Path &target) const;
 
 	// SETTERS
 	error_t	allowMethod(const std::string &str);
@@ -34,7 +31,7 @@ public:
 	void	setRedirect(const uint16_t status, const std::string &body);
 
 	// GETTERS
-	const std::string	&path(void) const;
+	const Path			&path(void) const;
 	bool				isAllowed(const std::string &method) const;
 	bool				isDirListing(void) const;
 	int32_t				getMaxBodySize(void) const;

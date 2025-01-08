@@ -46,3 +46,4 @@ rfc*
 conf/noperm.conf
 YoupiBanane/
 test.cpp
+bin/
