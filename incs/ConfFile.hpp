@@ -14,8 +14,8 @@ public:
 	void	parse(void);
 
 	// GETTERS
-	const std::string 			 &path(void) const;
-	const std::vector<ConfToken> &tokens(void) const;
+	const std::string 				&path(void) const;
+	const std::vector<ConfToken>	&tokens(void) const;
 
 	bool	eof(std::vector<ConfToken>::const_iterator &it) const;
 

@@ -6,12 +6,16 @@
 #include <cstring>
 
 #include "Response.hpp"
+#include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
 Response::Response(void)
 {
 	// std::cerr << "Response created" << std::endl;
+	this->_statusCode = NONE;
+	this->_reasonPhrase = "";
+	this->_headers["Server"] = "webserv/0.5";
 };
 
 Response::Response(const Response &other)
@@ -56,7 +60,7 @@ std::string	Response::reasonPhrase(void) const
 
 std::string	Response::statusLine(void) const
 {
-	return ("HTTP/1.1 " + numToStr(this->_statusCode) + " " + this->_reasonPhrase + "\r\n");
+	return ("HTTP/1.1 " + ft::numToStr(this->_statusCode) + " " + this->_reasonPhrase + "\r\n");
 }
 
 std::string	Response::header(const std::string &key) const
@@ -72,7 +76,7 @@ std::string	Response::body(void) const
 std::string	Response::response(void) const
 {
 	std::string	response = this->statusLine();
-	for (std::map<std::string, std::string>::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
+	for (headers_t::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++)
 	{
 		response += it->first + ": " + it->second + "\r\n";
 	}
@@ -97,7 +101,7 @@ void	Response::setHeader(const std::string &key, const std::string &value)
 void	Response::setBody(const std::string &body)
 {
 	this->_body = body;
-	this->_headers["Content-Length"] = numToStr(body.length());
+	this->_headers["Content-Length"] = ft::numToStr(body.length());
 }
 
 /* EXCEPTIONS *************************************************************** */

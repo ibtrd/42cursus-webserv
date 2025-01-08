@@ -2,7 +2,7 @@
 # define SERVER_HPP
 
 # include "Configuration.hpp"
-# include "Request.hpp"
+# include "Client.hpp"
 
 # include <stdint.h>
 # include <sys/epoll.h>
@@ -29,7 +29,7 @@ private:
 	int32_t 					_epollFd;
 	servermap_t					_serverBlocks;
 	struct epoll_event 			_events[MAX_EVENTS];
-	std::map<int32_t, Request>	_requests;
+	std::map<int32_t, Client>	_clients;
 
 	fd_t	_addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t	_addConnection(const int32_t socket);
