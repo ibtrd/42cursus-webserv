@@ -1,3 +1,6 @@
+#include "Server.hpp"
+#include "ft.hpp"
+
 #include <cstring>
 #include <errno.h>
 #include <unistd.h>
@@ -5,9 +8,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <algorithm>
-
-#include "Server.hpp"
-#include "ft.hpp"
 
 Server::Server() : _epollFd(-1) {}
 
@@ -141,33 +141,6 @@ void Server::_removeConnection(const int32_t socket) {
 	close(socket);
 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
 }
-
-// error_t	Server::_transformRequest(const int32_t socket) {
-// 	ClientrequestOld = this->_clients[socket];
-// 	ClientrequestNew = NULL;
-
-// 	switch (requestOld->method())
-// 	{
-// 	case GET:
-// 		requestNew = new RequestGET();
-// 		*requestNew = *requestOld;
-// 		delete requestOld;
-// 		this->_clients[socket] = requestNew;
-// 		std::cerr << "Transformed to GET " << this->_clients[socket]->method() << std::endl;
-// 		break;
-
-// 	// case POST:
-// 	// 	break;
-
-// 	// case DELETE:
-// 	// 	break;
-	
-// 	default:
-// 		std::cerr << "Error: couldn't transform: invalid method ()" << std::endl;
-// 		break;
-// 	}
-// 	return (0);
-// }
 
 int32_t	Server::epollFd(void) const {
 	return (this->_epollFd);

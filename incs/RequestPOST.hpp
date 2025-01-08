@@ -7,16 +7,18 @@ class RequestPOST : public ARequest {
 private:
 
 public:
-	RequestPOST(void);
+	RequestPOST(RequestContext_t &context);
 	RequestPOST(const RequestPOST &other);
 
 	~RequestPOST(void);
 
 	RequestPOST	&operator=(const RequestPOST &other);
 
+	error_t		parse(void);
+	error_t		process(void);
 	ARequest	*clone(void) const;
 };
 
-ARequest	*createRequestPOST(void);
+ARequest	*createRequestPOST(RequestContext_t &context);
 
 #endif /* ******************************************************************* */

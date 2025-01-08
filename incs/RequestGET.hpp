@@ -7,16 +7,18 @@ class RequestGET : public ARequest {
 private:
 
 public:
-	RequestGET(void);
+	RequestGET(RequestContext_t &context);
 	RequestGET(const RequestGET &other);
 
 	~RequestGET(void);
 
 	RequestGET	&operator=(const RequestGET &other);
 
+	error_t		parse(void);
+	error_t		process(void);
 	ARequest	*clone(void) const;
 };
 
-ARequest	*createRequestGET(void);
+ARequest	*createRequestGET(RequestContext_t &context);
 
 #endif /* ******************************************************************* */

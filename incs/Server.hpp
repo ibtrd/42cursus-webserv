@@ -2,8 +2,6 @@
 # define SERVER_HPP
 
 # include "Configuration.hpp"
-// # include "RequestMaster.hpp"
-// # include "RequestGET.hpp"
 # include "Client.hpp"
 
 # include <stdint.h>

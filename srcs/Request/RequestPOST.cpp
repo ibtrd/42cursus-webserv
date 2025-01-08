@@ -10,12 +10,17 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-RequestPOST::RequestPOST(void)
+// RequestPOST::RequestPOST(void)
+// {
+// 	// std::cerr << "RequestPOST created" << std::endl;
+// }
+
+RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context)
 {
-	// std::cerr << "RequestPOST created" << std::endl;
+	std::cerr << "RequestPOST created" << std::endl;
 }
 
-RequestPOST::RequestPOST(const RequestPOST &other)
+RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other)
 {
 	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
@@ -37,6 +42,24 @@ RequestPOST	&RequestPOST::operator=(const RequestPOST &other)
 
 /* ************************************************************************** */
 
+error_t	RequestPOST::parse(void)
+{
+	std::cerr << "RequestPOST parse" << std::endl;
+	return (REQ_DONE);
+}
+
+error_t	RequestPOST::process(void)
+{
+	std::cerr << "RequestPOST process" << std::endl;
+	// debug start
+	this->_context.response.setStatusCode(OK);
+	this->_context.response.setBody("Hello, World!");
+	this->_context.responseBuffer = this->_context.response.response();
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// debug end
+	return (REQ_DONE);
+}
+
 ARequest	*RequestPOST::clone(void) const
 {
 	std::cerr << "RequestPOST clone" << std::endl;
@@ -51,8 +74,8 @@ ARequest	*RequestPOST::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestPOST(void)
+ARequest	*createRequestPOST(RequestContext_t &context)
 {
 	std::cerr << "createRequestPOST" << std::endl;
-	return (new RequestPOST());
+	return (new RequestPOST(context));
 }
