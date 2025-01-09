@@ -9,6 +9,7 @@ LocationBlock::LocationBlock(void) {
 	this->_allowed = DEFAULT_METHODS;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_redirection = DEFAULT_REDIRECTON;
 }
 
 LocationBlock::LocationBlock(const LocationBlock &other) {
@@ -19,6 +20,7 @@ LocationBlock::LocationBlock(const Path &path) : _path(path) {
 	this->_allowed = DEFAULT_METHODS;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_redirection = DEFAULT_REDIRECTON;
 }
 
 LocationBlock::~LocationBlock(void) {}
@@ -43,13 +45,29 @@ bool LocationBlock::match(const Path &target) const {
 	return this->_path.prefixMatch(target);
 }
 
+void LocationBlock::fill(const LocationBlock &other) {
+	if (-1 == this->_dirListing) {
+		this->_dirListing = other._dirListing;
+	}
+	if (-1 == this->_maxBodySize) {
+		this->_maxBodySize = other._maxBodySize;
+	}
+	if (this->_root.string().empty()) {
+		this->_root = other._root;
+	}
+	if (!this->_allowed) {
+		this->_allowed = other._allowed;
+	}
+	if (0 == this->_redirection.first) {
+		this->_redirection = other._redirection;
+	}
+}
+
 /* SETTERS ****************************************************************** */
 
 error_t LocationBlock::allowMethod(const std::string &str) {
-	const std::vector<std::string> &methods = LocationBlock::_methods;
-
-	for (std::size_t i = 0; i < methods.size(); ++i) {
-		if (0 == methods[i].compare(str)) {
+	for (std::size_t i = 0; i < LocationBlock::methods.size(); ++i) {
+		if (0 == LocationBlock::methods[i].compare(str)) {
 			this->_allowed |= (1 << i);
 			return 0;
 		}
@@ -58,12 +76,12 @@ error_t LocationBlock::allowMethod(const std::string &str) {
 }
 
 error_t LocationBlock::setDirListing(const std::string &str) {
-	if (0 == str.compare("on")) {
-		this->_dirListing = true;
+	if (0 == str.compare(DIRLISTING_ON)) {
+		this->_dirListing = 1;
 		return 0;
 	}
-	if (0 == str.compare("off")) {
-		this->_dirListing = false;
+	if (0 == str.compare(DIRLISTING_OFF)) {
+		this->_dirListing = 0;
 		return 0;
 	}
 	return -1;
@@ -107,7 +125,7 @@ const Path &LocationBlock::path(void) const {
 }
 
 bool LocationBlock::isDirListing(void) const {
-	return this->_dirListing;
+	return this->_dirListing == 1;
 }
 
 int32_t LocationBlock::getMaxBodySize(void) const {
@@ -123,7 +141,7 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 }
 
 bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = LocationBlock::_methods;
+	const std::vector<std::string> &methods = LocationBlock::methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(method)) {
@@ -135,7 +153,7 @@ bool LocationBlock::isAllowed(const std::string &method) const {
 
 /* STATICS ****************************************************************** */
 
-const std::vector<std::string> LocationBlock::_methods = LocationBlock::_initMethods();
+const std::vector<std::string> LocationBlock::methods = LocationBlock::_initMethods();
 
 std::vector<std::string> LocationBlock::_initMethods(void) {
 	std::vector<std::string>	methods;
@@ -143,4 +161,23 @@ std::vector<std::string> LocationBlock::_initMethods(void) {
 	methods.push_back("POST");
 	methods.push_back("DELETE");
 	return methods;
+}
+
+std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
+	os << "Location '" << location._path << "' {\n"
+		<< "\troot: " << location._root << "\n"
+		<< "\tdirListing: ";
+	if (location._dirListing == -1) {
+		os << "undefined";
+	} else {
+		os << (location._dirListing ? DIRLISTING_ON : DIRLISTING_OFF);
+	}
+		os << "\n\tallowed: ";
+	for (uint32_t i = 0; i < LocationBlock::methods.size(); ++i) {
+		if (location.isAllowed(LocationBlock::methods[i])) {
+			os << LocationBlock::methods[i] << " ";
+		}
+	}
+	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;
+	return os;
 }

@@ -7,15 +7,17 @@
 #include "ft.hpp"
 
 void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
-	std::vector<ConfToken>::const_iterator directive = token++;
+	const uint32_t									args = this->_countBlockArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
 
-	if (token == this->_tokens.end() || *token != BLOCK_OPEN) {
-		throw Configuration::ConfigurationException(this->_missingOpening(*directive, BLOCK_OPEN));	
+	if (0 != args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	
 	ServerBlock		server;
 	LocationBlock	globalLocation;
 
+	globalLocation.setDirListing(DIRLISTING_OFF);
 	while (++token != this->_tokens.end() && *token != BLOCK_CLOSE) {
 		if (token + 1 == this->_tokens.end()) {
 			throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));
@@ -36,26 +38,29 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 	if (0 == server.hosts().size()) {
 		server.addHost(_defaultHost);
 	}
+	server.fillLocations(globalLocation);
 	this->_blocks->push_back(server);
 }
 
 void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
-	const std::vector<ConfToken>::const_iterator directive = token++;
+	const uint32_t 									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
 
-	if (token == this->_tokens.end() || *token == ';' || token + 1 == this->_tokens.end() || *(token + 1) != ';') {
+	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
-	
 	struct sockaddr_in host = _defaultHost;
 	try {
 		std::size_t sep = token->str().find(':');
 		if (std::string::npos != sep) {
-			if (0 >= inet_pton(AF_INET, token->str().substr(0, sep).c_str(), &host.sin_addr.s_addr)) {
+			if (0 >= inet_pton(host.sin_family, token->str().substr(0, sep).c_str(), &host.sin_addr.s_addr)) {
 				throw std::invalid_argument("");
 			}
 			host.sin_port = htons(ft::stoi<in_addr_t>(token->str().substr(sep + 1)));
 		} else {
-			host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
+			if (0 >= inet_pton(host.sin_family, token->str().c_str(), &host.sin_addr.s_addr)) {
+				host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
+			}
 		}
 	} catch (std::invalid_argument &e) {
 		throw Configuration::ConfigurationException(this->_hostNotFound(*directive, *token));
@@ -65,18 +70,14 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token, S
 }
 
 void ConfFile::_serverNameDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
-	const std::vector<ConfToken>::const_iterator directive = token++;
+	const uint32_t 									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
 
-	if (*token == ';') {
+	if (0 == args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
-	while (token != this->_tokens.end() && !token->isMetatoken()) {
+	for (uint32_t i = 0; i < args; ++i) {
 		server.addName(token->str());
 		++token;
-	}
-	if (token == this->_tokens.end()) {
-		throw Configuration::ConfigurationException(this->_unexpectedEOF(*directive, ';'));
-	} else if (*token != ';') {
-		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
 	}
 }

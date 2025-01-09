@@ -89,7 +89,7 @@ void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	if (0 != location.setDirListing(token->str())) {
-		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token, "on", "off"));
+		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token, DIRLISTING_ON, DIRLISTING_OFF));
 	}
 	++token;
 }
