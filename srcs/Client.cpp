@@ -152,15 +152,27 @@ error_t Client::_parseRequest(void)
 	}
 
 	SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
-	if (this->_context.response.statusCode() != NONE)
-	{
+	if (this->_context.response.statusCode() != NONE) {
 		SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
 		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 		this->_switchToWrite();
 		this->_context.responseBuffer = this->_context.response.response();
 	}
-	else
-		this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
+	else {
+		this->_context.ruleBlock = (void *)this->findServerBlock(this->_serverSocket, this->_context.headers["Host"]);
+		std::cerr << "ServerBlock: " << ((ServerBlock *)this->_context.ruleBlock)->names().at(0) << std::endl;
+		this->_context.ruleBlock = (void *)((ServerBlock *)this->_context.ruleBlock)->findLocationBlock(this->_context.target);
+		if (!this->_context.ruleBlock) {
+			this->_context.response.setStatusCode(NOT_FOUND);
+			SET_REQ_READ_COMPLETE(this->_context.requestState);
+			this->_switchToWrite();
+			this->_context.responseBuffer = this->_context.response.response();
+		}
+		else {
+			std::cerr << "RuleBlock: " << ((LocationBlock *)this->_context.ruleBlock)->path().string() << std::endl;
+			this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
+		}
+	}
 	return (REQ_DONE);
 }
 
@@ -334,11 +346,26 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
+const ServerBlock *Client::findServerBlock(fd_t fd, const std::string &host) const {
+	const std::vector<ServerBlock> &blocks = ((servermap_t *)(this->_context.ruleBlock))->at(fd);
+	for (uint32_t i = 0; i < blocks.size(); ++i) {
+		const std::vector<std::string> &names = blocks[i].names();
+		for (uint32_t j = 0; j < names.size(); ++j) {
+			if (0 == host.compare(names[j])) {
+				return &blocks[i];
+			}
+		}
+	}
+	return &blocks.front();
+}
+
 /* ************************************************************************** */
 
-error_t	Client::init(const int32_t requestSocket)
+error_t	Client::init(const fd_t serverSocket, const int32_t requestSocket, const servermap_t *serverBlocks)
 {
+	this->_context.ruleBlock = (void *)serverBlocks;
 	this->_socket = requestSocket;
+	this->_serverSocket = serverSocket;
 	struct epoll_event event;
 	event.events = EPOLLIN;
 	event.data.fd = this->_socket;

@@ -41,7 +41,7 @@
 typedef struct RequestContext_s {
 	uint32_t		requestState;
 
-	// Truc			&_truc;		// Server rules (reference or pointer)
+	void			*ruleBlock;
 	std::string		buffer;
 
 	Method			method;

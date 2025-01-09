@@ -19,7 +19,7 @@ public:
 	const std::vector<std::string>			&names(void) const;
 	const std::vector<LocationBlock>		&locations(void) const;
 
-	const LocationBlock &findLocationBlock(const Path &target) const;
+	const LocationBlock *findLocationBlock(const Path &target) const;
 
 	// SETTERS
 	void	addHost(const struct sockaddr_in &host);
@@ -31,5 +31,7 @@ private:
 	std::vector<std::string>		_names;
 	std::vector<LocationBlock>		_locations;
 };
+
+typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
 
 #endif /* ******************************************************************* */

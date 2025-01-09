@@ -37,7 +37,7 @@ const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
 }
 
-const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
+const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 	const std::vector<LocationBlock>	&locations = this->_locations;
 	const LocationBlock					*selected = NULL;
 	uint32_t							bestMatch = 0;
@@ -49,7 +49,7 @@ const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
 		}
 		if (locations[i].match(target)) {
 			if (path.prefixLength() == target.prefixLength()) {
-				return locations[i];
+				return &locations[i];
 			} else if (path.prefixLength() > bestMatch || !selected){
 				bestMatch = path.prefixLength();
 				selected = &locations[i];
@@ -57,8 +57,8 @@ const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
 		}
 	}
 	if (!selected)
-		throw std::string("404"); // TODO: change to std::exeption
-	return *selected;
+		return NULL;
+	return selected;
 }
 
 /* SETTERS ****************************************************************** */

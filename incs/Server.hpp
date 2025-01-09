@@ -10,7 +10,6 @@
 
 # define MAX_EVENTS 64
 
-typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
 typedef std::map<fd_t, std::vector<struct sockaddr_in> > bindmap_t;
 
 class Server {
@@ -22,8 +21,6 @@ public:
 	void	routine(void);
 
 	int32_t	epollFd(void) const;
-
-	const ServerBlock &findServerBlock(fd_t fd, const std::string &host) const;	
 
 private:
 	int32_t 					_epollFd;
