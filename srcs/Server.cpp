@@ -80,18 +80,6 @@ void Server::routine(void) {
 	}
 }
 
-const ServerBlock &Server::findServerBlock(fd_t fd, const std::string &host) const {
-	const std::vector<ServerBlock> &blocks = this->_serverBlocks.at(fd);
-	for (uint32_t i = 0; i < blocks.size(); ++i) {
-		const std::vector<std::string> &names = blocks[i].names();
-		for (uint32_t j = 0; j < names.size(); ++j) {
-			if (0 == host.compare(names[j])) {
-				return blocks[i];
-			}
-		}
-	}
-	return blocks.front();
-}
 
 fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host) {
 	fd_t fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
@@ -143,7 +131,7 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	if (-1 == this->_clients[requestSocket].init(requestSocket)) {
+	if (-1 == this->_clients[requestSocket].init(requestSocket, &this->_serverBlocks.at(socket))) {
 		return -1;
 	}
 	return 0;

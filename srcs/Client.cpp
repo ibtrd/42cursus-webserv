@@ -152,15 +152,25 @@ error_t Client::_parseRequest(void)
 	}
 
 	SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
-	if (this->_context.response.statusCode() != NONE)
-	{
-		SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
-		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-		this->_switchToWrite();
-		this->_context.responseBuffer = this->_context.response.response();
+
+	// Search for a rule block if no response has been set
+	if (this->_context.response.statusCode() == NONE) {
+		// Find rule block
+		this->_context.ruleBlock = (void *)this->findServerBlock(this->_context.headers["Host"]);
+		this->_context.ruleBlock = (void *)((ServerBlock *)this->_context.ruleBlock)->findLocationBlock(this->_context.target);
+		if (this->_context.ruleBlock) {
+			std::cerr << "RuleBlock: " << *((LocationBlock *)this->_context.ruleBlock) << std::endl;
+			this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
+			return (REQ_DONE);
+		}
+		std::cerr << "No rule block found" << std::endl;
+		this->_context.response.setStatusCode(NOT_FOUND);
 	}
-	else
-		this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
+
+	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	this->_switchToWrite();
+	this->_context.responseBuffer = this->_context.response.response();
 	return (REQ_DONE);
 }
 
@@ -214,7 +224,7 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 	this->_context.target = requestLine.substr(0, pos);
-	if (this->_context.target.empty())
+	if (this->_context.target.empty() || this->_context.target[0] != '/')
 	{
 		this->_context.response.setStatusCode(BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -334,10 +344,24 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
+const ServerBlock *Client::findServerBlock(const std::string &host) const {
+	const std::vector<ServerBlock> &blocks = *(std::vector<ServerBlock> *)(this->_context.ruleBlock);
+	for (uint32_t i = 0; i < blocks.size(); ++i) {
+		const std::vector<std::string> &names = blocks[i].names();
+		for (uint32_t j = 0; j < names.size(); ++j) {
+			if (0 == host.compare(names[j])) {
+				return &blocks[i];
+			}
+		}
+	}
+	return &blocks.front();
+}
+
 /* ************************************************************************** */
 
-error_t	Client::init(const int32_t requestSocket)
+error_t	Client::init(const int32_t requestSocket, const void *serverBlocks)
 {
+	this->_context.ruleBlock = (void *)serverBlocks;
 	this->_socket = requestSocket;
 	struct epoll_event event;
 	event.events = EPOLLIN;

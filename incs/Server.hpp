@@ -23,8 +23,6 @@ public:
 
 	int32_t	epollFd(void) const;
 
-	const ServerBlock &findServerBlock(fd_t fd, const std::string &host) const;	
-
 private:
 	int32_t 					_epollFd;
 	servermap_t					_serverBlocks;

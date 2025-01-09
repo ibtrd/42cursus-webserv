@@ -6,7 +6,7 @@
 #    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2024/12/27 21:41:27 by ibertran         ###   ########lyon.fr    #
+#    Updated: 2025/01/09 15:22:10 by ibertran         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -22,7 +22,6 @@ include SRCS.mk
 OBJS = $(patsubst %.cpp,$(BUILD_DIR)%.o,$(SRCS))
 
 DEPS = $(patsubst %.o,%.d,$(OBJS))
--include $(DEPS)
 
 # *** LIBRARIES && INCLUDES  ************************************************* #
 
@@ -65,6 +64,8 @@ $(NAME) : FORCE
 endif
 
 # *** TARGETS **************************************************************** #
+
+-include $(DEPS)
 
 .DEFAULT_GOAL := all
 

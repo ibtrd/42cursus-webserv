@@ -54,6 +54,8 @@ error_t	RequestGET::process(void)
 {
 	std::cerr << "RequestGET process" << std::endl;
 
+	// std::cerr << "ServerBlock: " << ((ServerBlock *)this->_context.ruleBlock)->names().at(0) << std::endl;
+
 	// debug 418 start
 	this->_context.response.setStatusCode(I_AM_A_TEAPOT);
 	// this->_context.response.setBody("Hello, World!");

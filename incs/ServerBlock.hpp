@@ -25,7 +25,7 @@ public:
 	void	addName(const std::string &name);
 	void	addLocation(const LocationBlock &location);
 
-	const LocationBlock	&findLocationBlock(const Path &target) const;
+	const LocationBlock	*findLocationBlock(const Path &target) const;
 
 	void	fillLocations(const LocationBlock &location);
 
