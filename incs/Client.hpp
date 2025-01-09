@@ -14,7 +14,6 @@ private:
 	static	ARequest	*(*_requestsBuilder[INVAL_METHOD])(RequestContext_t &);
 	
 	fd_t			_socket;
-	fd_t			_serverSocket;
 
 	ARequest			*_request;
 	RequestContext_t	_context;
@@ -29,7 +28,7 @@ private:
 	error_t	_switchToWrite(void);
 	error_t	_sendResponse(void);
 
-	const ServerBlock *findServerBlock(fd_t fd, const std::string &host) const;	
+	const ServerBlock *findServerBlock(const std::string &host) const;	
 
 public:
 	Client(void);
@@ -39,7 +38,7 @@ public:
 
 	Client	&operator=(const Client &other);
 
-	error_t		init(const fd_t serverSocket, const fd_t requestSocket, const servermap_t *serverBlocks);
+	error_t		init(const fd_t requestSocket, const void *serverBlocks);
 	error_t		handle(void);
 
 	// GETTERS

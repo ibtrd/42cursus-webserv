@@ -131,7 +131,7 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	if (-1 == this->_clients[requestSocket].init(socket, requestSocket, &this->_serverBlocks)) {
+	if (-1 == this->_clients[requestSocket].init(requestSocket, &this->_serverBlocks.at(socket))) {
 		return -1;
 	}
 	return 0;

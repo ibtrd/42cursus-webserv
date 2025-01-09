@@ -156,7 +156,7 @@ error_t Client::_parseRequest(void)
 	// Search for a rule block if no response has been set
 	if (this->_context.response.statusCode() == NONE) {
 		// Find rule block
-		this->_context.ruleBlock = (void *)this->findServerBlock(this->_serverSocket, this->_context.headers["Host"]);
+		this->_context.ruleBlock = (void *)this->findServerBlock(this->_context.headers["Host"]);
 		this->_context.ruleBlock = (void *)((ServerBlock *)this->_context.ruleBlock)->findLocationBlock(this->_context.target);
 		if (this->_context.ruleBlock) {
 			std::cerr << "RuleBlock: " << *((LocationBlock *)this->_context.ruleBlock) << std::endl;
@@ -344,8 +344,8 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
-const ServerBlock *Client::findServerBlock(fd_t fd, const std::string &host) const {
-	const std::vector<ServerBlock> &blocks = ((servermap_t *)(this->_context.ruleBlock))->at(fd);
+const ServerBlock *Client::findServerBlock(const std::string &host) const {
+	const std::vector<ServerBlock> &blocks = *(std::vector<ServerBlock> *)(this->_context.ruleBlock);
 	for (uint32_t i = 0; i < blocks.size(); ++i) {
 		const std::vector<std::string> &names = blocks[i].names();
 		for (uint32_t j = 0; j < names.size(); ++j) {
@@ -359,11 +359,10 @@ const ServerBlock *Client::findServerBlock(fd_t fd, const std::string &host) con
 
 /* ************************************************************************** */
 
-error_t	Client::init(const fd_t serverSocket, const int32_t requestSocket, const servermap_t *serverBlocks)
+error_t	Client::init(const int32_t requestSocket, const void *serverBlocks)
 {
 	this->_context.ruleBlock = (void *)serverBlocks;
 	this->_socket = requestSocket;
-	this->_serverSocket = serverSocket;
 	struct epoll_event event;
 	event.events = EPOLLIN;
 	event.data.fd = this->_socket;

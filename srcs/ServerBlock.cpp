@@ -56,8 +56,6 @@ const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 			}
 		}
 	}
-	if (!selected)
-		return NULL;
 	return selected;
 }
 

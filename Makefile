@@ -3,10 +3,10 @@
 #                                                         :::      ::::::::    #
 #    Makefile                                           :+:      :+:    :+:    #
 #                                                     +:+ +:+         +:+      #
-#    By: kchillon <kchillon@student.42lyon.fr>      +#+  +:+       +#+         #
+#    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2025/01/09 13:52:24 by kchillon         ###   ########lyon.fr    #
+#    Updated: 2025/01/09 15:22:10 by ibertran         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -38,7 +38,7 @@ DEFINES		=
 
 CPPFLAGS 	=	$(addprefix -I, $(INCS)) \
 				$(addprefix -D, $(DEFINES)) \
-				-MMD -MP \
+				-MD -MP \
 
 MAKEFLAGS	=	--no-print-directory
 
