@@ -29,6 +29,8 @@ public:
 private:
 	std::string					_str;
 	std::vector<std::string>	_chunks;
+
+	friend std::ostream &operator<<(std::ostream &os, const Path &path);
 };
 
 #endif /* ******************************************************************* */

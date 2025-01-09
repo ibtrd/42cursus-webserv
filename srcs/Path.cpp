@@ -91,3 +91,9 @@ std::string Path::extension(void) const {
 const std::string &Path::string(void) const {
 	return this->_str;
 }
+
+/* ************************************************************************** */
+
+std::ostream &operator<<(std::ostream &os, const Path &path) {
+	return os << path.string();
+}

@@ -61,6 +61,12 @@ const LocationBlock &ServerBlock::findLocationBlock(const Path &target) const {
 	return *selected;
 }
 
+void ServerBlock::fillLocations(const LocationBlock &location) {
+	for (uint32_t i = 0; i < this->_locations.size() ;++i) {
+		this->_locations[i].fill(location);
+	}
+}
+
 /* SETTERS ****************************************************************** */
 
 void ServerBlock::addHost(const struct sockaddr_in &host) {
@@ -74,5 +80,3 @@ void ServerBlock::addName(const std::string &name) {
 void ServerBlock::addLocation(const LocationBlock &location) {
 	this->_locations.push_back(location);
 }
-
-/* EXCEPTIONS *************************************************************** */

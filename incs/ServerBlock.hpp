@@ -19,12 +19,15 @@ public:
 	const std::vector<std::string>			&names(void) const;
 	const std::vector<LocationBlock>		&locations(void) const;
 
-	const LocationBlock &findLocationBlock(const Path &target) const;
 
 	// SETTERS
 	void	addHost(const struct sockaddr_in &host);
 	void	addName(const std::string &name);
 	void	addLocation(const LocationBlock &location);
+
+	const LocationBlock	&findLocationBlock(const Path &target) const;
+
+	void	fillLocations(const LocationBlock &location);
 
 private:
 	std::vector<struct sockaddr_in>	_hosts;
