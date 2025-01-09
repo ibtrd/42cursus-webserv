@@ -35,6 +35,4 @@ private:
 	std::vector<LocationBlock>		_locations;
 };
 
-typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
-
 #endif /* ******************************************************************* */
