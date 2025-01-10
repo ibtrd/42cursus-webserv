@@ -21,6 +21,7 @@ public:
 
 	void	configure(const Configuration &config);
 	void	routine(void);
+	const std::string	&getMimeType(const std::string &ext) const;
 
 	int32_t	epollFd(void) const;
 

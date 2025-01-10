@@ -85,6 +85,13 @@ void Server::routine(void) {
 	}
 }
 
+const std::string &Server::getMimeType(const std::string &ext) const {
+	std::map<std::string, std::string>::const_iterator it = this->_mimetypes.find(ext);
+	if (it == this->_mimetypes.end()) {
+		return this->_mimetypes.at("default");
+	}
+	return it->second;
+}
 
 fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host) {
 	fd_t fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
@@ -171,6 +178,7 @@ error_t Server::_loadMimeTypes(void)
 			this->_mimetypes[ext] = type;
 		}
 	}
+	this->_mimetypes["default"] = "application/octet-stream";
 	// DEBUG
 	// for (std::map<std::string, std::string>::const_iterator it = this->_mimetypes.begin(); it != this->_mimetypes.end(); ++it) {
 	// 	std::cout << it->first << " -> " << it->second << std::endl;
