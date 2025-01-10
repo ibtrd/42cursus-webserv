@@ -15,16 +15,17 @@ public:
 
 	Path	&operator=(const Path &other);
 
-	const std::string	&string(void) const;
-	std::string			extension(void) const;
-
 	bool	isOriginForm(void) const;
 	bool	isFile(void) const;
 	bool	isDir(void) const;
 
+	const std::string	&string(void) const;
+
+	std::string	extension(void) const;
 	uint32_t	length(void) const;
 	uint32_t	prefixLength(void) const;
 	bool		prefixMatch(const Path &other) const;
+	std::string	concat(const Path &other) const;
 
 private:
 	std::string					_str;

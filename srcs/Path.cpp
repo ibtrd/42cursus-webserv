@@ -42,6 +42,27 @@ Path &Path::operator=(const Path &other) {
 
 /* ************************************************************************** */
 
+bool Path::isOriginForm(void) const {
+	return (!this->_str.empty() && '/' == *this->_str.begin());
+}
+
+bool Path::isFile(void) const {
+	return (!this->_str.empty() && '/' != *this->_str.rbegin());
+}
+
+bool Path::isDir(void) const {
+	return (!this->_str.empty() && '/' == *this->_str.rbegin());
+}
+
+std::string Path::extension(void) const {
+	const std::string &src = this->_chunks.back();
+	const std::size_t pos = src.find_last_of('.');
+	if (pos != std::string::npos && pos != src.size() - 1) {
+		return src.substr(pos);
+	}
+	return std::string();
+}
+
 uint32_t Path::length(void) const {
 	return this->_chunks.size();
 }
@@ -65,25 +86,11 @@ bool Path::prefixMatch(const Path &other) const {
 	return true;
 }
 
-bool Path::isOriginForm(void) const {
-	return (!this->_str.empty() && '/' == *this->_str.begin());
-}
-
-bool Path::isFile(void) const {
-	return (!this->_str.empty() && '/' != *this->_str.rbegin());
-}
-
-bool Path::isDir(void) const {
-	return (!this->_str.empty() && '/' == *this->_str.rbegin());
-}
-
-std::string Path::extension(void) const {
-	const std::string &src = this->_chunks.back();
-	const std::size_t pos = src.find_last_of('.');
-	if (pos != std::string::npos && pos != src.size() - 1) {
-		return src.substr(pos);
+std::string Path::concat(const Path &other) const {
+	if (this->isDir() && other.isOriginForm()) {
+		return this->_str + other._str.substr(1);
 	}
-	return std::string();
+	return this->_str + other._str;
 }
 
 /* GETTERS ****************************************************************** */
