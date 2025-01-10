@@ -23,7 +23,7 @@
 // The body has been read
 # define REQ_STATE_READ_BODY_COMPLETE			0x00000004
 // The request has been read
-# define REQ_STATE_READ_COMPLETE				0x0000000F
+# define REQ_STATE_READ_COMPLETE				0x00000007
 // The request has been processed
 # define REQ_STATE_PROCESS_COMPLETE				0x00000010
 // The response can be written

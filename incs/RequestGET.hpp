@@ -5,6 +5,7 @@
 
 class RequestGET : public ARequest {
 private:
+	std::string		_path;
 
 public:
 	RequestGET(RequestContext_t &context);
