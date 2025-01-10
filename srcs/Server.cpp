@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <algorithm>
 #include <csignal>
+#include <fstream>
 
 #include "Server.hpp"
 #include "ft.hpp"
@@ -46,6 +47,10 @@ void Server::configure(const Configuration &config) {
 				this->_serverBlocks[it->first].push_back(blocks[i]);
 			}
 		}
+	}
+
+	if (-1 == this->_loadMimeTypes()) {
+		throw std::runtime_error("Failed to load mime types");
 	}
 }
 
@@ -141,6 +146,36 @@ void Server::_removeConnection(const int32_t socket) {
 	this->_clients.erase(socket);
 	close(socket);
 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
+}
+
+error_t Server::_loadMimeTypes(void)
+{
+	std::ifstream file(MIME_TYPE_FILE);
+	if (!file.is_open()) {
+		return -1;
+	}
+	std::string line;
+	while (std::getline(file, line)) {
+		if (line[0] == '#' || line.empty()) {
+			continue;
+		}
+		std::istringstream iss(line);
+		std::string type;
+		iss >> type;
+		while (iss) {
+			std::string ext;
+			iss >> ext;
+			if (ext.empty()) {
+				break;
+			}
+			this->_mimetypes[ext] = type;
+		}
+	}
+	// DEBUG
+	// for (std::map<std::string, std::string>::const_iterator it = this->_mimetypes.begin(); it != this->_mimetypes.end(); ++it) {
+	// 	std::cout << it->first << " -> " << it->second << std::endl;
+	// }
+	return 0;
 }
 
 int32_t	Server::epollFd(void) const {

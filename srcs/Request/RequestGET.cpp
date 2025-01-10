@@ -46,15 +46,13 @@ RequestGET	&RequestGET::operator=(const RequestGET &other)
 error_t	RequestGET::parse(void)
 {
 	std::cerr << "RequestGET parse" << std::endl;
-
+	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);	// GET requests have no body
 	return (REQ_DONE);
 }
 
 error_t	RequestGET::process(void)
 {
 	std::cerr << "RequestGET process" << std::endl;
-
-	// std::cerr << "ServerBlock: " << ((ServerBlock *)this->_context.ruleBlock)->names().at(0) << std::endl;
 
 	// debug 418 start
 	this->_context.response.setStatusCode(I_AM_A_TEAPOT);
