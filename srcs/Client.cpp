@@ -151,7 +151,7 @@ error_t Client::_parseRequest(void)
 			return (ret);
 	}
 
-	SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
+	// SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
 
 	// Search for a rule block if no response has been set
 	if (this->_context.response.statusCode() == NONE) {
