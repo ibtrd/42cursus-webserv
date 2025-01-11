@@ -39,21 +39,6 @@ typedef enum {
 	HTTP_VERSION_NOT_SUPPORTED = 505
 } StatusCode;
 
-typedef enum {
-	GET,
-	POST,
-	DELETE,
-	INVAL_METHOD
-} Method;
-
-// typedef enum {
-// 	INVAL_HEADER,
-// 	CONTENT_LENGTH,
-// 	CONTENT_TYPE
-// } Header;
-
-Method		stringToMethod(const std::string &method);
-std::string	methodToString(const Method method);
 std::string	statusCodeToReason(const StatusCode code);
 
 #endif

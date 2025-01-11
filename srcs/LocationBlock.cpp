@@ -1,12 +1,11 @@
-#include <stdexcept>
 
 #include "LocationBlock.hpp"
-#include "webdef.hpp"
+#include "Method.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed = DEFAULT_METHODS;
+	this->_allowed = DEFAULT_ALLOW;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 	this->_redirection = DEFAULT_REDIRECTON;
@@ -17,7 +16,7 @@ LocationBlock::LocationBlock(const LocationBlock &other) {
 }
 
 LocationBlock::LocationBlock(const Path &path) : _path(path) {
-	this->_allowed = DEFAULT_METHODS;
+	this->_allowed = DEFAULT_ALLOW;
 	this->_dirListing = DEFAULT_DIRLISTING;
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 	this->_redirection = DEFAULT_REDIRECTON;
@@ -66,8 +65,8 @@ void LocationBlock::fill(const LocationBlock &other) {
 /* SETTERS ****************************************************************** */
 
 error_t LocationBlock::allowMethod(const std::string &str) {
-	for (std::size_t i = 0; i < LocationBlock::methods.size(); ++i) {
-		if (0 == LocationBlock::methods[i].compare(str)) {
+	for (std::size_t i = 0; i < Method::methods.size(); ++i) {
+		if (0 == Method::methods[i].compare(str)) {
 			this->_allowed |= (1 << i);
 			return 0;
 		}
@@ -141,7 +140,7 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 }
 
 bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = LocationBlock::methods;
+	const std::vector<std::string> &methods = Method::methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(method)) {
@@ -149,18 +148,6 @@ bool LocationBlock::isAllowed(const std::string &method) const {
 		}
 	}
 	return false;
-}
-
-/* STATICS ****************************************************************** */
-
-const std::vector<std::string> LocationBlock::methods = LocationBlock::_initMethods();
-
-std::vector<std::string> LocationBlock::_initMethods(void) {
-	std::vector<std::string>	methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
-	return methods;
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
@@ -173,9 +160,9 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 		os << (location._dirListing ? DIRLISTING_ON : DIRLISTING_OFF);
 	}
 		os << "\n\tallowed: ";
-	for (uint32_t i = 0; i < LocationBlock::methods.size(); ++i) {
-		if (location.isAllowed(LocationBlock::methods[i])) {
-			os << LocationBlock::methods[i] << " ";
+	for (uint32_t i = 0; i < Method::methods.size(); ++i) {
+		if (location.isAllowed(Method::methods[i])) {
+			os << Method::methods[i] << " ";
 		}
 	}
 	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;

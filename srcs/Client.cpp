@@ -11,13 +11,15 @@
 #include "RequestPOST.hpp"
 #include "RequestDELETE.hpp"
 #include "Server.hpp"
+#include "RequestPUT.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 int32_t	Client::_epollFd = -1;
 ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
 	createRequestPOST,
-	createRequestDELETE
+	createRequestDELETE,
+	createRequestPUT,
 };
 
 /* CONSTRUCTORS ************************************************************* */
@@ -160,7 +162,7 @@ error_t Client::_parseRequest(void)
 		this->_context.ruleBlock = this->_findRuleBlock();
 		if (this->_context.ruleBlock) {
 			std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
-			this->_request = Client::_requestsBuilder[this->_context.method](this->_context);
+			this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
 			return (REQ_DONE);
 		}
 		std::cerr << "No rule block found" << std::endl;
@@ -191,7 +193,7 @@ error_t Client::_parseRequestLine(void)
 
 	// Parse request line
 
-	// Method
+	// method_t
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
@@ -206,9 +208,10 @@ error_t Client::_parseRequestLine(void)
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	this->_context.method = stringToMethod(method);
+	this->_context.method = Method(method);
+	std::cerr << this->_context.method.index() << std::endl;
 	requestLine.erase(0, pos + 1);
-	if (this->_context.method == INVAL_METHOD)
+	if (!this->_context.method.isValid())
 	{
 		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -247,7 +250,7 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 
-	std::cerr << "Method: |" << methodToString(this->_context.method) << "|" << std::endl;
+	std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
 	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
 	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 

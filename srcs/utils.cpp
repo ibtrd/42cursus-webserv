@@ -4,32 +4,6 @@
 
 #include <sstream>
 
-Method		stringToMethod(const std::string &method)
-{
-	if (method == "GET")
-		return (GET);
-	if (method == "POST")
-		return (POST);
-	if (method == "DELETE")
-		return (DELETE);
-	return (INVAL_METHOD);
-}
-
-std::string		methodToString(const Method method)
-{
-	switch (method)
-	{
-		case GET:
-			return ("GET");
-		case POST:
-			return ("POST");
-		case DELETE:
-			return ("DELETE");
-		default:
-			return ("INVALID METHOD");
-	}
-}
-
 std::string		statusCodeToReason(const StatusCode code)
 {
 	switch (code)

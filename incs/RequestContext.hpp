@@ -3,8 +3,7 @@
 
 # include "webdef.hpp"
 # include "Response.hpp"
-// # include "Server.hpp"
-// # include "LocationBlock.hpp"
+# include "Method.hpp"
 
 # define REQ_BUFFER_SIZE 1024
 

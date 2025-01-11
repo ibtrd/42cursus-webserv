@@ -1,11 +1,5 @@
-#include <sys/epoll.h>
-#include <unistd.h>
 #include <iostream>
-#include <sys/socket.h>
-#include <cerrno>
-#include <cstring>
 
-#include "ARequest.hpp"
 #include "Client.hpp"
 
 /* CONSTRUCTORS ************************************************************* */

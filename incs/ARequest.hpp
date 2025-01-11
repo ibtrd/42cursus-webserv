@@ -3,8 +3,7 @@
 
 # include "RequestContext.hpp"
 
-# include <string>
-# include <map>
+# include <vector>
 
 class Client;
 
