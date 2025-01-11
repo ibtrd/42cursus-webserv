@@ -22,6 +22,7 @@ public:
 	void	configure(const Configuration &config);
 	void	routine(void);
 	const std::string	&getMimeType(const std::string &ext) const;
+	const ServerBlock	&findServerBlock(const fd_t socket, const std::string &host) const;
 
 	int32_t	epollFd(void) const;
 

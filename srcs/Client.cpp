@@ -10,6 +10,7 @@
 #include "RequestGET.hpp"
 #include "RequestPOST.hpp"
 #include "RequestDELETE.hpp"
+#include "Server.hpp"
 #include "RequestPUT.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
@@ -158,11 +159,9 @@ error_t Client::_parseRequest(void)
 	// Search for a rule block if no response has been set
 	if (this->_context.response.statusCode() == NONE) {
 		// Find rule block
-		this->_context.ruleBlock = (void *)this->findServerBlock(this->_context.headers["Host"]);
-		std::cerr << ((ServerBlock *)this->_context.ruleBlock)->names().front() << std::endl;
-		this->_context.ruleBlock = (void *)((ServerBlock *)this->_context.ruleBlock)->findLocationBlock(this->_context.target);
+		this->_context.ruleBlock = this->_findRuleBlock();
 		if (this->_context.ruleBlock) {
-			std::cerr << "RuleBlock: " << *((LocationBlock *)this->_context.ruleBlock) << std::endl;
+			std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
 			this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
 			return (REQ_DONE);
 		}
@@ -302,13 +301,19 @@ error_t	Client::_process(void)
 {
 	error_t	ret;
 
-	ret = this->_request->parse();
-	if (ret != REQ_DONE)
-		return (ret);
+	if (!IS_REQ_READ_BODY_COMPLETE(this->_context.requestState))
+	{
+		ret = this->_request->parse();
+		if (ret != REQ_DONE)
+			return (ret);
+	}
 
-	ret = this->_request->process();
-	if (ret != REQ_ERROR)
-		return (ret);
+	if (!IS_REQ_PROCESS_COMPLETE(this->_context.requestState))
+	{
+		ret = this->_request->process();
+		if (ret != REQ_DONE)
+			return (ret);
+	}
 
 	return (REQ_DONE);
 }
@@ -348,24 +353,23 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
-const ServerBlock *Client::findServerBlock(const std::string &host) const {
-	const std::vector<ServerBlock> &blocks = *(std::vector<ServerBlock> *)(this->_context.ruleBlock);
-	for (uint32_t i = 0; i < blocks.size(); ++i) {
-		const std::vector<std::string> &names = blocks[i].names();
-		for (uint32_t j = 0; j < names.size(); ++j) {
-			if (0 == host.compare(names[j])) {
-				return &blocks[i];
-			}
-		}
-	}
-	return &blocks.front();
+const LocationBlock *Client::_findRuleBlock(void)
+{
+	// ServerBlock		&block = this->_context.server.findServerBlock(this->_idSocket, this->_context.headers["Host"]);
+	// LocationBlock	*ruleBlock = block.findLocationBlock(this->_context.target);
+	// return (ruleBlock);
+	return (this->_context.server
+		->findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findLocationBlock(this->_context.target));
 }
 
 /* ************************************************************************** */
 
-error_t	Client::init(const int32_t requestSocket, const void *serverBlocks)
+error_t	Client::init(const fd_t idSocket, const fd_t requestSocket, const Server *server)
 {
-	this->_context.ruleBlock = (void *)serverBlocks;
+	this->_context.server = server;
+	this->_context.requestState = REQ_STATE_NONE;
+	this->_idSocket = idSocket;
 	this->_socket = requestSocket;
 	struct epoll_event event;
 	event.events = EPOLLIN;
@@ -375,7 +379,6 @@ error_t	Client::init(const int32_t requestSocket, const void *serverBlocks)
 		return (-1);
 	}
 	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
-	this->_context.requestState = REQ_STATE_NONE;
 	return (0);
 }
 

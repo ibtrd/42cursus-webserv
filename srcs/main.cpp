@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
 
 	try {
 		Configuration conf(argc, argv);
-		
+
 		if (conf.noRun()) {
 			return 0;
 		}

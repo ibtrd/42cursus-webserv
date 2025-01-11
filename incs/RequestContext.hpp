@@ -24,7 +24,7 @@
 // The body has been read
 # define REQ_STATE_READ_BODY_COMPLETE			0x00000004
 // The request has been read
-# define REQ_STATE_READ_COMPLETE				0x0000000F
+# define REQ_STATE_READ_COMPLETE				0x00000007
 // The request has been processed
 # define REQ_STATE_PROCESS_COMPLETE				0x00000010
 // The response can be written
@@ -50,10 +50,14 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
-typedef struct RequestContext_s {
-	uint32_t		requestState;
+class Server;
+class LocationBlock;
 
-	void			*ruleBlock;
+typedef struct RequestContext_s {
+	Server const		*server;
+	LocationBlock const *ruleBlock;
+
+	uint32_t		requestState;
 	std::string		buffer;
 
 	Method			method;
