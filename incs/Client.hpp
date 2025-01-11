@@ -39,7 +39,8 @@ public:
 	Client	&operator=(const Client &other);
 
 	error_t		init(const fd_t idSocket, const fd_t requestSocket, Server const *server);
-	error_t		handle(void);
+	error_t		handle_in(void);
+	error_t		handle_out(void);
 
 	// GETTERS
 

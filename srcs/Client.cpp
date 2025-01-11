@@ -382,7 +382,7 @@ error_t	Client::init(const fd_t idSocket, const fd_t requestSocket, const Server
 	return (0);
 }
 
-error_t	Client::handle(void)
+error_t	Client::handle_in(void)
 {
 	error_t	ret;
 

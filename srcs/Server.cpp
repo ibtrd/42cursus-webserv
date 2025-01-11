@@ -62,11 +62,19 @@ void Server::routine(void) {
 		return ;
 	}
 	for(int i = 0; i < nfds; i++) {
-      int32_t fd = this->_events[i].data.fd;
-		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
+		int32_t fd = this->_events[i].data.fd;
+
+		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end())
+		{
 			this->_addConnection(fd);
-		} else {
-			switch (this->_clients[fd].handle())
+			continue;
+		}
+		if (this->_events[i].events & EPOLLIN) {
+			if (this->_inHandlers.find(fd) == this->_inHandlers.end()) {
+				std::cerr << "No handler for input on fd " << fd << std::endl;
+				continue;
+			}
+			switch (this->_inHandlers[fd](fd))
 			{
 			case REQ_ERROR:
 				std::cerr << "Close connection (Error)" << std::endl;
@@ -77,10 +85,34 @@ void Server::routine(void) {
 				std::cerr << "Close connection (Done)" << std::endl;
 				this->_removeConnection(fd);
 				break;
-
+			
 			default:
 				break;
 			}
+		}
+		else if (this->_events[i].events & EPOLLOUT) {
+			if (this->_outHandlers.find(fd) == this->_outHandlers.end()) {
+				std::cerr << "No handler for output on fd " << fd << std::endl;
+				continue;
+			}
+			switch (this->_outHandlers[fd](fd))
+			{
+			case REQ_ERROR:
+				std::cerr << "Close connection (Error)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+			
+			case REQ_DONE:
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+			
+			default:
+				break;
+			}
+		}
+		else {
+			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
 }
@@ -157,16 +189,24 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	if (-1 == this->_clients[requestSocket].init(socket, requestSocket, this)) {
+	this->_clients.push_front(Client());
+	if (-1 == this->_clients.front().init(socket, requestSocket, this)) {
 		return -1;
 	}
+	this->_fdClientMap[requestSocket] = this->_clients.begin();
 	return 0;
 }
 
-void Server::_removeConnection(const int32_t socket) {
-	this->_clients.erase(socket);
-	close(socket);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, socket, NULL);
+void Server::_removeConnection(const fd_t fd) {
+	std::list<Client>::iterator tmp = this->_fdClientMap[fd];
+	fd_t fds[2] = tmp.doneMoiTesFds();
+	this->_fdClientMap.erase(fd[0]);
+	this->_fdClientMap.erase(fd[1]);
+	close(fd[0]);
+	close(fd[1]);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd[0], NULL);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd[1], NULL);
+	this->_clients.erase(tmp);
 }
 
 error_t Server::_loadMimeTypes(void)

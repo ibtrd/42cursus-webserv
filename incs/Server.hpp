@@ -7,6 +7,7 @@
 # include <stdint.h>
 # include <sys/epoll.h>
 # include <map>
+# include <list>
 
 # define MAX_EVENTS 64
 # define MIME_TYPE_FILE "/etc/mime.types"
@@ -27,11 +28,12 @@ public:
 	int32_t	epollFd(void) const;
 
 private:
-	int32_t 							_epollFd;
-	servermap_t							_serverBlocks;
-	struct epoll_event 					_events[MAX_EVENTS];
-	std::map<int32_t, Client>			_clients;
-	std::map<std::string, std::string>	_mimetypes;
+	int32_t 									_epollFd;
+	servermap_t									_serverBlocks;
+	struct epoll_event 							_events[MAX_EVENTS];
+	std::list<Client>							_clients;
+	std::map<fd_t, std::list<Client>::iterator>	_fdClientMap;
+	std::map<std::string, std::string>			_mimetypes;
 
 	fd_t	_addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t	_addConnection(const int32_t socket);
