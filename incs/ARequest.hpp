@@ -8,9 +8,6 @@
 class Client;
 
 class ARequest {
-private:
-	static std::vector<std::string>	_initMethods(void);
-
 protected:
 	RequestContext_t	&_context;
 
@@ -26,9 +23,6 @@ public:
 	virtual error_t	process(void) = 0;
 
 	virtual ARequest	*clone(void) const = 0;
-
-	// STATICS
-	static const std::vector<std::string>	methods;
 };
 
 #endif /* ******************************************************************* */

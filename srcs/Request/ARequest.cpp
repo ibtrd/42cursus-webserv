@@ -44,16 +44,3 @@ ARequest	&ARequest::operator=(const ARequest &other)
 /* SETTERS ****************************************************************** */
 
 /* EXCEPTIONS *************************************************************** */
-
-/* STATICS ****************************************************************** */
-
-const std::vector<std::string> ARequest::methods = ARequest::_initMethods();
-
-std::vector<std::string> ARequest::_initMethods(void) {
-	std::vector<std::string>	methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
-	methods.push_back("PUT");
-	return methods;
-}

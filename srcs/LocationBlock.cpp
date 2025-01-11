@@ -1,6 +1,6 @@
 
 #include "LocationBlock.hpp"
-#include "ARequest.hpp"
+#include "Method.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -65,8 +65,8 @@ void LocationBlock::fill(const LocationBlock &other) {
 /* SETTERS ****************************************************************** */
 
 error_t LocationBlock::allowMethod(const std::string &str) {
-	for (std::size_t i = 0; i < ARequest::methods.size(); ++i) {
-		if (0 == ARequest::methods[i].compare(str)) {
+	for (std::size_t i = 0; i < Method::methods.size(); ++i) {
+		if (0 == Method::methods[i].compare(str)) {
 			this->_allowed |= (1 << i);
 			return 0;
 		}
@@ -140,7 +140,7 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 }
 
 bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = ARequest::methods;
+	const std::vector<std::string> &methods = Method::methods;
 
 	for (std::size_t i = 0; i < methods.size(); ++i) {
 		if (0 == methods[i].compare(method)) {
@@ -160,9 +160,9 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 		os << (location._dirListing ? DIRLISTING_ON : DIRLISTING_OFF);
 	}
 		os << "\n\tallowed: ";
-	for (uint32_t i = 0; i < ARequest::methods.size(); ++i) {
-		if (location.isAllowed(ARequest::methods[i])) {
-			os << ARequest::methods[i] << " ";
+	for (uint32_t i = 0; i < Method::methods.size(); ++i) {
+		if (location.isAllowed(Method::methods[i])) {
+			os << Method::methods[i] << " ";
 		}
 	}
 	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;

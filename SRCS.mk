@@ -10,6 +10,7 @@ SRC = \
 	signal \
 	utils \
 	Path \
+	Method \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/
@@ -31,5 +32,6 @@ REQUEST_SRC = \
 	RequestGET \
 	RequestPOST \
 	RequestDELETE \
+	RequestPUT \
 
 SRCS := $(addsuffix .cpp, $(SRC))
