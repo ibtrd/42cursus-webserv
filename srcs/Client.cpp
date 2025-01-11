@@ -1,12 +1,8 @@
-#include <sys/epoll.h>
 #include <unistd.h>
 #include <iostream>
-#include <sys/socket.h>
 #include <cerrno>
 #include <cstring>
-# include <dirent.h>
 
-#include "Client.hpp"
 #include "RequestGET.hpp"
 #include "RequestPOST.hpp"
 #include "RequestDELETE.hpp"
@@ -14,6 +10,7 @@
 #include "RequestPUT.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
+
 int32_t	Client::_epollFd = -1;
 ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
@@ -161,10 +158,15 @@ error_t Client::_parseRequest(void)
 		// Find rule block
 		this->_context.ruleBlock = this->_findRuleBlock();
 		if (this->_context.ruleBlock) {
-			std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
-			this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
-			return (REQ_DONE);
+			if (false == this->_isAllowedMethod()) {
+				this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+			} else {
+				std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
+				this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
+				return (REQ_DONE);
+			}
 		}
+	} else {
 		std::cerr << "No rule block found" << std::endl;
 		this->_context.response.setStatusCode(NOT_FOUND);
 	}
@@ -361,6 +363,10 @@ const LocationBlock *Client::_findRuleBlock(void)
 	return (this->_context.server
 		->findServerBlock(this->_idSocket, this->_context.headers["Host"])
 		.findLocationBlock(this->_context.target));
+}
+
+bool Client::_isAllowedMethod(void) const {
+	return this->_context.ruleBlock->isAllowed(this->_context.method);
 }
 
 /* ************************************************************************** */

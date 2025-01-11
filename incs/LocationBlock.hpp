@@ -5,6 +5,7 @@
 
 # include "Path.hpp"
 # include "webdef.hpp"
+# include "Method.hpp"
 
 # define DEFAULT_ALLOW 0
 # define DEFAULT_DIRLISTING -1
@@ -38,7 +39,7 @@ public:
 
 	// GETTERS
 	const Path			&path(void) const;
-	bool				isAllowed(const std::string &method) const;
+	bool				isAllowed(const Method &method) const;
 	bool				isDirListing(void) const;
 	int32_t				getMaxBodySize(void) const;
 	const Path		 	&getRoot(void) const;

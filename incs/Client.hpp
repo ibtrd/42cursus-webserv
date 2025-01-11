@@ -21,14 +21,16 @@ private:
 
 	const std::string	_requestStateStr(void) const;
 
-	error_t			_readSocket(void);
-	error_t			_parseRequest(void);
-	error_t			_parseRequestLine(void);
-	error_t			_parseHeaders(void);
-	error_t			_process(void);
-	error_t			_switchToWrite(void);
-	error_t			_sendResponse(void);
+	error_t				_readSocket(void);
+	error_t				_parseRequest(void);
+	error_t				_parseRequestLine(void);
+	error_t				_parseHeaders(void);
+	error_t				_process(void);
+	error_t				_switchToWrite(void);
+	error_t				_sendResponse(void);
 	const LocationBlock	*_findRuleBlock(void);
+
+	bool				_isAllowedMethod(void) const;
 
 public:
 	Client(void);

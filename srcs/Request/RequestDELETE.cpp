@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <cerrno>
 #include <cstring>
+#include <cstdio>
 
 #include "RequestDELETE.hpp"
 #include "ft.hpp"
@@ -45,18 +46,21 @@ RequestDELETE	&RequestDELETE::operator=(const RequestDELETE &other)
 error_t	RequestDELETE::parse(void)
 {
 	std::cerr << "RequestDELETE parse" << std::endl;
+	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
+	std::cout << ((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target) << std::endl;
 	return (REQ_DONE);
 }
 
 error_t	RequestDELETE::process(void)
 {
 	std::cerr << "RequestDELETE process" << std::endl;
-	// debug start
-	this->_context.response.setStatusCode(OK);
-	this->_context.response.setBody("Hello, World!");
+	if (0 != std::remove(((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target).c_str())) {
+		this->_context.response.setStatusCode(NOT_FOUND);
+	} else {
+		this->_context.response.setStatusCode(OK);
+	}
 	this->_context.responseBuffer = this->_context.response.response();
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-	// debug end
 	return (REQ_DONE);
 }
 

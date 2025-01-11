@@ -139,15 +139,8 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 	return this->_redirection;
 }
 
-bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = Method::methods;
-
-	for (std::size_t i = 0; i < methods.size(); ++i) {
-		if (0 == methods[i].compare(method)) {
-			return this->_allowed & (1 << i);
-		}
-	}
-	return false;
+bool LocationBlock::isAllowed(const Method &method) const {
+	return this->_allowed & (1 << method.index());
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {

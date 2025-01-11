@@ -24,6 +24,8 @@ std::string		statusCodeToReason(const StatusCode code)
 			return ("Method Not Allowed");
 		case REQUEST_TIMEOUT:
 			return ("Request Timeout");
+		case CONFLICT:
+			return ("Conflict");
 		case LENGTH_REQUIRED:
 			return ("Length Required");
 		case PAYLOAD_TOO_LARGE:

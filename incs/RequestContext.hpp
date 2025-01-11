@@ -1,9 +1,8 @@
 #ifndef REQUESTCONTEXT
 # define REQUESTCONTEXT
 
-# include "webdef.hpp"
 # include "Response.hpp"
-# include "Method.hpp"
+# include "LocationBlock.hpp"
 
 # define REQ_BUFFER_SIZE 1024
 
@@ -51,7 +50,6 @@
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
 class Server;
-class LocationBlock;
 
 typedef struct RequestContext_s {
 	Server const		*server;
