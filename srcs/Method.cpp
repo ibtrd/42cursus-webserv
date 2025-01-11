@@ -40,11 +40,11 @@ bool Method::operator==(const method_t method) {
 }
 
 bool Method::operator!=(const Method &other) {
-	return (this->_index == other._index);
+	return (this->_index != other._index);
 }
 
 bool Method::operator!=(const method_t method) {
-	return (this->_index == method);
+	return (this->_index != method);
 }
 
 /* ************************************************************************** */
