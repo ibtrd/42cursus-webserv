@@ -6,7 +6,7 @@
 # include "Path.hpp"
 # include "webdef.hpp"
 
-# define DEFAULT_METHODS 0
+# define DEFAULT_ALLOW 0
 # define DEFAULT_DIRLISTING -1
 # define DEFAULT_MAXBODYSIZE -1
 # define DEFAULT_REDIRECTON std::make_pair(0, "")
@@ -44,9 +44,6 @@ public:
 	const Path		 	&getRoot(void) const;
 	const redirect_t 	&getRedirect(void) const;
 
-	// STATICS
-	static const std::vector<std::string>	methods;
-
 private:
 	Path		_path;
 	int8_t		_dirListing;
@@ -54,9 +51,6 @@ private:
 	Path		_root;
 	uint8_t		_allowed;
 	redirect_t	_redirection;
-
-	// STATICS
-	static std::vector<std::string>	_initMethods(void);
 
 	friend std::ostream	&operator<<(std::ostream &os, const LocationBlock &location);
 };
