@@ -51,7 +51,15 @@ error_t	RequestGET::parse(void)
 	// temporary code
 	LocationBlock *block = (LocationBlock *)this->_context.ruleBlock;
 	this->_path = block->getRoot().string() + this->_context.target;
-	// 
+	std::cerr << "Path: " << this->_path << std::endl;
+	//
+	if (access(this->_path.c_str(), F_OK) == -1)
+	{
+		this->_context.response.setStatusCode(NOT_FOUND);
+		this->_context.responseBuffer = this->_context.response.response();
+		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
 	return (REQ_DONE);
 }
 
@@ -92,12 +100,12 @@ error_t	RequestGET::process(void)
 	// 	return (REQ_DONE);
 	// }
 
-	// // debug 418 start
-	// this->_context.response.setStatusCode(I_AM_A_TEAPOT);
-	// // this->_context.response.setBody("Hello, World!");
-	// this->_context.responseBuffer = this->_context.response.response();
-	// SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-	// // debug end
+	// debug 418 start
+	this->_context.response.setStatusCode(I_AM_A_TEAPOT);
+	// this->_context.response.setBody("Hello, World!");
+	this->_context.responseBuffer = this->_context.response.response();
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	// debug end
 
 	// // debug 200 start
 	// this->_context.response.setStatusCode(OK);

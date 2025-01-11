@@ -3,6 +3,8 @@
 
 # include "webdef.hpp"
 # include "Response.hpp"
+// # include "Server.hpp"
+// # include "LocationBlock.hpp"
 
 # define REQ_BUFFER_SIZE 1024
 
@@ -49,10 +51,14 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
-typedef struct RequestContext_s {
-	uint32_t		requestState;
+class Server;
+class LocationBlock;
 
-	void			*ruleBlock;
+typedef struct RequestContext_s {
+	Server const		*server;
+	LocationBlock const *ruleBlock;
+
+	uint32_t		requestState;
 	std::string		buffer;
 
 	Method			method;
