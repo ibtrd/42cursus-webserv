@@ -89,16 +89,24 @@ error_t	RequestGET::process(void)
 		return (REQ_DONE);
 	}
 
-	if (this->_path.isDir()) {
-		this->_context.response.setStatusCode(OK);
-		this->_context.response.setBody("Directory listing not implemented");
+	if (!this->_path.isDir()) {
+		this->_context.response.setStatusCode(CONFLICT);
 		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 
-	this->_context.response.setStatusCode(CONFLICT);
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	if (!this->_path.isDirFormat()) {
+		this->_context.response.setStatusCode(MOVED_PERMANENTLY);
+		this->_context.response.setBody(this->_path.concat("/").string());
+		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
 
+	/* to implement: index */
+
+	this->_context.response.setStatusCode(OK);
+	this->_context.response.setBody("Directory listing not implemented");
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 

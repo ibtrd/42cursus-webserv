@@ -409,15 +409,15 @@ error_t	Client::_handleSocketOut(void)
 	return (REQ_DONE);
 }
 
-error_t	Client::_handleFileIn(void)
+error_t	Client::_handlePipeIn(void)
 {
-	std::cerr << "File in" << std::endl;
+	std::cerr << "Pipe in" << std::endl;
 	return (REQ_ERROR);
 }
 
-error_t	Client::_handleFileOut(void)
+error_t	Client::_handlePipeOut(void)
 {
-	std::cerr << "File out" << std::endl;
+	std::cerr << "Pipe out" << std::endl;
 	return (REQ_ERROR);
 }
 
@@ -442,7 +442,7 @@ error_t	Client::handleIn(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketIn());
 	else
-		return (this->_handleFileIn());
+		return (this->_handlePipeIn());
 }
 
 error_t	Client::handleOut(fd_t fd)
@@ -450,7 +450,7 @@ error_t	Client::handleOut(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketOut());
 	else
-		return (this->_handleFileOut());
+		return (this->_handlePipeOut());
 }
 
 /* GETTERS ****************************************************************** */
