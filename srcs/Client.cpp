@@ -21,16 +21,17 @@ ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 
 /* CONSTRUCTORS ************************************************************* */
 
-Client::Client(void)
+
+Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server) : _idSocket(idSocket), _socket(requestSocket), _request(NULL), _context(server)
 {
 	// std::cerr << "Client created" << std::endl;
+	this->_context.requestState = REQ_STATE_NONE;
 	this->_request = NULL;
 }
 
-Client::Client(const Client &other)
+Client::Client(const Client &other) : _idSocket(other._idSocket), _socket(other._socket), _request(other._request), _context(other._context)
 {
 	// std::cerr << "Client copy" << std::endl;
-	this->_request = NULL;
 	*this = other;
 }
 
@@ -56,8 +57,15 @@ Client	&Client::operator=(const Client &other)
 	else
 		this->_request = NULL;
 
-	this->_socket = other._socket;
-	this->_context = other._context;
+	this->_context.ruleBlock = other._context.ruleBlock;
+	this->_context.requestState = other._context.requestState;
+	this->_context.buffer = other._context.buffer;
+	this->_context.method = other._context.method;
+	this->_context.target = other._context.target;
+	this->_context.protocolVersion = other._context.protocolVersion;
+	this->_context.headers = other._context.headers;
+	this->_context.response = other._context.response;
+	this->_context.responseBuffer = other._context.responseBuffer;
 	return (*this);
 }
 
@@ -153,24 +161,10 @@ error_t Client::_parseRequest(void)
 
 	// SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
 
-	// Search for a rule block if no response has been set
 	if (this->_context.response.statusCode() == NONE) {
-		// Find rule block
-		this->_context.ruleBlock = this->_findRuleBlock();
-		if (this->_context.ruleBlock) {
-			if (false == this->_isAllowedMethod()) {
-				this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
-			} else {
-				std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
-				this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
-				return (REQ_DONE);
-			}
-		}
-	} else {
-		std::cerr << "No rule block found" << std::endl;
-		this->_context.response.setStatusCode(NOT_FOUND);
+		ret = this->_resolveARequest();
+		RETURN_UNLESS(ret, REQ_CONTINUE);
 	}
-
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	this->_switchToWrite();
@@ -245,7 +239,7 @@ error_t Client::_parseRequestLine(void)
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (this->_context.protocolVersion != "HTTP/1.1")
+	if (this->_context.protocolVersion != PROTOCOLE_VERSION)
 	{
 		this->_context.response.setStatusCode(HTTP_VERSION_NOT_SUPPORTED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -297,6 +291,24 @@ error_t Client::_parseHeaders(void)
 		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
+}
+
+error_t Client::_resolveARequest(void) {
+	this->_context.ruleBlock = (this->_context.server
+		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findLocationBlock(this->_context.target));
+	if (!this->_context.ruleBlock) {
+		this->_context.response.setStatusCode(NOT_FOUND);
+		return REQ_CONTINUE;
+	}
+	std::cerr << *this->_context.ruleBlock << std::endl;
+	if (!this->_context.ruleBlock->isAllowed(this->_context.method)) {
+		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+		return REQ_CONTINUE;
+	}
+	
+	this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
+	return REQ_DONE;
 }
 
 error_t	Client::_process(void)
@@ -355,40 +367,7 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
-const LocationBlock *Client::_findRuleBlock(void)
-{
-	// ServerBlock		&block = this->_context.server.findServerBlock(this->_idSocket, this->_context.headers["Host"]);
-	// LocationBlock	*ruleBlock = block.findLocationBlock(this->_context.target);
-	// return (ruleBlock);
-	return (this->_context.server
-		->findServerBlock(this->_idSocket, this->_context.headers["Host"])
-		.findLocationBlock(this->_context.target));
-}
-
-bool Client::_isAllowedMethod(void) const {
-	return this->_context.ruleBlock->isAllowed(this->_context.method);
-}
-
-/* ************************************************************************** */
-
-error_t	Client::init(const fd_t idSocket, const fd_t requestSocket, const Server *server)
-{
-	this->_context.server = server;
-	this->_context.requestState = REQ_STATE_NONE;
-	this->_idSocket = idSocket;
-	this->_socket = requestSocket;
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
-		return (-1);
-	}
-	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
-	return (0);
-}
-
-error_t	Client::handle(void)
+error_t	Client::_handleSocketIn(void)
 {
 	error_t	ret;
 
@@ -407,38 +386,78 @@ error_t	Client::handle(void)
 			return (ret);
 	}
 
-	if (!IS_REQ_CAN_WRITE(this->_context.requestState))
-	{
-		if (this->_switchToWrite() == -1)
-			return (REQ_ERROR);
-	}
+	if (this->_switchToWrite() == -1)
+		return (REQ_ERROR);
+	return (REQ_CONTINUE);
+}
 
-	// if (IS_REQ_CAN_WRITE(this->_context.requestState))	// possibly not needed
-	// {
-		if ((ret = this->_sendResponse()) != REQ_DONE)
-			return (ret);
-	// }
+error_t	Client::_handleSocketOut(void)
+{
+	error_t	ret;
+
+	if ((ret = this->_sendResponse()) != REQ_DONE)
+		return (ret);
 
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 
-	// if (IS_REQ_WRITE_COMPLETE(this->_requestState))
-	// {
-		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
-		{
-			close(this->_socket);
-			return (REQ_ERROR);
-		}
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
+	{
 		close(this->_socket);
-		return (REQ_DONE);
-	// }
-	// return (REQ_CONTINUE);
+		return (REQ_ERROR);
+	}
+	close(this->_socket);
+	return (REQ_DONE);
+}
+
+error_t	Client::_handleFileIn(void)
+{
+	std::cerr << "File in" << std::endl;
+	return (REQ_ERROR);
+}
+
+error_t	Client::_handleFileOut(void)
+{
+	std::cerr << "File out" << std::endl;
+	return (REQ_ERROR);
+}
+
+/* ************************************************************************** */
+
+error_t	Client::init(void)
+{
+	this->_context.requestState = REQ_STATE_NONE;
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+		close(this->_socket);
+		return (-1);
+	}
+	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
+	return (0);
+}
+
+error_t	Client::handleIn(fd_t fd)
+{
+	if (fd == this->_socket)
+		return (this->_handleSocketIn());
+	else
+		return (this->_handleFileIn());
+}
+
+error_t	Client::handleOut(fd_t fd)
+{
+	if (fd == this->_socket)
+		return (this->_handleSocketOut());
+	else
+		return (this->_handleFileOut());
 }
 
 /* GETTERS ****************************************************************** */
 
-/* SETTERS ****************************************************************** */
+void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
 
-// void	Client::skipNextRead(void) { this->_skipNextRead = true; }
+/* SETTERS ****************************************************************** */
 
 void	Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
 

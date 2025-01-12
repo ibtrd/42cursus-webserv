@@ -6,8 +6,8 @@
 
 LocationBlock::LocationBlock(void) {
 	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -17,8 +17,8 @@ LocationBlock::LocationBlock(const LocationBlock &other) {
 
 LocationBlock::LocationBlock(const Path &path) : _path(path) {
 	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -115,6 +115,11 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 			throw std::invalid_argument("invalid redirection status");
 	}
 	this->_redirection.second = body;
+}
+
+void LocationBlock::setDefaults(void) {
+	this->setDirListing(DEFAULT_DIRLISTING);
+	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 }
 
 /* GETTERS ****************************************************************** */

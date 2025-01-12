@@ -49,11 +49,13 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
+# define RETURN_UNLESS(ret, code)				if (ret != code) { return ret; }
+
 class Server;
 
 typedef struct RequestContext_s {
-	Server const		*server;
-	LocationBlock const *ruleBlock;
+	const Server		&server;
+	const LocationBlock	*ruleBlock;
 
 	uint32_t		requestState;
 	std::string		buffer;
@@ -66,6 +68,10 @@ typedef struct RequestContext_s {
 
 	Response		response;
 	std::string		responseBuffer;
+
+	RequestContext_s(const Server &server)
+        : server(server) {}
+
 } RequestContext_t;
 
 #endif
