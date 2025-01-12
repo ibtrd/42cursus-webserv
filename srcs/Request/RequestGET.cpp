@@ -97,7 +97,7 @@ error_t	RequestGET::process(void)
 
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(MOVED_PERMANENTLY);
-		this->_context.response.setBody(this->_path.concat("/").string());
+		this->_context.response.setHeader(HEADER_LOCATION, this->_path.string() + '/');
 		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
