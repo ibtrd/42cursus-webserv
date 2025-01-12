@@ -6,8 +6,8 @@
 
 LocationBlock::LocationBlock(void) {
 	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -17,8 +17,8 @@ LocationBlock::LocationBlock(const LocationBlock &other) {
 
 LocationBlock::LocationBlock(const Path &path) : _path(path) {
 	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -117,6 +117,11 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 	this->_redirection.second = body;
 }
 
+void LocationBlock::setDefaults(void) {
+	this->setDirListing(DEFAULT_DIRLISTING);
+	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+}
+
 /* GETTERS ****************************************************************** */
 
 const Path &LocationBlock::path(void) const {
@@ -139,15 +144,8 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 	return this->_redirection;
 }
 
-bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = Method::methods;
-
-	for (std::size_t i = 0; i < methods.size(); ++i) {
-		if (0 == methods[i].compare(method)) {
-			return this->_allowed & (1 << i);
-		}
-	}
-	return false;
+bool LocationBlock::isAllowed(const Method &method) const {
+	return this->_allowed & (1 << method.index());
 }
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {

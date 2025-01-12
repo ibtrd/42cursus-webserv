@@ -1,9 +1,8 @@
 #ifndef REQUESTCONTEXT
 # define REQUESTCONTEXT
 
-# include "webdef.hpp"
 # include "Response.hpp"
-# include "Method.hpp"
+# include "LocationBlock.hpp"
 
 # define REQ_BUFFER_SIZE 1024
 
@@ -50,6 +49,8 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
+# define RETURN_UNLESS(ret, code)				if (ret != code) { return ret; }
+
 # define HEADER_HOST				"Host"
 # define HEADER_CONTENT_LENGTH		"Content-Length"
 # define HEADER_CONTENT_TYPE		"Content-Type"
@@ -59,7 +60,6 @@
 # define HEADER_TRANSFER_ENCODING	"Transfer-Encoding"
 
 class Server;
-class LocationBlock;
 
 typedef struct RequestContext_s {
 	const Server		&server;

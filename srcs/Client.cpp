@@ -1,12 +1,8 @@
-#include <sys/epoll.h>
 #include <unistd.h>
 #include <iostream>
-#include <sys/socket.h>
 #include <cerrno>
 #include <cstring>
-# include <dirent.h>
 
-#include "Client.hpp"
 #include "RequestGET.hpp"
 #include "RequestPOST.hpp"
 #include "RequestDELETE.hpp"
@@ -14,6 +10,7 @@
 #include "RequestPUT.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
+
 int32_t	Client::_epollFd = -1;
 ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
@@ -24,11 +21,6 @@ ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 
 /* CONSTRUCTORS ************************************************************* */
 
-// Client::Client(void)
-// {
-// 	// std::cerr << "Client created" << std::endl;
-// 	this->_request = NULL;
-// }
 
 Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server) : _idSocket(idSocket), _socket(requestSocket), _request(NULL), _context(server)
 {
@@ -169,19 +161,10 @@ error_t Client::_parseRequest(void)
 
 	// SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
 
-	// Search for a rule block if no response has been set
 	if (this->_context.response.statusCode() == NONE) {
-		// Find rule block
-		this->_context.ruleBlock = this->_findRuleBlock();
-		if (this->_context.ruleBlock) {
-			std::cerr << "RuleBlock: " << *this->_context.ruleBlock << std::endl;
-			this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
-			return (REQ_DONE);
-		}
-		std::cerr << "No rule block found" << std::endl;
-		this->_context.response.setStatusCode(NOT_FOUND);
+		ret = this->_resolveARequest();
+		RETURN_UNLESS(ret, REQ_CONTINUE);
 	}
-
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	this->_switchToWrite();
@@ -256,7 +239,7 @@ error_t Client::_parseRequestLine(void)
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (this->_context.protocolVersion != "HTTP/1.1")
+	if (this->_context.protocolVersion != PROTOCOLE_VERSION)
 	{
 		this->_context.response.setStatusCode(HTTP_VERSION_NOT_SUPPORTED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -308,6 +291,24 @@ error_t Client::_parseHeaders(void)
 		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
+}
+
+error_t Client::_resolveARequest(void) {
+	this->_context.ruleBlock = (this->_context.server
+		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findLocationBlock(this->_context.target));
+	if (!this->_context.ruleBlock) {
+		this->_context.response.setStatusCode(NOT_FOUND);
+		return REQ_CONTINUE;
+	}
+	std::cerr << *this->_context.ruleBlock << std::endl;
+	if (!this->_context.ruleBlock->isAllowed(this->_context.method)) {
+		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+		return REQ_CONTINUE;
+	}
+	
+	this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
+	return REQ_DONE;
 }
 
 error_t	Client::_process(void)
@@ -364,16 +365,6 @@ error_t	Client::_sendResponse(void)
 	}
 	std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
-}
-
-const LocationBlock *Client::_findRuleBlock(void)
-{
-	// ServerBlock		&block = this->_context.server.findServerBlock(this->_idSocket, this->_context.headers["Host"]);
-	// LocationBlock	*ruleBlock = block.findLocationBlock(this->_context.target);
-	// return (ruleBlock);
-	return (this->_context.server
-		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
-		.findLocationBlock(this->_context.target));
 }
 
 error_t	Client::_handleSocketIn(void)
@@ -467,8 +458,6 @@ error_t	Client::handleOut(fd_t fd)
 void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
 
 /* SETTERS ****************************************************************** */
-
-// void	Client::skipNextRead(void) { this->_skipNextRead = true; }
 
 void	Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
 

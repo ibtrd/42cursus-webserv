@@ -5,11 +5,15 @@
 
 # include "Path.hpp"
 # include "webdef.hpp"
+# include "Method.hpp"
+
+# define UNDEFINED -1;
 
 # define DEFAULT_ALLOW 0
-# define DEFAULT_DIRLISTING -1
-# define DEFAULT_MAXBODYSIZE -1
+# define DEFAULT_DIRLISTING DIRLISTING_OFF
+# define DEFAULT_MAXBODYSIZE 1048576
 # define DEFAULT_REDIRECTON std::make_pair(0, "")
+
 # define DIRLISTING_ON "on"
 # define DIRLISTING_OFF "off"
 
@@ -35,10 +39,11 @@ public:
 	void	setMaxBodySize(const int32_t size);
 	error_t	setRoot(const std::string &str);
 	void	setRedirect(const uint16_t status, const std::string &body);
+	void	setDefaults(void);
 
 	// GETTERS
 	const Path			&path(void) const;
-	bool				isAllowed(const std::string &method) const;
+	bool				isAllowed(const Method &method) const;
 	bool				isDirListing(void) const;
 	int32_t				getMaxBodySize(void) const;
 	const Path		 	&getRoot(void) const;

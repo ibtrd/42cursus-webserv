@@ -50,11 +50,10 @@ error_t	RequestGET::parse(void)
 	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);	// GET requests have no body
 	// temporary code
 	LocationBlock *block = (LocationBlock *)this->_context.ruleBlock;
-	this->_path = block->getRoot().string() + this->_context.target;
+	this->_path = block->getRoot().concat(this->_context.target);
 	std::cerr << "Path: " << this->_path << std::endl;
 	//
-	if (access(this->_path.c_str(), F_OK) == -1)
-	{
+	if (access(this->_path.c_str(), F_OK) == -1) {
 		this->_context.response.setStatusCode(NOT_FOUND);
 		this->_context.responseBuffer = this->_context.response.response();
 		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
