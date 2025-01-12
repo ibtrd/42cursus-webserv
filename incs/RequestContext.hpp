@@ -51,6 +51,14 @@
 
 # define RETURN_UNLESS(ret, code)				if (ret != code) { return ret; }
 
+# define HEADER_HOST				"Host"
+# define HEADER_CONTENT_LENGTH		"Content-Length"
+# define HEADER_CONTENT_TYPE		"Content-Type"
+# define HEADER_USER_AGENT			"User-Agent"
+# define HEADER_ACCEPT_ENCODING		"Accept-Encoding"
+# define HEADER_LOCATION			"Location"
+# define HEADER_TRANSFER_ENCODING	"Transfer-Encoding"
+
 class Server;
 
 typedef struct RequestContext_s {

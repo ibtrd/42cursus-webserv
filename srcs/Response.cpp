@@ -48,7 +48,7 @@ Response	&Response::operator=(const Response &other)
 
 /* GETTERS ****************************************************************** */
 
-StatusCode	Response::statusCode(void) const
+status_code_t	Response::statusCode(void) const
 {
 	return (this->_statusCode);
 }
@@ -87,7 +87,7 @@ std::string	Response::response(void) const
 
 /* SETTERS ****************************************************************** */
 
-void	Response::setStatusCode(const StatusCode &code)
+void	Response::setStatusCode(const status_code_t &code)
 {
 	this->_statusCode = code;
 	this->_reasonPhrase = statusCodeToReason(code);

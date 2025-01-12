@@ -223,11 +223,13 @@ void Server::_removeConnection(const fd_t fd) {
 	fd_t fds[2];
 	client->sockets(fds);
 	this->_fdClientMap.erase(fds[0]);
-	this->_fdClientMap.erase(fds[1]);
 	close(fds[0]);
-	close(fds[1]);
 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
+	if (fds[1] != -1) {
+		this->_fdClientMap.erase(fds[1]);
+		close(fds[1]);
+		epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
+	}
 	this->_clients.erase(client);
 }
 
