@@ -5,6 +5,9 @@
 
 class RequestGET : public ARequest {
 private:
+	fd_t	_fd;
+
+	void	_openFile(void);
 
 public:
 	RequestGET(RequestContext_t &context);
