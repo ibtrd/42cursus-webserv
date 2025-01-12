@@ -167,8 +167,6 @@ error_t Client::_parseRequest(void)
 	}
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-	this->_switchToWrite();
-	this->_context.responseBuffer = this->_context.response.response();
 	return (REQ_DONE);
 }
 
@@ -295,9 +293,9 @@ error_t Client::_parseHeaders(void)
 
 error_t Client::_resolveARequest(void) {
 	this->_context.ruleBlock = (this->_context.server
-		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findServerBlock(this->_idSocket, this->_context.headers[HEADER_HOST])
 		.findLocationBlock(this->_context.target));
-	if (!this->_context.ruleBlock) {
+	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().string().empty()) {
 		this->_context.response.setStatusCode(NOT_FOUND);
 		return REQ_CONTINUE;
 	}
@@ -385,6 +383,8 @@ error_t	Client::_handleSocketIn(void)
 		if (ret != REQ_DONE)
 			return (ret);
 	}
+
+	this->_context.responseBuffer = this->_context.response.response();
 
 	if (this->_switchToWrite() == -1)
 		return (REQ_ERROR);

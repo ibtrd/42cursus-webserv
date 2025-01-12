@@ -59,7 +59,6 @@ error_t	RequestDELETE::process(void)
 	} else {
 		this->_context.response.setStatusCode(OK);
 	}
-	this->_context.responseBuffer = this->_context.response.response();
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }

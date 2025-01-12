@@ -48,7 +48,6 @@ error_t	RequestPUT::process(void)
 	// debug start
 	this->_context.response.setStatusCode(OK);
 	this->_context.response.setBody("Hello, World!");
-	this->_context.responseBuffer = this->_context.response.response();
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	// debug end
 	return (REQ_DONE);

@@ -8,6 +8,7 @@
 class ARequest {
 protected:
 	RequestContext_t	&_context;
+	Path				_path;
 
 public:
 	ARequest(RequestContext_t &context);
@@ -19,6 +20,8 @@ public:
 
 	virtual error_t	parse(void) = 0;
 	virtual error_t	process(void) = 0;
+
+	// bool	pathExists(void) const;
 
 	virtual ARequest	*clone(void) const = 0;
 };
