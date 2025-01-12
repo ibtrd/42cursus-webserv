@@ -35,12 +35,12 @@ void Server::configure(const Configuration &config) {
 	}
 	Client::setEpollFd(this->_epollFd);
 
-	bindmap_t	bound;
+	socketbindmap_t	bound;
 	const std::vector<ServerBlock> &blocks = config.blocks();
 	for (std::size_t i = 0; i < blocks.size(); ++i) {
 		const std::vector<struct sockaddr_in> &hosts = blocks[i].hosts();
 		for (std::size_t j = 0; j < hosts.size(); ++j) {
-			bindmap_t::const_iterator it = ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
+			socketbindmap_t::const_iterator it = ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
 			if (bound.end() == it) {
 				bound[this->_addSocket(blocks[i], hosts[j])].push_back(hosts[j]);
 			} else {
@@ -61,6 +61,8 @@ void Server::routine(void) {
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
 		return ;
 	}
+
+	// New connections and read events
 	for(int i = 0; i < nfds; i++) {
 		int32_t fd = this->_events[i].data.fd;
 
@@ -70,11 +72,14 @@ void Server::routine(void) {
 			continue;
 		}
 		if (this->_events[i].events & EPOLLIN) {
-			if (this->_inHandlers.find(fd) == this->_inHandlers.end()) {
-				std::cerr << "No handler for input on fd " << fd << std::endl;
+			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+
+			if (it == this->_fdClientMap.end()) {
+				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-			switch (this->_inHandlers[fd](fd))
+
+			switch (it->second->handleIn(fd))
 			{
 			case REQ_ERROR:
 				std::cerr << "Close connection (Error)" << std::endl;
@@ -90,18 +95,30 @@ void Server::routine(void) {
 				break;
 			}
 		}
-		else if (this->_events[i].events & EPOLLOUT) {
-			if (this->_outHandlers.find(fd) == this->_outHandlers.end()) {
-				std::cerr << "No handler for output on fd " << fd << std::endl;
+		else if (!(this->_events[i].events & EPOLLOUT)) {
+			std::cerr << "Unknown event on fd " << fd << std::endl;
+		}
+	}
+
+	// Write events
+	for(int i = 0; i < nfds; i++) {
+		int32_t fd = this->_events[i].data.fd;
+
+		if (this->_events[i].events & EPOLLOUT) {
+			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+
+			if (it == this->_fdClientMap.end()) {
+				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-			switch (this->_outHandlers[fd](fd))
+
+			switch (it->second->handleOut(fd))
 			{
 			case REQ_ERROR:
 				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
 				break;
-			
+
 			case REQ_DONE:
 				std::cerr << "Close connection (Done)" << std::endl;
 				this->_removeConnection(fd);
@@ -111,7 +128,7 @@ void Server::routine(void) {
 				break;
 			}
 		}
-		else {
+		else if (!(this->_events[i].events & EPOLLIN)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
@@ -189,8 +206,8 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	this->_clients.push_front(Client());
-	if (-1 == this->_clients.front().init(socket, requestSocket, this)) {
+	this->_clients.push_front(Client(socket, requestSocket, *this));
+	if (-1 == this->_clients.front().init()) {
 		return -1;
 	}
 	this->_fdClientMap[requestSocket] = this->_clients.begin();
@@ -198,15 +215,20 @@ error_t	Server::_addConnection(const int32_t socket) {
 }
 
 void Server::_removeConnection(const fd_t fd) {
-	std::list<Client>::iterator tmp = this->_fdClientMap[fd];
-	fd_t fds[2] = tmp.doneMoiTesFds();
-	this->_fdClientMap.erase(fd[0]);
-	this->_fdClientMap.erase(fd[1]);
-	close(fd[0]);
-	close(fd[1]);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd[0], NULL);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd[1], NULL);
-	this->_clients.erase(tmp);
+	std::list<Client>::iterator client = this->_fdClientMap[fd];
+	if (client == this->_clients.end()) {
+		return;
+	}
+
+	fd_t fds[2];
+	client->sockets(fds);
+	this->_fdClientMap.erase(fds[0]);
+	this->_fdClientMap.erase(fds[1]);
+	close(fds[0]);
+	close(fds[1]);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
+	this->_clients.erase(client);
 }
 
 error_t Server::_loadMimeTypes(void)

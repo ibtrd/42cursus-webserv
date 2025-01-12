@@ -13,7 +13,8 @@
 # define MIME_TYPE_FILE "/etc/mime.types"
 
 typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
-typedef std::map<fd_t, std::vector<struct sockaddr_in> > bindmap_t;
+typedef std::map<fd_t, std::vector<struct sockaddr_in> > socketbindmap_t;
+typedef std::map<fd_t, std::list<Client>::iterator> clientbindmap_t;
 
 class Server {
 public:
@@ -28,12 +29,12 @@ public:
 	int32_t	epollFd(void) const;
 
 private:
-	int32_t 									_epollFd;
-	servermap_t									_serverBlocks;
-	struct epoll_event 							_events[MAX_EVENTS];
-	std::list<Client>							_clients;
-	std::map<fd_t, std::list<Client>::iterator>	_fdClientMap;
-	std::map<std::string, std::string>			_mimetypes;
+	int32_t 							_epollFd;
+	servermap_t							_serverBlocks;
+	struct epoll_event 					_events[MAX_EVENTS];
+	std::list<Client>					_clients;
+	clientbindmap_t						_fdClientMap;
+	std::map<std::string, std::string>	_mimetypes;
 
 	fd_t	_addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t	_addConnection(const int32_t socket);
