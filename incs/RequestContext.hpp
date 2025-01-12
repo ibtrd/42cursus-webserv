@@ -50,6 +50,14 @@
 # define SET_REQ_CAN_WRITE(x)					(x |= REQ_STATE_CAN_WRITE)
 # define SET_REQ_WRITE_COMPLETE(x)				(x |= REQ_STATE_WRITE_COMPLETE)
 
+# define HEADER_HOST				"Host"
+# define HEADER_CONTENT_LENGTH		"Content-Length"
+# define HEADER_CONTENT_TYPE		"Content-Type"
+# define HEADER_USER_AGENT			"User-Agent"
+# define HEADER_ACCEPT_ENCODING		"Accept-Encoding"
+# define HEADER_LOCATION			"Location"
+# define HEADER_TRANSFER_ENCODING	"Transfer-Encoding"
+
 class Server;
 class LocationBlock;
 

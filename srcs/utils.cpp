@@ -4,7 +4,7 @@
 
 #include <sstream>
 
-std::string		statusCodeToReason(const StatusCode code)
+std::string		statusCodeToReason(const status_code_t code)
 {
 	switch (code)
 	{

@@ -39,6 +39,8 @@ typedef enum {
 	HTTP_VERSION_NOT_SUPPORTED = 505
 } StatusCode;
 
-std::string	statusCodeToReason(const StatusCode code);
+typedef uint16_t	status_code_t;
+
+std::string	statusCodeToReason(const status_code_t code);
 
 #endif
