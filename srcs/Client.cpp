@@ -167,8 +167,6 @@ error_t Client::_parseRequest(void)
 	}
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-	this->_switchToWrite();
-	this->_context.responseBuffer = this->_context.response.response();
 	return (REQ_DONE);
 }
 
@@ -295,9 +293,9 @@ error_t Client::_parseHeaders(void)
 
 error_t Client::_resolveARequest(void) {
 	this->_context.ruleBlock = (this->_context.server
-		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findServerBlock(this->_idSocket, this->_context.headers[HEADER_HOST])
 		.findLocationBlock(this->_context.target));
-	if (!this->_context.ruleBlock) {
+	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().string().empty()) {
 		this->_context.response.setStatusCode(NOT_FOUND);
 		return REQ_CONTINUE;
 	}
@@ -386,6 +384,8 @@ error_t	Client::_handleSocketIn(void)
 			return (ret);
 	}
 
+	this->_context.responseBuffer = this->_context.response.response();
+
 	if (this->_switchToWrite() == -1)
 		return (REQ_ERROR);
 	return (REQ_CONTINUE);
@@ -409,15 +409,15 @@ error_t	Client::_handleSocketOut(void)
 	return (REQ_DONE);
 }
 
-error_t	Client::_handleFileIn(void)
+error_t	Client::_handlePipeIn(void)
 {
-	std::cerr << "File in" << std::endl;
+	std::cerr << "Pipe in" << std::endl;
 	return (REQ_ERROR);
 }
 
-error_t	Client::_handleFileOut(void)
+error_t	Client::_handlePipeOut(void)
 {
-	std::cerr << "File out" << std::endl;
+	std::cerr << "Pipe out" << std::endl;
 	return (REQ_ERROR);
 }
 
@@ -442,7 +442,7 @@ error_t	Client::handleIn(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketIn());
 	else
-		return (this->_handleFileIn());
+		return (this->_handlePipeIn());
 }
 
 error_t	Client::handleOut(fd_t fd)
@@ -450,7 +450,7 @@ error_t	Client::handleOut(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketOut());
 	else
-		return (this->_handleFileOut());
+		return (this->_handlePipeOut());
 }
 
 /* GETTERS ****************************************************************** */

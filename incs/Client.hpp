@@ -32,8 +32,8 @@ private:
 	error_t				_sendResponse(void);
 	error_t				_handleSocketIn(void);
 	error_t				_handleSocketOut(void);
-	error_t				_handleFileIn(void);
-	error_t				_handleFileOut(void);
+	error_t				_handlePipeIn(void);
+	error_t				_handlePipeOut(void);
 	error_t				_resolveARequest(void);
 	const LocationBlock	*_findRuleBlock(void);
 

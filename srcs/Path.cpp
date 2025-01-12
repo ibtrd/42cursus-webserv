@@ -1,6 +1,9 @@
 #include "Path.hpp"
 
 #include <sstream>
+#include <unistd.h>
+#include <errno.h>
+#include <cstring>
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -46,12 +49,34 @@ bool Path::isOriginForm(void) const {
 	return (!this->_str.empty() && '/' == *this->_str.begin());
 }
 
-bool Path::isFile(void) const {
+bool Path::isFileFormat(void) const {
 	return (!this->_str.empty() && '/' != *this->_str.rbegin());
 }
 
-bool Path::isDir(void) const {
+bool Path::isDirFormat(void) const {
 	return (!this->_str.empty() && '/' == *this->_str.rbegin());
+}
+
+bool Path::exists(void) {
+	if (access(this->_str.c_str(), F_OK) == -1) {
+		return false;
+	}
+	if (stat(this->_str.c_str(), &this->_stat) == -1) {
+		throw std::runtime_error("stat: " + std::string(std::strerror(errno)));
+	}
+	return (true);
+}
+
+bool Path::hasPermission(int32_t mode) const {
+	return (access(this->_str.c_str(), mode) != -1);
+}
+
+bool Path::isFile(void) const {
+	return S_ISREG(this->_stat.st_mode);
+}
+
+bool Path::isDir(void) const {
+	return S_ISDIR(this->_stat.st_mode);
 }
 
 std::string Path::extension(void) const {
@@ -68,7 +93,7 @@ uint32_t Path::length(void) const {
 }
 
 uint32_t Path::prefixLength(void) const {
-	if (this->isDir()) {
+	if (this->isDirFormat()) {
 		return this->_chunks.size();
 	}
 	return this->_chunks.size() == 0 ? 0 : this->_chunks.size() - 1;
@@ -87,7 +112,7 @@ bool Path::prefixMatch(const Path &other) const {
 }
 
 std::string Path::concat(const Path &other) const {
-	if (this->isDir() && other.isOriginForm()) {
+	if (this->isDirFormat() && other.isOriginForm()) {
 		return this->_str + other._str.substr(1);
 	}
 	return this->_str + other._str;

@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <stdint.h>
+#include <sys/stat.h>
 
 class Path {
 public:
@@ -16,6 +17,10 @@ public:
 	Path	&operator=(const Path &other);
 
 	bool	isOriginForm(void) const;
+	bool	isFileFormat(void) const;
+	bool	isDirFormat(void) const;
+	bool	exists(void);
+	bool	hasPermission(int32_t mode) const;
 	bool	isFile(void) const;
 	bool	isDir(void) const;
 
@@ -30,6 +35,7 @@ public:
 private:
 	std::string					_str;
 	std::vector<std::string>	_chunks;
+	struct stat					_stat;
 
 	friend std::ostream &operator<<(std::ostream &os, const Path &path);
 };
