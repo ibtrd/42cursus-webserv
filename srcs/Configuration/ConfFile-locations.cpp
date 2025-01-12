@@ -110,3 +110,17 @@ void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &tok
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 }
+
+void ConfFile::_indexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+	const uint32_t									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
+
+	if (0 == args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	for (uint32_t i = 0; i < args; ++i) {
+		location.addIndex(token->str());
+		++token;
+	}
+	std::cout << location.indexes().size();
+}

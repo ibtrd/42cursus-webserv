@@ -35,6 +35,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_root = other._root;
 	this->_allowed = other._allowed;
 	this->_redirection = other._redirection;
+	this->_indexes = other._indexes;
 	return (*this);
 }
 
@@ -59,6 +60,13 @@ void LocationBlock::fill(const LocationBlock &other) {
 	}
 	if (0 == this->_redirection.first) {
 		this->_redirection = other._redirection;
+	}
+	if (0 == this->_indexes.size()) {
+		if (0 != other._indexes.size()) {
+			this->_indexes = other._indexes;
+		} else {
+			this->_indexes.push_back(DEFAULT_INDEX);
+		}
 	}
 }
 
@@ -117,6 +125,10 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 	this->_redirection.second = body;
 }
 
+void LocationBlock::addIndex(const std::string &str) {
+	this->_indexes.push_back(str);
+}
+
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
@@ -144,14 +156,24 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 	return this->_redirection;
 }
 
+const std::vector<std::string> &LocationBlock::indexes(void) const {
+	return this->_indexes;
+}
+
 bool LocationBlock::isAllowed(const Method &method) const {
 	return this->_allowed & (1 << method.index());
 }
 
+/* ************************************************************************** */
+
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 	os << "Location '" << location._path << "' {\n"
 		<< "\troot: " << location._root << "\n"
-		<< "\tdirListing: ";
+		<< "\tindexes: ";
+	for (uint32_t i = 0; i < location.indexes().size(); ++i) {
+		os << location.indexes()[i] << " ";
+	}
+		os << "\n\tdirListing: ";
 	if (location._dirListing == -1) {
 		os << "undefined";
 	} else {
