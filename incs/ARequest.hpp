@@ -5,8 +5,6 @@
 
 # include <vector>
 
-class Client;
-
 class ARequest {
 protected:
 	RequestContext_t	&_context;

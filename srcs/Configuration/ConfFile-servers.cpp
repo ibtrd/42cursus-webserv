@@ -17,7 +17,7 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 	ServerBlock		server;
 	LocationBlock	globalLocation;
 
-	globalLocation.setDirListing(DIRLISTING_OFF);
+	globalLocation.setDefaults();
 	while (++token != this->_tokens.end() && *token != BLOCK_CLOSE) {
 		if (token + 1 == this->_tokens.end()) {
 			throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));

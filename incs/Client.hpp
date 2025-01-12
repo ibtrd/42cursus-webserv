@@ -7,6 +7,8 @@
 # include <string>
 # include <map>
 
+# define PROTOCOLE_VERSION "HTTP/1.1"
+
 class Client {
 private:
 	static	char		_readBuffer[REQ_BUFFER_SIZE];
@@ -21,21 +23,21 @@ private:
 
 	const std::string	_requestStateStr(void) const;
 
-	error_t			_readSocket(void);
-	error_t			_parseRequest(void);
-	error_t			_parseRequestLine(void);
-	error_t			_parseHeaders(void);
-	error_t			_process(void);
-	error_t			_switchToWrite(void);
-	error_t			_sendResponse(void);
-	error_t			_handleSocketIn(void);
-	error_t			_handleSocketOut(void);
-	error_t			_handleFileIn(void);
-	error_t			_handleFileOut(void);
+	error_t				_readSocket(void);
+	error_t				_parseRequest(void);
+	error_t				_parseRequestLine(void);
+	error_t				_parseHeaders(void);
+	error_t				_process(void);
+	error_t				_switchToWrite(void);
+	error_t				_sendResponse(void);
+	error_t				_handleSocketIn(void);
+	error_t				_handleSocketOut(void);
+	error_t				_handleFileIn(void);
+	error_t				_handleFileOut(void);
+	error_t				_resolveARequest(void);
 	const LocationBlock	*_findRuleBlock(void);
 
 public:
-	// Client(void);
 	Client(const fd_t idSocket, const fd_t requestSocket, Server const &server);
 	Client(const Client &other);
 
