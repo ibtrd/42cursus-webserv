@@ -24,16 +24,22 @@ ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 
 /* CONSTRUCTORS ************************************************************* */
 
-Client::Client(void)
+// Client::Client(void)
+// {
+// 	// std::cerr << "Client created" << std::endl;
+// 	this->_request = NULL;
+// }
+
+Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server) : _idSocket(idSocket), _socket(requestSocket), _request(NULL), _context(server)
 {
 	// std::cerr << "Client created" << std::endl;
+	this->_context.requestState = REQ_STATE_NONE;
 	this->_request = NULL;
 }
 
-Client::Client(const Client &other)
+Client::Client(const Client &other) : _idSocket(other._idSocket), _socket(other._socket), _request(other._request), _context(other._context)
 {
 	// std::cerr << "Client copy" << std::endl;
-	this->_request = NULL;
 	*this = other;
 }
 
@@ -59,8 +65,15 @@ Client	&Client::operator=(const Client &other)
 	else
 		this->_request = NULL;
 
-	this->_socket = other._socket;
-	this->_context = other._context;
+	this->_context.ruleBlock = other._context.ruleBlock;
+	this->_context.requestState = other._context.requestState;
+	this->_context.buffer = other._context.buffer;
+	this->_context.method = other._context.method;
+	this->_context.target = other._context.target;
+	this->_context.protocolVersion = other._context.protocolVersion;
+	this->_context.headers = other._context.headers;
+	this->_context.response = other._context.response;
+	this->_context.responseBuffer = other._context.responseBuffer;
 	return (*this);
 }
 
@@ -359,30 +372,11 @@ const LocationBlock *Client::_findRuleBlock(void)
 	// LocationBlock	*ruleBlock = block.findLocationBlock(this->_context.target);
 	// return (ruleBlock);
 	return (this->_context.server
-		->findServerBlock(this->_idSocket, this->_context.headers["Host"])
+		.findServerBlock(this->_idSocket, this->_context.headers["Host"])
 		.findLocationBlock(this->_context.target));
 }
 
-/* ************************************************************************** */
-
-error_t	Client::init(const fd_t idSocket, const fd_t requestSocket, const Server *server)
-{
-	this->_context.server = server;
-	this->_context.requestState = REQ_STATE_NONE;
-	this->_idSocket = idSocket;
-	this->_socket = requestSocket;
-	struct epoll_event event;
-	event.events = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
-		return (-1);
-	}
-	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
-	return (0);
-}
-
-error_t	Client::handle(void)
+error_t	Client::_handleSocketIn(void)
 {
 	error_t	ret;
 
@@ -401,34 +395,76 @@ error_t	Client::handle(void)
 			return (ret);
 	}
 
-	if (!IS_REQ_CAN_WRITE(this->_context.requestState))
-	{
-		if (this->_switchToWrite() == -1)
-			return (REQ_ERROR);
-	}
+	if (this->_switchToWrite() == -1)
+		return (REQ_ERROR);
+	return (REQ_CONTINUE);
+}
 
-	// if (IS_REQ_CAN_WRITE(this->_context.requestState))	// possibly not needed
-	// {
-		if ((ret = this->_sendResponse()) != REQ_DONE)
-			return (ret);
-	// }
+error_t	Client::_handleSocketOut(void)
+{
+	error_t	ret;
+
+	if ((ret = this->_sendResponse()) != REQ_DONE)
+		return (ret);
 
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 
-	// if (IS_REQ_WRITE_COMPLETE(this->_requestState))
-	// {
-		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
-		{
-			close(this->_socket);
-			return (REQ_ERROR);
-		}
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
+	{
 		close(this->_socket);
-		return (REQ_DONE);
-	// }
-	// return (REQ_CONTINUE);
+		return (REQ_ERROR);
+	}
+	close(this->_socket);
+	return (REQ_DONE);
+}
+
+error_t	Client::_handleFileIn(void)
+{
+	std::cerr << "File in" << std::endl;
+	return (REQ_ERROR);
+}
+
+error_t	Client::_handleFileOut(void)
+{
+	std::cerr << "File out" << std::endl;
+	return (REQ_ERROR);
+}
+
+/* ************************************************************************** */
+
+error_t	Client::init(void)
+{
+	this->_context.requestState = REQ_STATE_NONE;
+	struct epoll_event event;
+	event.events = EPOLLIN;
+	event.data.fd = this->_socket;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
+		close(this->_socket);
+		return (-1);
+	}
+	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
+	return (0);
+}
+
+error_t	Client::handleIn(fd_t fd)
+{
+	if (fd == this->_socket)
+		return (this->_handleSocketIn());
+	else
+		return (this->_handleFileIn());
+}
+
+error_t	Client::handleOut(fd_t fd)
+{
+	if (fd == this->_socket)
+		return (this->_handleSocketOut());
+	else
+		return (this->_handleFileOut());
 }
 
 /* GETTERS ****************************************************************** */
+
+void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
 
 /* SETTERS ****************************************************************** */
 

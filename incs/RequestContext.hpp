@@ -54,8 +54,8 @@ class Server;
 class LocationBlock;
 
 typedef struct RequestContext_s {
-	Server const		*server;
-	LocationBlock const *ruleBlock;
+	const Server		&server;
+	const LocationBlock	*ruleBlock;
 
 	uint32_t		requestState;
 	std::string		buffer;
@@ -68,6 +68,10 @@ typedef struct RequestContext_s {
 
 	Response		response;
 	std::string		responseBuffer;
+
+	RequestContext_s(const Server &server)
+        : server(server) {}
+
 } RequestContext_t;
 
 #endif
