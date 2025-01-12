@@ -51,7 +51,7 @@ public:
 	error_t		handleOut(fd_t fd);
 
 	// GETTERS
-	void	sockets(fd_t fds[2]) const;
+	std::string getProof(void) const;
 
 	// SETTERS
 	static void	setEpollFd(const int32_t fd);

@@ -72,14 +72,14 @@ void Server::routine(void) {
 			continue;
 		}
 		if (this->_events[i].events & EPOLLIN) {
-			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+			clientbindmap_t::iterator it = this->_clients.find(fd);
 
-			if (it == this->_fdClientMap.end()) {
+			if (it == this->_clients.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
 
-			switch (it->second->handleIn(fd))
+			switch (it->second.handleIn(fd))
 			{
 			case REQ_ERROR:
 				std::cerr << "Close connection (Error)" << std::endl;
@@ -105,14 +105,14 @@ void Server::routine(void) {
 		int32_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
-			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+			clientbindmap_t::iterator it = this->_clients.find(fd);
 
-			if (it == this->_fdClientMap.end()) {
+			if (it == this->_clients.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
 
-			switch (it->second->handleOut(fd))
+			switch (it->second.handleOut(fd))
 			{
 			case REQ_ERROR:
 				std::cerr << "Close connection (Error)" << std::endl;
@@ -141,7 +141,6 @@ const std::string &Server::getMimeType(const std::string &ext) const {
 	}
 	return it->second;
 }
-
 
 const ServerBlock &Server::findServerBlock(const fd_t socket, const std::string &host) const {
 	const std::vector<ServerBlock> &blocks = this->_serverBlocks.at(socket);
@@ -206,31 +205,28 @@ error_t	Server::_addConnection(const int32_t socket) {
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	this->_clients.push_front(Client(socket, requestSocket, *this));
-	if (-1 == this->_clients.front().init()) {
+	this->_clients.insert(std::pair<fd_t, Client>(requestSocket, Client(socket, requestSocket, *this)));
+	// if (-1 == this->_clients[requestSocket].init()) {
+	// 	return -1;
+	// }
+	clientbindmap_t::iterator it = this->_clients.find(requestSocket);
+	// if (it == this->_clients.end()) {
+	// 	std::cerr << "No client for fd " << requestSocket << std::endl;
+	// 	return -1;
+	// }
+	if (it->second.init() == -1) {
+		close(requestSocket);
+		this->_clients.erase(it);
 		return -1;
 	}
-	this->_fdClientMap[requestSocket] = this->_clients.begin();
+	// std::cerr << "CCCCCCCCCCCCCC" << this->_clients[requestSocket].getProof() << std::endl;
 	return 0;
 }
 
 void Server::_removeConnection(const fd_t fd) {
-	std::list<Client>::iterator client = this->_fdClientMap[fd];
-	if (client == this->_clients.end()) {
-		return;
-	}
-
-	fd_t fds[2];
-	client->sockets(fds);
-	this->_fdClientMap.erase(fds[0]);
-	close(fds[0]);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL);
-	if (fds[1] != -1) {
-		this->_fdClientMap.erase(fds[1]);
-		close(fds[1]);
-		epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
-	}
-	this->_clients.erase(client);
+	close(fd);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd, NULL);
+	this->_clients.erase(fd);
 }
 
 error_t Server::_loadMimeTypes(void)

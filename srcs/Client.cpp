@@ -455,7 +455,10 @@ error_t	Client::handleOut(fd_t fd)
 
 /* GETTERS ****************************************************************** */
 
-void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
+std::string Client::getProof(void) const
+{
+	return ("Client proof");
+}
 
 /* SETTERS ****************************************************************** */
 
