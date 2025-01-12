@@ -122,5 +122,4 @@ void ConfFile::_indexDirective(std::vector<ConfToken>::const_iterator &token, Lo
 		location.addIndex(token->str());
 		++token;
 	}
-	std::cout << location.indexes().size();
 }
