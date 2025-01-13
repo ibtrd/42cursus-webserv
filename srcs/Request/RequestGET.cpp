@@ -98,6 +98,15 @@ error_t	RequestGET::process(void)
 		return (REQ_DONE);
 	}
 
+
+	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin(); it != this->_context.ruleBlock->indexes().end(); ++it) {
+		std::string test = this->_path.concat(*it);
+		if (0 == access(test.c_str(), F_OK)) {
+			this->_path = test;
+			break ;
+		} 
+	}
+
 	/* to implement: index */
 	// iterate over index files (exists)
 	// if found:
