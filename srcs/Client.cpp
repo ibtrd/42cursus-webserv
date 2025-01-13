@@ -62,7 +62,7 @@ Client::~Client(void)
 
 Client	&Client::operator=(const Client &other)
 {
-	std::cerr << "Client assign" << std::endl;
+	// std::cerr << "Client assign" << std::endl;
 	if (this == &other)
 		return (*this);
 
@@ -122,6 +122,11 @@ const std::string Client::_requestStateStr(void) const
 		str += "1";
 	else
 		str += "0";
+	str += ", processOut: ";
+	if (IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState))
+		str += "1";
+	else
+		str += "0";
 	str += ", writing: ";
 	if (IS_REQ_CAN_WRITE(this->_context.requestState))
 		str += "1";
@@ -151,7 +156,6 @@ error_t	Client::_readSocket(void)
 		return (REQ_ERROR);
 	}
 	Client::_readBuffer[bytes] = '\0';
-	std::cerr << "Read:|" << Client::_readBuffer << "|" << std::endl;
 	this->_context.buffer += Client::_readBuffer;
 	Client::_readBuffer[0] = '\0';
 	return (REQ_CONTINUE);
@@ -194,13 +198,9 @@ error_t Client::_parseRequestLine(void)
 	// Check at least one line is present
 	size_t	pos = this->_context.buffer.find("\r\n");
 	if (pos == std::string::npos)
-	{
-		std::cerr << "RequestLine too short" << std::endl;
 		return (REQ_CONTINUE);
-	}
 	requestLine = this->_context.buffer.substr(0, pos);
 	this->_context.buffer.erase(0, pos + 2);
-	std::cerr << "RequestLine line: |" << requestLine << "|" << std::endl;
 
 	// Parse request line
 
@@ -220,7 +220,6 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 	this->_context.method = Method(method);
-	std::cerr << this->_context.method.index() << std::endl;
 	requestLine.erase(0, pos + 1);
 	if (!this->_context.method.isValid())
 	{
@@ -261,9 +260,9 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 
-	std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
-	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
+		// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
+		// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+		// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
@@ -277,7 +276,7 @@ error_t Client::_parseHeaders(void)
 	std::string	key;
 	std::string	value;
 
-	std::cerr << "Parsing headers..." << std::endl;
+	// std::cerr << "Parsing headers..." << std::endl;
 	while ((pos = this->_context.buffer.find("\r\n")) != std::string::npos)
 	{
 		line = this->_context.buffer.substr(0, pos);
@@ -303,7 +302,7 @@ error_t Client::_parseHeaders(void)
 		key = line.substr(0, pos);
 		value = line.substr(pos + 2);
 		this->_context.headers[key] = value;
-		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
+		// std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
 }
@@ -367,7 +366,12 @@ error_t	Client::_sendResponse(void)
 	ssize_t	bytes;
 
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
-	bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, 0);
+	errno = 0;
+	bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
+	if (errno == EPIPE) {
+		std::cerr << "Client disconnected" << std::endl;
+		return (REQ_DONE);
+	}
 	if (bytes == -1) {
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
 		return (REQ_ERROR);
@@ -376,9 +380,12 @@ error_t	Client::_sendResponse(void)
 	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 	this->_context.responseBuffer.erase(0, bytes);
 
-	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
+	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState) && IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
+	// if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
+	// 	return (REQ_DONE);
+	// }
 	std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
@@ -436,13 +443,13 @@ error_t	Client::_handleSocketOut(void)
 
 error_t	Client::_handleCGIIn(void)
 {
-	std::cerr << "Pipe in" << std::endl;
+	std::cerr << "CGI in" << std::endl;
 	return (REQ_ERROR);
 }
 
 error_t	Client::_handleCGIOut(void)
 {
-	std::cerr << "Pipe out" << std::endl;
+	std::cerr << "CGI out" << std::endl;
 	return (REQ_ERROR);
 }
 

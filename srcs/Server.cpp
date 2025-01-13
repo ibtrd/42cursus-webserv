@@ -194,21 +194,13 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 }
 
 error_t	Server::_addConnection(const int32_t socket) { //TODO: REMOVE PRINTS
-	std::cerr << "New connection: ";
 	struct sockaddr_in clientAddr;
 	socklen_t clientAddrLen = sizeof(clientAddr);
 
 	int32_t requestSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrLen);	
 	if (-1 == requestSocket) {
-		std::cerr << "failure" << std::endl;
 		return -1;
 	}
-
-	char clientIP[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &clientAddr.sin_addr, clientIP, INET_ADDRSTRLEN);
-	int clientPort = ntohs(clientAddr.sin_port);
-	std::cerr << "sucess " << clientIP << ":" << clientPort << std::endl;
-
 	this->_clients.push_front(Client(socket, requestSocket, *this, clientAddr));
 	if (-1 == this->_clients.front().init()) {
 		return -1;
