@@ -29,7 +29,8 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
 	_socket(requestSocket),
 	_addr(addr),
 	_request(NULL),
-	_context(server)
+	_context(server),
+	_bytesSent(0)
 {
 	// std::cerr << "Client created" << std::endl;
 	this->_context.requestState = REQ_STATE_NONE;
@@ -42,7 +43,8 @@ Client::Client(const Client &other) :
 	_socket(other._socket),
 	_addr(other._addr),
 	_request(other._request),
-	_context(other._context)
+	_context(other._context),
+	_bytesSent(other._bytesSent)
 {
 	// std::cerr << "Client copy" << std::endl;
 	*this = other;
@@ -80,6 +82,7 @@ Client	&Client::operator=(const Client &other)
 	this->_context.headers = other._context.headers;
 	this->_context.response = other._context.response;
 	this->_context.responseBuffer = other._context.responseBuffer;
+	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
 
@@ -114,8 +117,8 @@ const std::string Client::_requestStateStr(void) const
 		str += "1";
 	else
 		str += "0";
-	str += ", process: ";
-	if (IS_REQ_PROCESS_COMPLETE(this->_context.requestState))
+	str += ", processIn: ";
+	if (IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
@@ -175,12 +178,12 @@ error_t Client::_parseRequest(void)
 
 	// SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
 
-	if (this->_context.response.statusCode() == NONE) {
+	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
 		RETURN_UNLESS(ret, REQ_CONTINUE);
 	}
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
@@ -205,14 +208,14 @@ error_t Client::_parseRequestLine(void)
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
-		this->_context.response.setStatusCode(BAD_REQUEST);
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	std::string	method = requestLine.substr(0, pos);
 	if (method.empty())
 	{
-		this->_context.response.setStatusCode(BAD_REQUEST);
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
@@ -221,7 +224,7 @@ error_t Client::_parseRequestLine(void)
 	requestLine.erase(0, pos + 1);
 	if (!this->_context.method.isValid())
 	{
-		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
@@ -230,14 +233,14 @@ error_t Client::_parseRequestLine(void)
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
-		this->_context.response.setStatusCode(BAD_REQUEST);
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	this->_context.target = requestLine.substr(0, pos);
 	if (this->_context.target.empty() || this->_context.target[0] != '/')
 	{
-		this->_context.response.setStatusCode(BAD_REQUEST);
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
@@ -247,13 +250,13 @@ error_t Client::_parseRequestLine(void)
 	this->_context.protocolVersion = requestLine;
 	if (this->_context.protocolVersion.empty())
 	{
-		this->_context.response.setStatusCode(BAD_REQUEST);
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (this->_context.protocolVersion != PROTOCOLE_VERSION)
 	{
-		this->_context.response.setStatusCode(HTTP_VERSION_NOT_SUPPORTED);
+		this->_context.response.setStatusCode(STATUS_HTTP_VERSION_NOT_SUPPORTED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
@@ -281,9 +284,9 @@ error_t Client::_parseHeaders(void)
 		this->_context.buffer.erase(0, pos + 2);
 		if (line.empty())
 		{
-			if (this->_context.headers.find("Host") == this->_context.headers.end())
+			if (this->_context.headers.find(HEADER_HOST) == this->_context.headers.end())
 			{
-				this->_context.response.setStatusCode(BAD_REQUEST);
+				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_READ_COMPLETE(this->_context.requestState);
 			}
 			else
@@ -293,7 +296,7 @@ error_t Client::_parseHeaders(void)
 		pos = line.find(": ");
 		if (pos == std::string::npos)
 		{
-			this->_context.response.setStatusCode(BAD_REQUEST);
+			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 			SET_REQ_READ_COMPLETE(this->_context.requestState);
 			return (REQ_DONE);
 		}
@@ -310,12 +313,12 @@ error_t Client::_resolveARequest(void) {
 		.findServerBlock(this->_idSocket, this->_context.headers[HEADER_HOST])
 		.findLocationBlock(this->_context.target));
 	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().string().empty()) {
-		this->_context.response.setStatusCode(NOT_FOUND);
+		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return REQ_CONTINUE;
 	}
 	std::cerr << *this->_context.ruleBlock << std::endl;
 	if (!this->_context.ruleBlock->isAllowed(this->_context.method)) {
-		this->_context.response.setStatusCode(METHOD_NOT_ALLOWED);
+		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
 		return REQ_CONTINUE;
 	}
 	
@@ -334,9 +337,9 @@ error_t	Client::_process(void)
 			return (ret);
 	}
 
-	if (!IS_REQ_PROCESS_COMPLETE(this->_context.requestState))
+	if (!IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState))
 	{
-		ret = this->_request->process();
+		ret = this->_request->processIn();
 		if (ret != REQ_DONE)
 			return (ret);
 	}
@@ -369,10 +372,11 @@ error_t	Client::_sendResponse(void)
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
 		return (REQ_ERROR);
 	}
+	this->_bytesSent += bytes;
 	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 	this->_context.responseBuffer.erase(0, bytes);
 
-	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
+	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
 	std::cerr << "Response not fully sent" << std::endl;
@@ -392,7 +396,7 @@ error_t	Client::_handleSocketIn(void)
 		return (ret);
 
 	// Handle request
-	if (this->_request && !IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
+	if (this->_request && !IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
 		ret = this->_process();
 		if (ret != REQ_DONE)
 			return (ret);
@@ -409,6 +413,13 @@ error_t	Client::_handleSocketOut(void)
 {
 	error_t	ret;
 
+	if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState))
+	{
+		ret = this->_request->processOut();
+		// if (ret != REQ_DONE)
+		// 	return (ret);
+	}
+
 	if ((ret = this->_sendResponse()) != REQ_DONE)
 		return (ret);
 
@@ -423,13 +434,13 @@ error_t	Client::_handleSocketOut(void)
 	return (REQ_DONE);
 }
 
-error_t	Client::_handlePipeIn(void)
+error_t	Client::_handleCGIIn(void)
 {
 	std::cerr << "Pipe in" << std::endl;
 	return (REQ_ERROR);
 }
 
-error_t	Client::_handlePipeOut(void)
+error_t	Client::_handleCGIOut(void)
 {
 	std::cerr << "Pipe out" << std::endl;
 	return (REQ_ERROR);
@@ -456,7 +467,7 @@ error_t	Client::handleIn(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketIn());
 	else
-		return (this->_handlePipeIn());
+		return (this->_handleCGIIn());
 }
 
 error_t	Client::handleOut(fd_t fd)
@@ -464,7 +475,7 @@ error_t	Client::handleOut(fd_t fd)
 	if (fd == this->_socket)
 		return (this->_handleSocketOut());
 	else
-		return (this->_handlePipeOut());
+		return (this->_handleCGIOut());
 }
 
 /* GETTERS ****************************************************************** */
@@ -502,7 +513,8 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 			<< client._context.target << " "
 			<< client._context.protocolVersion << "\" ";
 	}
-	os << client._context.response.statusCode();
+	os << client._context.response.statusCode() << " "
+		<< client._bytesSent;
 	headers_t::const_iterator agent = client._context.headers.find(HEADER_USER_AGENT);
 	if (agent != client._context.headers.end()) {
 		os << " \"" << agent->second << '"';

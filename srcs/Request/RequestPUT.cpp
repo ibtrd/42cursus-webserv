@@ -42,14 +42,20 @@ error_t	RequestPUT::parse(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestPUT::process(void)
+error_t	RequestPUT::processIn(void)
 {
-	std::cerr << "RequestPUT process" << std::endl;
+	std::cerr << "RequestPUT processIn" << std::endl;
 	// debug start
-	this->_context.response.setStatusCode(OK);
+	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setBody("Hello, World!");
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	// debug end
+	return (REQ_DONE);
+}
+
+error_t	RequestPUT::processOut(void)
+{
+	std::cerr << "RequestPUT processOut" << std::endl;
 	return (REQ_DONE);
 }
 

@@ -23,6 +23,7 @@ private:
 
 	ARequest			*_request;
 	RequestContext_t	_context;
+	size_t				_bytesSent;
 
 	const std::string	_requestStateStr(void) const;
 
@@ -35,8 +36,8 @@ private:
 	error_t				_sendResponse(void);
 	error_t				_handleSocketIn(void);
 	error_t				_handleSocketOut(void);
-	error_t				_handlePipeIn(void);
-	error_t				_handlePipeOut(void);
+	error_t				_handleCGIIn(void);
+	error_t				_handleCGIOut(void);
 	error_t				_resolveARequest(void);
 	const LocationBlock	*_findRuleBlock(void);
 

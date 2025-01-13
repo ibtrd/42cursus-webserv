@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Response.hpp"
+#include "RequestContext.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -13,9 +14,9 @@
 Response::Response(void)
 {
 	// std::cerr << "Response created" << std::endl;
-	this->_statusCode = NONE;
+	this->_statusCode = STATUS_NONE;
 	this->_reasonPhrase = "";
-	this->_headers["Server"] = "webserv/0.5";
+	this->_headers[HEADER_SERVER] = "webserv/0.5";
 };
 
 Response::Response(const Response &other)
@@ -101,7 +102,7 @@ void	Response::setHeader(const std::string &key, const std::string &value)
 void	Response::setBody(const std::string &body)
 {
 	this->_body = body;
-	this->_headers["Content-Length"] = ft::numToStr(body.length());
+	this->_headers[HEADER_CONTENT_LENGTH] = ft::numToStr(body.length());
 }
 
 /* EXCEPTIONS *************************************************************** */

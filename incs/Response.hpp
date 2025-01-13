@@ -9,6 +9,7 @@ private:
 	status_code_t	_statusCode;
 	std::string	_reasonPhrase;
 	headers_t	_headers;
+	// DEPRECATED
 	std::string	_body;
 
 public:
@@ -28,7 +29,9 @@ public:
 
 	void		setStatusCode(const status_code_t &code);
 	void		setHeader(const std::string &key, const std::string &value);
+	// DEPRECATED
 	void		setBody(const std::string &body);
+	// void		setBody(const char *body, const size_t size);
 
 };
 

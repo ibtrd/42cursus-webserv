@@ -19,7 +19,8 @@ public:
 	ARequest	&operator=(const ARequest &other);
 
 	virtual error_t	parse(void) = 0;
-	virtual error_t	process(void) = 0;
+	virtual error_t	processIn(void) = 0;
+	virtual error_t	processOut(void) = 0;
 
 	// bool	pathExists(void) const;
 
