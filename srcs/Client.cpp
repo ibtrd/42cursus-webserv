@@ -29,7 +29,8 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
 	_socket(requestSocket),
 	_addr(addr),
 	_request(NULL),
-	_context(server)
+	_context(server),
+	_bytesSent(0)
 {
 	// std::cerr << "Client created" << std::endl;
 	this->_context.requestState = REQ_STATE_NONE;
@@ -42,7 +43,8 @@ Client::Client(const Client &other) :
 	_socket(other._socket),
 	_addr(other._addr),
 	_request(other._request),
-	_context(other._context)
+	_context(other._context),
+	_bytesSent(other._bytesSent)
 {
 	// std::cerr << "Client copy" << std::endl;
 	*this = other;
@@ -80,6 +82,7 @@ Client	&Client::operator=(const Client &other)
 	this->_context.headers = other._context.headers;
 	this->_context.response = other._context.response;
 	this->_context.responseBuffer = other._context.responseBuffer;
+	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
 
@@ -369,6 +372,7 @@ error_t	Client::_sendResponse(void)
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
 		return (REQ_ERROR);
 	}
+	this->_bytesSent += bytes;
 	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 	this->_context.responseBuffer.erase(0, bytes);
 
@@ -509,7 +513,8 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 			<< client._context.target << " "
 			<< client._context.protocolVersion << "\" ";
 	}
-	os << client._context.response.statusCode();
+	os << client._context.response.statusCode() << " "
+		<< client._bytesSent;
 	headers_t::const_iterator agent = client._context.headers.find(HEADER_USER_AGENT);
 	if (agent != client._context.headers.end()) {
 		os << " \"" << agent->second << '"';

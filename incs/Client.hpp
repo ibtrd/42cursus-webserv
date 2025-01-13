@@ -23,6 +23,7 @@ private:
 
 	ARequest			*_request;
 	RequestContext_t	_context;
+	size_t				_bytesSent;
 
 	const std::string	_requestStateStr(void) const;
 
