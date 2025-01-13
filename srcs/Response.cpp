@@ -82,8 +82,13 @@ std::string	Response::response(void) const
 		response += it->first + ": " + it->second + "\r\n";
 	}
 	response += "\r\n";
-	response += this->_body;
+	// response += this->_body;
 	return (response);
+}
+
+size_t	Response::bodySize(void) const
+{
+	return (this->_body.size());
 }
 
 /* SETTERS ****************************************************************** */
@@ -102,7 +107,16 @@ void	Response::setHeader(const std::string &key, const std::string &value)
 void	Response::setBody(const std::string &body)
 {
 	this->_body = body;
-	this->_headers[HEADER_CONTENT_LENGTH] = ft::numToStr(body.length());
+}
+
+void	Response::addBody(const std::string &body)
+{
+	this->_body += body;
+}
+
+void	Response::clearBody(void)
+{
+	this->_body.clear();
 }
 
 /* EXCEPTIONS *************************************************************** */

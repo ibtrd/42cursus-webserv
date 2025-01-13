@@ -5,6 +5,7 @@
 # include "LocationBlock.hpp"
 
 # define REQ_BUFFER_SIZE 65535
+# define REQ_DIR_BUFFER_SIZE 128
 
 # define REQ_CONTINUE 0	// Incomplete task, skip to next call
 # define REQ_DONE 1		// Done with current task
