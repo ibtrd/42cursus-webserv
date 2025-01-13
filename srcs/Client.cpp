@@ -2,6 +2,7 @@
 #include <iostream>
 #include <cerrno>
 #include <cstring>
+#include <arpa/inet.h>
 
 #include "RequestGET.hpp"
 #include "RequestPOST.hpp"
@@ -22,14 +23,26 @@ ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 /* CONSTRUCTORS ************************************************************* */
 
 
-Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server) : _idSocket(idSocket), _socket(requestSocket), _request(NULL), _context(server)
+Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server, const struct sockaddr_in &addr) :
+	_timestamp(time(NULL)),
+	_idSocket(idSocket),
+	_socket(requestSocket),
+	_addr(addr),
+	_request(NULL),
+	_context(server)
 {
 	// std::cerr << "Client created" << std::endl;
 	this->_context.requestState = REQ_STATE_NONE;
 	this->_request = NULL;
 }
 
-Client::Client(const Client &other) : _idSocket(other._idSocket), _socket(other._socket), _request(other._request), _context(other._context)
+Client::Client(const Client &other) :
+	_timestamp(other._timestamp),
+	_idSocket(other._idSocket),
+	_socket(other._socket),
+	_addr(other._addr),
+	_request(other._request),
+	_context(other._context)
 {
 	// std::cerr << "Client copy" << std::endl;
 	*this = other;
@@ -38,6 +51,7 @@ Client::Client(const Client &other) : _idSocket(other._idSocket), _socket(other.
 Client::~Client(void)
 {
 	// std::cerr << "Client destroyed" << std::endl;
+	std::cout << *this;
 	if (this->_request)
 		delete this->_request;
 }
@@ -457,8 +471,42 @@ error_t	Client::handleOut(fd_t fd)
 
 void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
 
+const RequestContext_t &Client::context(void) const {
+	return this->_context;
+}
+
+const struct sockaddr_in &Client::addr(void) const {
+	return this->_addr;
+}
+
+time_t Client::timestamp(void) const {
+	return this->_timestamp;
+}
+
 /* SETTERS ****************************************************************** */
 
 void	Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
 
 /* EXCEPTIONS *************************************************************** */
+
+/* ************************************************************************** */
+
+std::ostream &operator<<(std::ostream &os, const Client &client) {
+    char buffer[128];
+    std::strftime(buffer, sizeof(buffer), "%c", std::localtime(&client._timestamp));
+	char clientIP[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
+	os << clientIP << " [" << buffer << "] ";
+	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(client._context.requestState)) {
+		os << '"' << client._context.method.string() << " "
+			<< client._context.target << " "
+			<< client._context.protocolVersion << "\" ";
+	}
+	os << client._context.response.statusCode();
+	headers_t::const_iterator agent = client._context.headers.find(HEADER_USER_AGENT);
+	if (agent != client._context.headers.end()) {
+		os << " \"" << agent->second << '"';
+	}
+	os << std::endl;
+	return os;
+}
