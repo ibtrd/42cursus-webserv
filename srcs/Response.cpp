@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Response.hpp"
+#include "RequestContext.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */

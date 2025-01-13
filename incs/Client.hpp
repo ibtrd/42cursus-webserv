@@ -6,6 +6,7 @@
 
 # include <string>
 # include <map>
+# include <ctime>
 
 # define PROTOCOLE_VERSION "HTTP/1.1"
 
@@ -15,8 +16,10 @@ private:
 	static	int32_t		_epollFd;
 	static	ARequest	*(*_requestsBuilder[INVAL_METHOD])(RequestContext_t &);
 	
-	const fd_t			_idSocket;
-	const fd_t			_socket;
+	const time_t				_timestamp;
+	const fd_t					_idSocket;
+	const fd_t					_socket;
+	const struct sockaddr_in	_addr;
 
 	ARequest			*_request;
 	RequestContext_t	_context;
@@ -37,8 +40,10 @@ private:
 	error_t				_resolveARequest(void);
 	const LocationBlock	*_findRuleBlock(void);
 
+	friend std::ostream &operator<<(std::ostream &os, const Client &client);
+
 public:
-	Client(const fd_t idSocket, const fd_t requestSocket, Server const &server);
+	Client(const fd_t idSocket, const fd_t requestSocket, Server const &server, const struct sockaddr_in &addr);
 	Client(const Client &other);
 
 	~Client(void);
@@ -51,7 +56,10 @@ public:
 	error_t		handleOut(fd_t fd);
 
 	// GETTERS
-	void	sockets(fd_t fds[2]) const;
+	const RequestContext_t		&context(void) const;
+	const struct sockaddr_in	&addr(void) const;
+	time_t						timestamp(void) const;
+	void						sockets(fd_t fds[2]) const;
 
 	// SETTERS
 	static void	setEpollFd(const int32_t fd);

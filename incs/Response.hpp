@@ -2,8 +2,7 @@
 # define RESPONSE_HPP
 
 # include "webdef.hpp"
-# include <string>
-# include <map>
+
 
 class Response {
 private:
