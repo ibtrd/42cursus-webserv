@@ -1,15 +1,8 @@
-#include "Server.hpp"
-#include "ft.hpp"
 
-#include <cstring>
-#include <errno.h>
-#include <unistd.h>
 #include <iostream>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <algorithm>
 #include <csignal>
 #include <fstream>
+#include <arpa/inet.h>
 
 #include "Server.hpp"
 #include "ft.hpp"
@@ -200,13 +193,15 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 	return fd;
 }
 
-error_t	Server::_addConnection(const int32_t socket) {
-	std::cerr << "New connection" << std::endl;
-	int32_t requestSocket = accept(socket, NULL, NULL);
+error_t	Server::_addConnection(const int32_t socket) { //TODO: REMOVE PRINTS
+	struct sockaddr_in clientAddr;
+	socklen_t clientAddrLen = sizeof(clientAddr);
+
+	int32_t requestSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrLen);	
 	if (-1 == requestSocket) {
 		return -1;
 	}
-	this->_clients.push_front(Client(socket, requestSocket, *this));
+	this->_clients.push_front(Client(socket, requestSocket, *this, clientAddr));
 	if (-1 == this->_clients.front().init()) {
 		return -1;
 	}

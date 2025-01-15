@@ -51,15 +51,21 @@ error_t	RequestDELETE::parse(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestDELETE::process(void)
+error_t	RequestDELETE::processIn(void)
 {
-	std::cerr << "RequestDELETE process" << std::endl;
+	std::cerr << "RequestDELETE processIn" << std::endl;
 	if (0 != std::remove(((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target).c_str())) {
-		this->_context.response.setStatusCode(NOT_FOUND);
+		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else {
-		this->_context.response.setStatusCode(OK);
+		this->_context.response.setStatusCode(STATUS_OK);
 	}
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	return (REQ_DONE);
+}
+
+error_t	RequestDELETE::processOut(void)
+{
+	std::cerr << "RequestDELETE processOut" << std::endl;
 	return (REQ_DONE);
 }
 

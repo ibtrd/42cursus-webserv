@@ -15,7 +15,8 @@ public:
 	RequestDELETE	&operator=(const RequestDELETE &other);
 
 	error_t		parse(void);
-	error_t		process(void);
+	error_t		processIn(void);
+	error_t		processOut(void);
 	ARequest	*clone(void) const;
 };
 

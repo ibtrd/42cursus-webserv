@@ -110,13 +110,13 @@ error_t LocationBlock::setRoot(const std::string &str) {
 
 void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
 	switch (status) {
-		case MULTIPLE_CHOICES:
-		case MOVED_PERMANENTLY:
-		case FOUND:
-		case SEE_OTHER:
-		case NOT_MODIFIED:
-		case TEMPORARY_REDIRECT:
-		case PERMANENT_REDIRECT:
+		case STATUS_MULTIPLE_CHOICES:
+		case STATUS_MOVED_PERMANENTLY:
+		case STATUS_FOUND:
+		case STATUS_SEE_OTHER:
+		case STATUS_NOT_MODIFIED:
+		case STATUS_TEMPORARY_REDIRECT:
+		case STATUS_PERMANENT_REDIRECT:
 			this->_redirection.first = status;
 			break;
 		default:

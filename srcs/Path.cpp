@@ -83,7 +83,7 @@ std::string Path::extension(void) const {
 	const std::string &src = this->_chunks.back();
 	const std::size_t pos = src.find_last_of('.');
 	if (pos != std::string::npos && pos != src.size() - 1) {
-		return src.substr(pos);
+		return src.substr(pos + 1);
 	}
 	return std::string();
 }

@@ -48,14 +48,20 @@ error_t	RequestPOST::parse(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestPOST::process(void)
+error_t	RequestPOST::processIn(void)
 {
-	std::cerr << "RequestPOST process" << std::endl;
+	std::cerr << "RequestPOST processIn" << std::endl;
 	// debug start
-	this->_context.response.setStatusCode(OK);
+	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setBody("Hello, World!");
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	// debug end
+	return (REQ_DONE);
+}
+
+error_t	RequestPOST::processOut(void)
+{
+	std::cerr << "RequestPOST processOut" << std::endl;
 	return (REQ_DONE);
 }
 

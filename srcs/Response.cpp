@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Response.hpp"
+#include "RequestContext.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -13,9 +14,9 @@
 Response::Response(void)
 {
 	// std::cerr << "Response created" << std::endl;
-	this->_statusCode = NONE;
+	this->_statusCode = STATUS_NONE;
 	this->_reasonPhrase = "";
-	this->_headers["Server"] = "webserv/0.5";
+	this->_headers[HEADER_SERVER] = "webserv/0.5";
 };
 
 Response::Response(const Response &other)
@@ -81,8 +82,13 @@ std::string	Response::response(void) const
 		response += it->first + ": " + it->second + "\r\n";
 	}
 	response += "\r\n";
-	response += this->_body;
+	// response += this->_body;
 	return (response);
+}
+
+size_t	Response::bodySize(void) const
+{
+	return (this->_body.size());
 }
 
 /* SETTERS ****************************************************************** */
@@ -101,7 +107,16 @@ void	Response::setHeader(const std::string &key, const std::string &value)
 void	Response::setBody(const std::string &body)
 {
 	this->_body = body;
-	this->_headers["Content-Length"] = ft::numToStr(body.length());
+}
+
+void	Response::addBody(const std::string &body)
+{
+	this->_body += body;
+}
+
+void	Response::clearBody(void)
+{
+	this->_body.clear();
 }
 
 /* EXCEPTIONS *************************************************************** */
