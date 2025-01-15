@@ -10,6 +10,7 @@
 #include "ft.hpp"
 #include "Client.hpp"
 #include "Server.hpp"
+#include "webservHTML.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -74,7 +75,10 @@ void RequestGET::_openDir(void)
 	// this->_context.response.setHeader(HEADER_TRANSFER_ENCODING, "chunked");
 
 	std::string body;
-	body = "<html><head><title>Index of " + this->_context.target + "</title></head><body><h1>Index of " + this->_context.target + "</h1><hr><pre>";
+	body = INDEXOF(this->_context.target);
+	// if (this->_context.target != "/") {
+	// 	body += INDEXOF_PARENT(this->_context.target);
+	// }
 	this->_context.response.setBody(body);
 }
 
@@ -91,35 +95,6 @@ error_t RequestGET::_readFile(void)
 	}
 
 	this->_context.responseBuffer.append(buffer, bytes);
-	return (REQ_CONTINUE);
-}
-
-error_t RequestGET::_readDir(void)
-{
-	struct dirent	*entry;
-	std::string		buffer;
-	size_t			entryCount = 0;
-
-	errno = 0;
-	while (entryCount < REQ_DIR_BUFFER_SIZE && (entry = readdir(this->_dir)) != NULL)
-	{
-		buffer += "<a href=\"http://" + this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name + "\">" + entry->d_name + "</a><br>";
-		entryCount++;
-	}
-	if (errno != 0)
-	{
-		std::cerr << "readdir: " << strerror(errno) << std::endl;
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return (REQ_ERROR);
-	}
-	this->_context.response.addBody(buffer);
-	if (entry == NULL)
-	{
-		this->_context.response.addBody("</pre><hr></body></html>");
-		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
-	}
-	this->_context.responseBuffer += this->_context.response.body();
-	this->_context.response.clearBody();
 	return (REQ_CONTINUE);
 }
 

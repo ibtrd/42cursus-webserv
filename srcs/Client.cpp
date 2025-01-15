@@ -366,12 +366,7 @@ error_t	Client::_sendResponse(void)
 	ssize_t	bytes;
 
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
-	errno = 0;
 	bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
-	if (errno == EPIPE) {
-		std::cerr << "Client disconnected" << std::endl;
-		return (REQ_DONE);
-	}
 	if (bytes == -1) {
 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
 		return (REQ_ERROR);
