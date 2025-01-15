@@ -1,10 +1,10 @@
 #ifndef PATH_HPP
 # define PATH_HPP
 
-#include <string>
 #include <vector>
-#include <stdint.h>
 #include <sys/stat.h>
+
+#include "webdef.hpp"
 
 class Path {
 public:
@@ -19,7 +19,9 @@ public:
 	bool	isOriginForm(void) const;
 	bool	isFileFormat(void) const;
 	bool	isDirFormat(void) const;
-	bool	exists(void);
+	error_t	access(int type) const;
+	error_t	stat(void);
+
 	bool	hasPermission(int32_t mode) const;
 	bool	isFile(void) const;
 	bool	isDir(void) const;
@@ -36,6 +38,7 @@ private:
 	std::string					_str;
 	std::vector<std::string>	_chunks;
 	struct stat					_stat;
+	bool						_statDone;
 
 	friend std::ostream &operator<<(std::ostream &os, const Path &path);
 };

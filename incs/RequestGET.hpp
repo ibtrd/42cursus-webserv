@@ -17,6 +17,9 @@ private:
 	error_t	_readFile(void);
 	error_t	_readDir(void);
 
+	error_t _fetchIndexes(void);
+	error_t	_validateLocalFile(void);
+
 public:
 	RequestGET(RequestContext_t &context);
 	RequestGET(const RequestGET &other);
