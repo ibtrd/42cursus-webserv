@@ -184,10 +184,11 @@ error_t Client::_parseRequest(void)
 
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
-		RETURN_UNLESS(ret, REQ_CONTINUE);
+		if (ret != REQ_CONTINUE)
+			return (ret);
 	}
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
