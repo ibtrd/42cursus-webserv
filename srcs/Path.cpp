@@ -80,7 +80,24 @@ bool Path::isFile(void) const {
 }
 
 bool Path::isDir(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
 	return S_ISDIR(this->_stat.st_mode);
+}
+
+const time_t &Path::mTime(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
+	return this->_stat.st_mtime;
+}
+
+long Path::size(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
+	return this->_stat.st_size;
 }
 
 std::string Path::extension(void) const {

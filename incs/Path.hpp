@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <sys/stat.h>
+#include <ctime>
 
 #include "webdef.hpp"
 
@@ -22,9 +23,11 @@ public:
 	error_t	access(int type) const;
 	error_t	stat(void);
 
-	bool	hasPermission(int32_t mode) const;
-	bool	isFile(void) const;
-	bool	isDir(void) const;
+	bool			hasPermission(int32_t mode) const;
+	bool			isFile(void) const;
+	bool			isDir(void) const;
+	const time_t	&mTime(void) const;
+	long			size(void) const;
 
 	const std::string	&string(void) const;
 
