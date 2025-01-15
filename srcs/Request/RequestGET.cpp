@@ -73,13 +73,7 @@ void RequestGET::_openDir(void)
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
 	// this->_context.response.setHeader(HEADER_TRANSFER_ENCODING, "chunked");
-
-	std::string body;
-	body = INDEXOF(this->_context.target);
-	// if (this->_context.target != "/") {
-	// 	body += INDEXOF_PARENT(this->_context.target);
-	// }
-	this->_context.response.setBody(body);
+	this->_context.response.setBody(INDEXOF(this->_context.target));
 }
 
 error_t RequestGET::_readFile(void)
@@ -98,6 +92,37 @@ error_t RequestGET::_readFile(void)
 	return (REQ_CONTINUE);
 }
 
+error_t RequestGET::_validateLocalFile(void) {
+	if (0 != this->_path.stat()) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (!this->_path.hasPermission(R_OK)) {
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (this->_path.isFile()) {
+		this->_openFile();
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	return (REQ_CONTINUE);
+}
+
+error_t RequestGET::_fetchIndexes(void) {
+	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin(); it != this->_context.ruleBlock->indexes().end(); ++it) {
+		std::string test = this->_path.concat(*it);
+		std::cerr << "testing indexfile: " << test << std::endl;
+		if (0 == access(test.c_str(), F_OK)) {
+			this->_path = test;
+			return 0;
+		} 
+	}
+	return -1;
+}
+
 /* ************************************************************************** */
 
 error_t	RequestGET::parse(void)
@@ -107,64 +132,37 @@ error_t	RequestGET::parse(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestGET::processIn(void)
-{
-	// std::cerr << "RequestGET processIn" << std::endl;
-
-	if (!this->_path.exists()) {
+error_t	RequestGET::processIn(void) {
+	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-
-	if (this->_path.hasPermission(R_OK) == false) {
-		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	if (REQ_CONTINUE != this->_validateLocalFile()) {
 		return (REQ_DONE);
 	}
-
-	if (this->_path.isFile()) {
-		this->_openFile();
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-
 	if (!this->_path.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-
-
-	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin(); it != this->_context.ruleBlock->indexes().end(); ++it) {
-		std::string test = this->_path.concat(*it);
-		if (0 == access(test.c_str(), F_OK)) {
-			this->_path = test;
-			break ;
-		} 
+	if (0 == this->_fetchIndexes()) {
+		if (REQ_CONTINUE != this->_validateLocalFile()) {
+			return (REQ_DONE);
+		}
+	} else {
+		if (this->_context.ruleBlock->isDirListing()) {
+			this->_openDir();
+			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+			return (REQ_DONE);
+		}
 	}
-
-	/* to implement: index */
-	// iterate over index files (exists)
-	// if found:
-	//  if not readable -> 403
-	//  if not regular file -> 409
-	//  open file
-	//  return
-
-	if (this->_context.ruleBlock->isDirListing()) {
-		this->_openDir();
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);

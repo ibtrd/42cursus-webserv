@@ -57,21 +57,25 @@ bool Path::isDirFormat(void) const {
 	return (!this->_str.empty() && '/' == *this->_str.rbegin());
 }
 
-bool Path::exists(void) {
-	if (access(this->_str.c_str(), F_OK) == -1) {
-		return false;
-	}
-	if (stat(this->_str.c_str(), &this->_stat) == -1) {
-		throw std::runtime_error("stat: " + std::string(std::strerror(errno)));
-	}
-	return (true);
+error_t Path::access(int type) const {
+	return ::access(this->_str.c_str(), type);
+}
+
+error_t Path::stat(void) {
+	error_t err = ::stat(this->_str.c_str(), &this->_stat);
+	if (!err)
+		this->_statDone = true;
+	return err;
 }
 
 bool Path::hasPermission(int32_t mode) const {
-	return (access(this->_str.c_str(), mode) != -1);
+	return (::access(this->_str.c_str(), mode) != -1);
 }
 
 bool Path::isFile(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
 	return S_ISREG(this->_stat.st_mode);
 }
 
