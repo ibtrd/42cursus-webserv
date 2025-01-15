@@ -506,8 +506,8 @@ void	Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
 /* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const Client &client) {
-    char buffer[128];
-    std::strftime(buffer, sizeof(buffer), "%c", std::localtime(&client._timestamp));
+	char buffer[128];
+	std::strftime(buffer, sizeof(buffer), "%c", std::localtime(&client._timestamp));
 	char clientIP[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";

@@ -1,7 +1,9 @@
 #include <iostream>
+#include <ctime>
 
 #include "RequestGET.hpp"
 #include "ft.hpp"
+#include "webservHTML.hpp"
 
 #define KB 1024L
 #define MB 1048576L
@@ -29,18 +31,44 @@ error_t RequestGET::_readDir(void)
 	while (entryCount < REQ_DIR_BUFFER_SIZE && (entry = readdir(this->_dir)) != NULL)
 	{
 		if (!std::strcmp(entry->d_name, ".")) continue;
-		std::string fullPath = this->_context.target + entry->d_name;
+
+		char nameBuffer[32] = {0};
+		char timeBuffer[128];
+		struct stat fileStat;
+
+		if (strlen(entry->d_name) > 23)
+		{
+			std::strncpy(nameBuffer, entry->d_name, 20);
+			std::strncpy(nameBuffer + 20, "...", 4);
+			nameBuffer[24] = '\0';
+		}
+		else {
+			std::strcpy(nameBuffer, entry->d_name);
+		}
+
+		Path localPath(this->_path.string() + entry->d_name);
+
+		error_t err = stat(localPath.string().c_str(), &fileStat);
+		if (err == -1)
+			timeBuffer[0] = '\0';
+		else
+			std::strftime(timeBuffer, sizeof(timeBuffer), "%F %R", std::localtime(&fileStat.st_mtime));
 
 		if (entry->d_type == DT_DIR) {
-			buffer += "📁 <a href=\"http://" + this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name + "\">" + entry->d_name + "</a><br>";
+			buffer += HTMLDIR(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
+								nameBuffer,
+								timeBuffer);
 		} else if (entry->d_type == DT_REG) {
-			struct stat fileStat;
-			std::string localPath = this->_path.string() + entry->d_name;
-			error_t err = stat(localPath.c_str(), &fileStat);
-			buffer += "📄 <a href=\"http://" + this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name + "\">" + entry->d_name + "</a>" + (-1 != err ? " " + bytesToUnit(fileStat.st_size) : "") + "<br>";
+			buffer += HTMLFILE(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
+								nameBuffer,
+								timeBuffer,
+								(-1 != err ? " " + bytesToUnit(fileStat.st_size) : ""));
 		} else {
-			buffer += "❓ <a href=\"http://" + this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name + "\">" + entry->d_name + "</a><br>";
+			buffer += HTMLOTHER(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
+								nameBuffer,
+								timeBuffer);
 		}
+
 		entryCount++;
 		errno = 0;
 	}
@@ -53,7 +81,7 @@ error_t RequestGET::_readDir(void)
 	this->_context.response.addBody(buffer);
 	if (entry == NULL)
 	{
-		this->_context.response.addBody("</body></html>");
+		this->_context.response.addBody("</table></body></html>");
 		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
 	}
 	this->_context.responseBuffer += this->_context.response.body();
