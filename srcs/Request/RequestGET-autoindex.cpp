@@ -33,8 +33,7 @@ error_t RequestGET::_readDir(void)
 		if (!std::strcmp(entry->d_name, ".")) continue;
 
 		char nameBuffer[32] = {0};
-		char timeBuffer[128];
-		struct stat fileStat;
+		char timeBuffer[128] = {0};
 
 		if (strlen(entry->d_name) > 23)
 		{
@@ -47,22 +46,25 @@ error_t RequestGET::_readDir(void)
 		}
 
 		Path localPath(this->_path.string() + entry->d_name);
-
-		error_t err = stat(localPath.string().c_str(), &fileStat);
+		
+		error_t err = localPath.stat();
 		if (err == -1)
 			timeBuffer[0] = '\0';
 		else
-			std::strftime(timeBuffer, sizeof(timeBuffer), "%F %R", std::localtime(&fileStat.st_mtime));
+			std::strftime(timeBuffer, sizeof(timeBuffer), "%F %R", std::localtime(&localPath.mTime()));
 
-		if (entry->d_type == DT_DIR) {
+		if (-1 == err) {
+			buffer += HTMLERROR(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
+								nameBuffer);
+		} else if (localPath.isDir()) {
 			buffer += HTMLDIR(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
 								nameBuffer,
 								timeBuffer);
-		} else if (entry->d_type == DT_REG) {
+		} else if (localPath.isFile()) {
 			buffer += HTMLFILE(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
 								nameBuffer,
 								timeBuffer,
-								(-1 != err ? " " + bytesToUnit(fileStat.st_size) : ""));
+								(-1 != err ? " " + bytesToUnit(localPath.size()) : ""));
 		} else {
 			buffer += HTMLOTHER(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
 								nameBuffer,

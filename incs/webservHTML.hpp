@@ -60,5 +60,6 @@
 # define HTMLFILE(path, name, time, size) "<tr><td>📄</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>" + size + "</span></td></tr>"
 # define HTMLDIR(path, name, time) "<tr><td>📁</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>-</span></td></tr>"
 # define HTMLOTHER(path, name, time) "<tr><td>❓</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>-</span></td></tr>"
+# define HTMLERROR(path, name) "<tr><td>❌</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td></td> <td class=\"size-column\"><span>-</span></td></tr>"
 
 #endif /* ******************************************************************* */
