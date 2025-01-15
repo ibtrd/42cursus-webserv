@@ -1,8 +1,5 @@
 #include <arpa/inet.h>
-#include <stdexcept>
-#include <cstring>
 
-#include "ConfFile.hpp"
 #include "Configuration.hpp"
 #include "ft.hpp"
 
@@ -17,6 +14,7 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 	ServerBlock		server;
 	LocationBlock	globalLocation;
 
+	this->_root = Path();
 	globalLocation.setDefaults();
 	while (++token != this->_tokens.end() && *token != BLOCK_CLOSE) {
 		if (token + 1 == this->_tokens.end()) {
@@ -28,6 +26,7 @@ void ConfFile::_serverDirective(std::vector<ConfToken>::const_iterator &token) {
 			(this->*(srvdir->second))(token, server);
 		} else if (locdir != _locationDirectives.end()) {
 			(this->*(locdir->second))(token, globalLocation);
+			this->_root = globalLocation.getRoot();
 		} else {
 			throw Configuration::ConfigurationException(this->_unkwownDirective(*token));
 		}
@@ -80,4 +79,34 @@ void ConfFile::_serverNameDirective(std::vector<ConfToken>::const_iterator &toke
 		server.addName(token->str());
 		++token;
 	}
+}
+
+
+#include <iostream>
+
+void ConfFile::_errorPageDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
+	const uint32_t 									args = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator	directive = token++;
+
+	if (2 > args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	if (this->_root.empty()) {
+		token += args;
+		return ;
+	}
+	Path	file(this->_root.string() + (token + args - 1)->str());
+	for (uint32_t i = 0; i < args - 1; ++i) {
+		try {
+			status_code_t	code = ft::stoi<status_code_t>(token->str());
+			if (code < 400 || code > 599) {
+				throw std::invalid_argument("");
+			}
+			server.addErrorPage(code, file);
+		} catch (std::invalid_argument &e) {
+			throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
+		}
+		++token;
+	}
+	++token;
 }

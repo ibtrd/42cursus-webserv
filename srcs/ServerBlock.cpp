@@ -37,6 +37,10 @@ const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
 }
 
+const error_pages_t &ServerBlock::errorPages(void) const {
+	return this->_errorPages;
+}
+
 const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 	const std::vector<LocationBlock>	&locations = this->_locations;
 	const LocationBlock					*selected = NULL;
@@ -77,4 +81,8 @@ void ServerBlock::addName(const std::string &name) {
 
 void ServerBlock::addLocation(const LocationBlock &location) {
 	this->_locations.push_back(location);
+}
+
+void ServerBlock::addErrorPage(const status_code_t code, const Path &file) {
+	this->_errorPages[code] = file;
 }
