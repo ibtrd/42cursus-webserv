@@ -11,6 +11,7 @@
 #include "RequestPUT.hpp"
 #include "webservHTML.hpp"
 #include "fcntl.h"
+#include "ft.hpp"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 
@@ -381,12 +382,9 @@ error_t	Client::_sendResponse(void)
 	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 	this->_context.responseBuffer.erase(0, bytes);
 
-	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState) && IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState)) {
+	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	// if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
-	// 	return (REQ_DONE);
-	// }
 	std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
@@ -394,7 +392,7 @@ error_t	Client::_sendResponse(void)
 void	Client::_loadErrorPage(void)
 {
 	std::cerr << "Loading error page" << std::endl;
-	// set http error body
+
 	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
 	Path	errorPath;
 
@@ -423,7 +421,9 @@ void	Client::_loadErrorPage(void)
 	return ;
 
 to_default_error_page:
-	this->_context.response.setBody("666 Default error page");
+	std::string errorBody;
+	errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()), statusCodeToMsg(this->_context.response.statusCode()));
+	this->_context.response.setBody(errorBody);
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
 	std::cerr << "Default error page loaded" << std::endl;
 }
