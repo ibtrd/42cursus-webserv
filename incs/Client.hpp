@@ -7,6 +7,7 @@
 # include <string>
 # include <map>
 # include <ctime>
+# include <fstream>
 
 # define PROTOCOLE_VERSION "HTTP/1.1"
 
@@ -23,7 +24,9 @@ private:
 
 	ARequest			*_request;
 	RequestContext_t	_context;
+	std::ifstream		_errorPage;
 	size_t				_bytesSent;
+
 
 	const std::string	_requestStateStr(void) const;
 
@@ -39,6 +42,8 @@ private:
 	error_t				_handleCGIIn(void);
 	error_t				_handleCGIOut(void);
 	error_t				_resolveARequest(void);
+	void				_loadErrorPage(void);
+	void				_readErrorPage(void);
 	const LocationBlock	*_findRuleBlock(void);
 
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);

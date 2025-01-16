@@ -29,6 +29,7 @@ public:
 	void	addErrorPage(const status_code_t code, const Path &file);
 
 	const LocationBlock	*findLocationBlock(const Path &target) const;
+	const Path			*findErrorPage(status_code_t code) const;
 
 	void	fillLocations(const LocationBlock &location);
 
