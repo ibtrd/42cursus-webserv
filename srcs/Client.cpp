@@ -373,14 +373,17 @@ error_t	Client::_sendResponse(void)
 	ssize_t	bytes;
 
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
-	bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
-	if (bytes == -1) {
-		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-		return (REQ_ERROR);
+	if (bytes > 0)
+	{
+		bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
+		if (bytes == -1) {
+			std::cerr << "Error: send: " << strerror(errno) << std::endl;
+			return (REQ_ERROR);
+		}
+		this->_bytesSent += bytes;
+		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		this->_context.responseBuffer.erase(0, bytes);
 	}
-	this->_bytesSent += bytes;
-	std::cerr << "Sent: " << bytes << " bytes" << std::endl;
-	this->_context.responseBuffer.erase(0, bytes);
 
 	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
@@ -391,7 +394,7 @@ error_t	Client::_sendResponse(void)
 
 void	Client::_loadErrorPage(void)
 {
-	std::cerr << "Loading error page" << std::endl;
+	// std::cerr << "Loading error page" << std::endl;
 
 	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
 	Path	errorPath;
@@ -417,7 +420,6 @@ void	Client::_loadErrorPage(void)
 		goto to_default_error_page;
 	}
 	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-	std::cerr << "Error page loaded" << std::endl;
 	return ;
 
 to_default_error_page:
@@ -425,7 +427,6 @@ to_default_error_page:
 	errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()), statusCodeToMsg(this->_context.response.statusCode()));
 	this->_context.response.setBody(errorBody);
 	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-	std::cerr << "Default error page loaded" << std::endl;
 }
 
 void	Client::_readErrorPage(void)
@@ -480,7 +481,6 @@ error_t	Client::_handleSocketOut(void)
 	error_t	ret;
 
 	if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) && this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
-		std::cerr << "READ ERROR PAGE" << std::endl;
 		this->_readErrorPage();
 	} else if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) && this->_request) {
 		ret = this->_request->processOut();
