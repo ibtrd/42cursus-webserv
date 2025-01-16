@@ -1,0 +1,21 @@
+name: Format
+run-name: Code formating
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Run Makefile rule
+      run: make clang-format
+    - name : Compile
+      run: make
