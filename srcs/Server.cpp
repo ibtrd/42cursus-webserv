@@ -1,10 +1,12 @@
 
-#include <iostream>
-#include <csignal>
-#include <fstream>
+#include "Server.hpp"
+
 #include <arpa/inet.h>
 
-#include "Server.hpp"
+#include <csignal>
+#include <fstream>
+#include <iostream>
+
 #include "ft.hpp"
 
 extern int g_signal;
@@ -15,7 +17,8 @@ Server::~Server() {
 	if (this->_epollFd != -1) {
 		close(this->_epollFd);
 	}
-	for (servermap_t::const_iterator it = this->_serverBlocks.begin(); it != this->_serverBlocks.end(); ++it) {
+	for (servermap_t::const_iterator it = this->_serverBlocks.begin();
+	     it != this->_serverBlocks.end(); ++it) {
 		close(it->first);
 	}
 }
@@ -28,12 +31,13 @@ void Server::configure(const Configuration &config) {
 	}
 	Client::setEpollFd(this->_epollFd);
 
-	socketbindmap_t	bound;
+	socketbindmap_t                 bound;
 	const std::vector<ServerBlock> &blocks = config.blocks();
 	for (std::size_t i = 0; i < blocks.size(); ++i) {
 		const std::vector<struct sockaddr_in> &hosts = blocks[i].hosts();
 		for (std::size_t j = 0; j < hosts.size(); ++j) {
-			socketbindmap_t::const_iterator it = ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
+			socketbindmap_t::const_iterator it =
+			    ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
 			if (bound.end() == it) {
 				bound[this->_addSocket(blocks[i], hosts[j])].push_back(hosts[j]);
 			} else {
@@ -52,15 +56,14 @@ void Server::routine(void) {
 	if (nfds == -1) {
 		if (g_signal != SIGQUIT)
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
-		return ;
+		return;
 	}
 
 	// New connections and read events
-	for(int i = 0; i < nfds; i++) {
+	for (int i = 0; i < nfds; i++) {
 		int32_t fd = this->_events[i].data.fd;
 
-		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end())
-		{
+		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
 			this->_addConnection(fd);
 			continue;
 		}
@@ -72,29 +75,27 @@ void Server::routine(void) {
 				continue;
 			}
 
-			switch (it->second->handleIn(fd))
-			{
-			case REQ_ERROR:
-				std::cerr << "Close connection (Error)" << std::endl;
-				this->_removeConnection(fd);
-				break;
+			switch (it->second->handleIn(fd)) {
+				case REQ_ERROR:
+					std::cerr << "Close connection (Error)" << std::endl;
+					this->_removeConnection(fd);
+					break;
 
-			case REQ_DONE:
-				std::cerr << "Close connection (Done)" << std::endl;
-				this->_removeConnection(fd);
-				break;
-			
-			default:
-				break;
+				case REQ_DONE:
+					std::cerr << "Close connection (Done)" << std::endl;
+					this->_removeConnection(fd);
+					break;
+
+				default:
+					break;
 			}
-		}
-		else if (!(this->_events[i].events & EPOLLOUT)) {
+		} else if (!(this->_events[i].events & EPOLLOUT)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
 
 	// Write events
-	for(int i = 0; i < nfds; i++) {
+	for (int i = 0; i < nfds; i++) {
 		int32_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
@@ -105,23 +106,21 @@ void Server::routine(void) {
 				continue;
 			}
 
-			switch (it->second->handleOut(fd))
-			{
-			case REQ_ERROR:
-				std::cerr << "Close connection (Error)" << std::endl;
-				this->_removeConnection(fd);
-				break;
+			switch (it->second->handleOut(fd)) {
+				case REQ_ERROR:
+					std::cerr << "Close connection (Error)" << std::endl;
+					this->_removeConnection(fd);
+					break;
 
-			case REQ_DONE:
-				std::cerr << "Close connection (Done)" << std::endl;
-				this->_removeConnection(fd);
-				break;
-			
-			default:
-				break;
+				case REQ_DONE:
+					std::cerr << "Close connection (Done)" << std::endl;
+					this->_removeConnection(fd);
+					break;
+
+				default:
+					break;
 			}
-		}
-		else if (!(this->_events[i].events & EPOLLIN)) {
+		} else if (!(this->_events[i].events & EPOLLIN)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
@@ -134,7 +133,6 @@ const std::string &Server::getMimeType(const std::string &ext) const {
 	}
 	return it->second;
 }
-
 
 const ServerBlock &Server::findServerBlock(const fd_t socket, const std::string &host) const {
 	const std::vector<ServerBlock> &blocks = this->_serverBlocks.at(socket);
@@ -157,12 +155,12 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 	this->_serverBlocks[fd] = std::vector<ServerBlock>();
 
 	int reuse = 1;
- 	if(-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int))) {
+	if (-1 == setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int))) {
 		throw std::runtime_error((std::string("setsockopt(): ") + strerror(errno)).c_str());
 	}
 
 	socklen_t addrlen = sizeof(host);
-	if (-1 == bind(fd, (struct sockaddr *)&host, addrlen)){
+	if (-1 == bind(fd, (struct sockaddr *)&host, addrlen)) {
 		throw std::runtime_error((std::string("bind(): ") + strerror(errno)).c_str());
 	}
 
@@ -171,14 +169,14 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 	}
 
 	struct epoll_event event;
-	event.events = EPOLLIN;
+	event.events  = EPOLLIN;
 	event.data.fd = fd;
 	if (-1 == epoll_ctl(this->_epollFd, EPOLL_CTL_ADD, fd, &event)) {
 		throw std::runtime_error((std::string("epoll_ctl(): ") + strerror(errno)).c_str());
 	}
 
 	struct sockaddr_in boundAddr;
-	socklen_t boundAddrLen = sizeof(boundAddr);
+	socklen_t          boundAddrLen = sizeof(boundAddr);
 	if (-1 == getsockname(fd, (struct sockaddr *)&boundAddr, &boundAddrLen)) {
 		throw std::runtime_error((std::string("getsockname(): ") + strerror(errno)).c_str());
 	}
@@ -188,16 +186,17 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 		throw std::runtime_error((std::string("inet_ntop(): ") + strerror(errno)).c_str());
 	}
 
-	std::cout << "Socket " << fd << " listening on " << ip << ":" << ntohs(boundAddr.sin_port) << std::endl;
+	std::cout << "Socket " << fd << " listening on " << ip << ":" << ntohs(boundAddr.sin_port)
+	          << std::endl;
 	this->_serverBlocks[fd].push_back(block);
 	return fd;
 }
 
-error_t	Server::_addConnection(const int32_t socket) { //TODO: REMOVE PRINTS
+error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 	struct sockaddr_in clientAddr;
-	socklen_t clientAddrLen = sizeof(clientAddr);
+	socklen_t          clientAddrLen = sizeof(clientAddr);
 
-	int32_t requestSocket = accept(socket, (struct sockaddr*)&clientAddr, &clientAddrLen);	
+	int32_t requestSocket = accept(socket, (struct sockaddr *)&clientAddr, &clientAddrLen);
 	if (-1 == requestSocket) {
 		return -1;
 	}
@@ -228,8 +227,7 @@ void Server::_removeConnection(const fd_t fd) {
 	this->_clients.erase(client);
 }
 
-error_t Server::_loadMimeTypes(void)
-{
+error_t Server::_loadMimeTypes(void) {
 	std::ifstream file(MIME_TYPE_FILE);
 	if (!file.is_open()) {
 		return -1;
@@ -240,7 +238,7 @@ error_t Server::_loadMimeTypes(void)
 			continue;
 		}
 		std::istringstream iss(line);
-		std::string type;
+		std::string        type;
 		iss >> type;
 		while (iss) {
 			std::string ext;
@@ -253,12 +251,10 @@ error_t Server::_loadMimeTypes(void)
 	}
 	this->_mimetypes["default"] = "application/octet-stream";
 	// DEBUG
-	// for (std::map<std::string, std::string>::const_iterator it = this->_mimetypes.begin(); it != this->_mimetypes.end(); ++it) {
-	// 	std::cout << it->first << " -> " << it->second << std::endl;
+	// for (std::map<std::string, std::string>::const_iterator it = this->_mimetypes.begin(); it !=
+	// this->_mimetypes.end(); ++it) { 	std::cout << it->first << " -> " << it->second << std::endl;
 	// }
 	return 0;
 }
 
-int32_t	Server::epollFd(void) const {
-	return (this->_epollFd);
-}
+int32_t Server::epollFd(void) const { return (this->_epollFd); }

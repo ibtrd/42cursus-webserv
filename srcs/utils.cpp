@@ -1,13 +1,11 @@
 // function a ranger quand on aura le temps (si nécessaire)
 
-#include "webdef.hpp"
-
 #include <sstream>
 
-std::string		statusCodeToReason(const status_code_t code)
-{
-	switch (code)
-	{
+#include "webdef.hpp"
+
+std::string statusCodeToReason(const status_code_t code) {
+	switch (code) {
 		case STATUS_OK:
 			return ("STATUS_OK");
 		case STATUS_CREATED:

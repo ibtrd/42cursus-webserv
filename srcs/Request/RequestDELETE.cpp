@@ -1,12 +1,14 @@
-#include <sys/epoll.h>
-#include <unistd.h>
-#include <iostream>
-#include <sys/socket.h>
-#include <cerrno>
-#include <cstring>
-#include <cstdio>
-
 #include "RequestDELETE.hpp"
+
+#include <sys/epoll.h>
+#include <sys/socket.h>
+#include <unistd.h>
+
+#include <cerrno>
+#include <cstdio>
+#include <cstring>
+#include <iostream>
+
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -16,26 +18,22 @@
 // 	// std::cerr << "RequestDELETE created" << std::endl;
 // }
 
-RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context)
-{
+RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context) {
 	std::cerr << "RequestDELETE created" << std::endl;
 }
 
-RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other)
-{
+RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other) {
 	// std::cerr << "RequestDELETE copy" << std::endl;
 	*this = other;
 }
 
-RequestDELETE::~RequestDELETE(void)
-{
+RequestDELETE::~RequestDELETE(void) {
 	// std::cerr << "RequestDELETE destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-RequestDELETE	&RequestDELETE::operator=(const RequestDELETE &other)
-{
+RequestDELETE &RequestDELETE::operator=(const RequestDELETE &other) {
 	std::cerr << "RequestDELETE assign" << std::endl;
 	(void)other;
 	return (*this);
@@ -43,18 +41,21 @@ RequestDELETE	&RequestDELETE::operator=(const RequestDELETE &other)
 
 /* ************************************************************************** */
 
-error_t	RequestDELETE::parse(void)
-{
+error_t RequestDELETE::parse(void) {
 	std::cerr << "RequestDELETE parse" << std::endl;
 	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
-	std::cout << ((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target) << std::endl;
+	std::cout
+	    << ((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target)
+	    << std::endl;
 	return (REQ_DONE);
 }
 
-error_t	RequestDELETE::processIn(void)
-{
+error_t RequestDELETE::processIn(void) {
 	std::cerr << "RequestDELETE processIn" << std::endl;
-	if (0 != std::remove(((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target).c_str())) {
+	if (0 != std::remove(((LocationBlock *)this->_context.ruleBlock)
+	                         ->getRoot()
+	                         .concat(this->_context.target)
+	                         .c_str())) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else {
 		this->_context.response.setStatusCode(STATUS_OK);
@@ -63,14 +64,12 @@ error_t	RequestDELETE::processIn(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestDELETE::processOut(void)
-{
+error_t RequestDELETE::processOut(void) {
 	std::cerr << "RequestDELETE processOut" << std::endl;
 	return (REQ_DONE);
 }
 
-ARequest	*RequestDELETE::clone(void) const
-{
+ARequest *RequestDELETE::clone(void) const {
 	std::cerr << "RequestDELETE clone" << std::endl;
 	return (new RequestDELETE(*this));
 }
@@ -83,8 +82,7 @@ ARequest	*RequestDELETE::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestDELETE(RequestContext_t &context)
-{
+ARequest *createRequestDELETE(RequestContext_t &context) {
 	std::cerr << "createRequestDELETE" << std::endl;
 	return (new RequestDELETE(context));
 }

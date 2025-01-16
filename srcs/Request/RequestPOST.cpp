@@ -1,11 +1,13 @@
+#include "RequestPOST.hpp"
+
 #include <sys/epoll.h>
-#include <unistd.h>
-#include <iostream>
 #include <sys/socket.h>
+#include <unistd.h>
+
 #include <cerrno>
 #include <cstring>
+#include <iostream>
 
-#include "RequestPOST.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -15,26 +17,22 @@
 // 	// std::cerr << "RequestPOST created" << std::endl;
 // }
 
-RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context)
-{
+RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context) {
 	std::cerr << "RequestPOST created" << std::endl;
 }
 
-RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other)
-{
+RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other) {
 	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
 }
 
-RequestPOST::~RequestPOST(void)
-{
+RequestPOST::~RequestPOST(void) {
 	// std::cerr << "RequestPOST destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-RequestPOST	&RequestPOST::operator=(const RequestPOST &other)
-{
+RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 	std::cerr << "RequestPOST assign" << std::endl;
 	(void)other;
 	return (*this);
@@ -42,14 +40,12 @@ RequestPOST	&RequestPOST::operator=(const RequestPOST &other)
 
 /* ************************************************************************** */
 
-error_t	RequestPOST::parse(void)
-{
+error_t RequestPOST::parse(void) {
 	std::cerr << "RequestPOST parse" << std::endl;
 	return (REQ_DONE);
 }
 
-error_t	RequestPOST::processIn(void)
-{
+error_t RequestPOST::processIn(void) {
 	std::cerr << "RequestPOST processIn" << std::endl;
 	// debug start
 	this->_context.response.setStatusCode(STATUS_OK);
@@ -59,14 +55,12 @@ error_t	RequestPOST::processIn(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestPOST::processOut(void)
-{
+error_t RequestPOST::processOut(void) {
 	std::cerr << "RequestPOST processOut" << std::endl;
 	return (REQ_DONE);
 }
 
-ARequest	*RequestPOST::clone(void) const
-{
+ARequest *RequestPOST::clone(void) const {
 	std::cerr << "RequestPOST clone" << std::endl;
 	return (new RequestPOST(*this));
 }
@@ -79,8 +73,7 @@ ARequest	*RequestPOST::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestPOST(RequestContext_t &context)
-{
+ARequest *createRequestPOST(RequestContext_t &context) {
 	std::cerr << "createRequestPOST" << std::endl;
 	return (new RequestPOST(context));
 }

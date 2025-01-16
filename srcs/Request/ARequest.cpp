@@ -9,30 +9,26 @@
 // 	// std::cerr << "ARequest created" << std::endl;
 // }
 
-ARequest::ARequest(RequestContext_t &context) : _context(context)
-{
+ARequest::ARequest(RequestContext_t &context) : _context(context) {
 	// std::cerr << "ARequest created" << std::endl;
-	this->_path = this->_context.ruleBlock->getRoot().concat(this->_context.target);;
+	this->_path = this->_context.ruleBlock->getRoot().concat(this->_context.target);
+	;
 }
 
-ARequest::ARequest(const ARequest &other) : _context(other._context)
-{
+ARequest::ARequest(const ARequest &other) : _context(other._context) {
 	// std::cerr << "ARequest copy" << std::endl;
 	this->_path = this->_context.ruleBlock->getRoot().concat(this->_context.target);
 }
 
-ARequest::~ARequest(void)
-{
+ARequest::~ARequest(void) {
 	// std::cerr << "ARequest destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-ARequest	&ARequest::operator=(const ARequest &other)
-{
+ARequest &ARequest::operator=(const ARequest &other) {
 	std::cerr << "ARequest assign" << std::endl;
-	if (this == &other)
-		return (*this);
+	if (this == &other) return (*this);
 	// this->_context = other._context;
 	return (*this);
 }

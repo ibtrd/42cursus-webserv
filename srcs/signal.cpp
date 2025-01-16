@@ -1,14 +1,14 @@
-#include <iostream>
 #include <csignal>
+#include <iostream>
 
 extern int g_signal;
 
-static void	sigHandler(int sig) {
+static void sigHandler(int sig) {
 	std::cout << " Interrupt signal (" << sig << ") received.\n";
 	g_signal = sig;
 }
 
-int	setupSignalHandlers(void) {
+int setupSignalHandlers(void) {
 	if (SIG_ERR == signal(SIGQUIT, &sigHandler)) {
 		return (-1);
 	}
