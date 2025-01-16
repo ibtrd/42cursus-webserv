@@ -9,6 +9,8 @@
 #include "RequestDELETE.hpp"
 #include "Server.hpp"
 #include "RequestPUT.hpp"
+#include "webservHTML.hpp"
+#include "fcntl.h"
 
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 
@@ -21,7 +23,6 @@ ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 };
 
 /* CONSTRUCTORS ************************************************************* */
-
 
 Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server, const struct sockaddr_in &addr) :
 	_timestamp(time(NULL)),
@@ -44,6 +45,7 @@ Client::Client(const Client &other) :
 	_addr(other._addr),
 	_request(other._request),
 	_context(other._context),
+	// _errorPage(other._errorPage),
 	_bytesSent(other._bytesSent)
 {
 	// std::cerr << "Client copy" << std::endl;
@@ -73,6 +75,7 @@ Client	&Client::operator=(const Client &other)
 	else
 		this->_request = NULL;
 
+	this->_context.serverBlock = other._context.serverBlock;
 	this->_context.ruleBlock = other._context.ruleBlock;
 	this->_context.requestState = other._context.requestState;
 	this->_context.buffer = other._context.buffer;
@@ -82,6 +85,7 @@ Client	&Client::operator=(const Client &other)
 	this->_context.headers = other._context.headers;
 	this->_context.response = other._context.response;
 	this->_context.responseBuffer = other._context.responseBuffer;
+	// this->_errorPage = other._errorPage;
 	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
@@ -188,7 +192,7 @@ error_t Client::_parseRequest(void)
 			return (ret);
 	}
 	SET_REQ_READ_COMPLETE(this->_context.requestState); // probably not needed
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
@@ -309,9 +313,10 @@ error_t Client::_parseHeaders(void)
 }
 
 error_t Client::_resolveARequest(void) {
-	this->_context.ruleBlock = (this->_context.server
-		.findServerBlock(this->_idSocket, this->_context.headers[HEADER_HOST])
-		.findLocationBlock(this->_context.target));
+	this->_context.serverBlock = &(this->_context.server
+		.findServerBlock(this->_idSocket, this->_context.headers[HEADER_HOST]));
+	this->_context.ruleBlock = (this->_context.serverBlock
+		->findLocationBlock(this->_context.target));
 	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().string().empty()) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return REQ_CONTINUE;
@@ -386,6 +391,59 @@ error_t	Client::_sendResponse(void)
 	return (REQ_CONTINUE);
 }
 
+void	Client::_loadErrorPage(void)
+{
+	std::cerr << "Loading error page" << std::endl;
+	// set http error body
+	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
+	Path	errorPath;
+
+	if (!errorPathPtr) {
+		goto to_default_error_page;
+	}
+	errorPath = *errorPathPtr;
+	if (0 != errorPath.access(F_OK)) {
+		goto to_default_error_page;
+	}
+	if (0 != errorPath.stat()) {
+		goto to_default_error_page;
+	}
+	if (!errorPath.hasPermission(R_OK)) {
+		goto to_default_error_page;
+	}
+	if (!errorPath.isFile()) {
+		goto to_default_error_page;
+	}
+	this->_errorPage.open(errorPath.string().c_str(), std::ios::in | std::ios::binary);
+	if (!this->_errorPage.is_open()) {
+		goto to_default_error_page;
+	}
+	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	std::cerr << "Error page loaded" << std::endl;
+	return ;
+
+to_default_error_page:
+	this->_context.response.setBody("666 Default error page");
+	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	std::cerr << "Default error page loaded" << std::endl;
+}
+
+void	Client::_readErrorPage(void)
+{
+	char	buffer[REQ_BUFFER_SIZE];
+
+	this->_errorPage.read(buffer, REQ_BUFFER_SIZE);
+	ssize_t	bytes = this->_errorPage.gcount();
+	if (bytes == 0)
+	{
+		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
+		return ;
+	}
+
+	this->_context.responseBuffer.append(buffer, bytes);
+	return ;
+}
+
 error_t	Client::_handleSocketIn(void)
 {
 	error_t	ret;
@@ -405,7 +463,12 @@ error_t	Client::_handleSocketIn(void)
 			return (ret);
 	}
 
+	if (this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
+		this->_loadErrorPage();
+	}
+
 	this->_context.responseBuffer = this->_context.response.response();
+	this->_context.response.clearBody();
 
 	if (this->_switchToWrite() == -1)
 		return (REQ_ERROR);
@@ -416,8 +479,10 @@ error_t	Client::_handleSocketOut(void)
 {
 	error_t	ret;
 
-	if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState))
-	{
+	if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) && this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
+		std::cerr << "READ ERROR PAGE" << std::endl;
+		this->_readErrorPage();
+	} else if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) && this->_request) {
 		ret = this->_request->processOut();
 		// if (ret != REQ_DONE)
 		// 	return (ret);

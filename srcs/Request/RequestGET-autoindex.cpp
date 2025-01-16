@@ -54,7 +54,7 @@ error_t RequestGET::_readDir(void)
 			std::strftime(timeBuffer, sizeof(timeBuffer), "%F %R", std::localtime(&localPath.mTime()));
 
 		if (-1 == err) {
-			buffer += HTMLERROR(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
+			buffer += HTMLWEIRD(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
 								nameBuffer);
 		} else if (localPath.isDir()) {
 			buffer += HTMLDIR(this->_context.headers[HEADER_HOST] + this->_context.target + entry->d_name,
@@ -83,7 +83,7 @@ error_t RequestGET::_readDir(void)
 	this->_context.response.addBody(buffer);
 	if (entry == NULL)
 	{
-		this->_context.response.addBody("</table></body></html>");
+		this->_context.response.addBody(HTMLFOOTER);
 		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
 	}
 	this->_context.responseBuffer += this->_context.response.body();

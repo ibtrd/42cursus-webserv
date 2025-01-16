@@ -82,7 +82,7 @@ std::string	Response::response(void) const
 		response += it->first + ": " + it->second + "\r\n";
 	}
 	response += "\r\n";
-	// response += this->_body;
+	response += this->_body;
 	return (response);
 }
 

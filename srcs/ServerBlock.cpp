@@ -18,6 +18,7 @@ ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 	this->_hosts = other._hosts;
 	this->_names = other._names;
 	this->_locations = other._locations;
+	this->_errorPages = other._errorPages;
 	return (*this);
 }
 
@@ -61,6 +62,14 @@ const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 		}
 	}
 	return selected;
+}
+
+const Path *ServerBlock::findErrorPage(status_code_t code) const {
+	error_pages_t::const_iterator it = this->_errorPages.find(code);
+	if (it != this->_errorPages.end()) {
+		return &it->second;
+	}
+	return NULL;
 }
 
 void ServerBlock::fillLocations(const LocationBlock &location) {
