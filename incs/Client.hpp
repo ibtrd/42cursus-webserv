@@ -61,6 +61,8 @@ public:
 	error_t		handleIn(fd_t fd);
 	error_t		handleOut(fd_t fd);
 
+	error_t		timeoutCheck(const time_t now);
+
 	// GETTERS
 	const RequestContext_t		&context(void) const;
 	const struct sockaddr_in	&addr(void) const;
