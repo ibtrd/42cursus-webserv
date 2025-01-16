@@ -13,6 +13,7 @@
 char	Client::_readBuffer[REQ_BUFFER_SIZE];
 
 int32_t	Client::_epollFd = -1;
+
 ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
 	createRequestPOST,
@@ -461,7 +462,7 @@ error_t	Client::init(void)
 		close(this->_socket);
 		return (-1);
 	}
-	std::cerr << "Client accepted! fd=" << this->_socket << std::endl;
+	std::cerr << "Client(" << this->_socket << ") accepted!" << std::endl;
 	return (0);
 }
 
@@ -479,6 +480,19 @@ error_t	Client::handleOut(fd_t fd)
 		return (this->_handleSocketOut());
 	else
 		return (this->_handleCGIOut());
+}
+
+error_t Client::timeoutCheck(const time_t now) {
+	if (IS_REQ_READ_BODY_COMPLETE(this->_context.requestState)) {
+			return (REQ_CONTINUE);
+	}
+	if (now - this->_timestamp >= REQUEST_TIMEOUT) {
+		std::cerr << "Client(" << this->_socket << ") timeout detected!" << std::endl; //DEBUG
+		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
+		//TODO
+	}
+	return (REQ_CONTINUE);
 }
 
 /* GETTERS ****************************************************************** */

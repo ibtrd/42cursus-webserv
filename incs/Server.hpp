@@ -10,6 +10,7 @@
 # include <list>
 
 # define MAX_EVENTS 64
+# define REQUEST_TIMEOUT 15
 # define MIME_TYPE_FILE "/etc/mime.types"
 
 typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;
@@ -23,6 +24,7 @@ public:
 
 	void	configure(const Configuration &config);
 	void	routine(void);
+
 	const std::string	&getMimeType(const std::string &ext) const;
 	const ServerBlock	&findServerBlock(const fd_t socket, const std::string &host) const;
 
@@ -39,6 +41,7 @@ private:
 	fd_t	_addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t	_addConnection(const int32_t socket);
 	void	_removeConnection(const int32_t socket);
+	void	_checkClientsTimeout(void);
 	error_t	_loadMimeTypes(void);
 };
 

@@ -23,8 +23,7 @@ Server::~Server() {
 void Server::configure(const Configuration &config) {
 	this->_epollFd = epoll_create(1);
 	if (-1 == this->_epollFd) {
-		std::string err = "epoll_create: ";
-		throw std::runtime_error((err + strerror(errno)).c_str());
+		throw std::runtime_error(std::string("epoll_create():") + strerror(errno));
 	}
 	Client::setEpollFd(this->_epollFd);
 
@@ -48,7 +47,7 @@ void Server::configure(const Configuration &config) {
 }
 
 void Server::routine(void) {
-	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, 50000);
+	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, 5000);
 	if (nfds == -1) {
 		if (g_signal != SIGQUIT)
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
@@ -56,8 +55,8 @@ void Server::routine(void) {
 	}
 
 	// New connections and read events
-	for(int i = 0; i < nfds; i++) {
-		int32_t fd = this->_events[i].data.fd;
+	for(int32_t i = 0; i < nfds; i++) {
+		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end())
 		{
@@ -94,8 +93,8 @@ void Server::routine(void) {
 	}
 
 	// Write events
-	for(int i = 0; i < nfds; i++) {
-		int32_t fd = this->_events[i].data.fd;
+	for(int32_t i = 0; i < nfds; i++) {
+		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
@@ -125,6 +124,7 @@ void Server::routine(void) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
+	this->_checkClientsTimeout();
 }
 
 const std::string &Server::getMimeType(const std::string &ext) const {
@@ -226,6 +226,17 @@ void Server::_removeConnection(const fd_t fd) {
 		epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
 	}
 	this->_clients.erase(client);
+}
+
+void Server::_checkClientsTimeout(void) {
+	const time_t now = time(NULL);
+
+	for (std::list<Client>::iterator it = this->_clients.begin();  it != this->_clients.end(); ++it) {
+		error_t status =  it->timeoutCheck(now);
+		if (status != REQ_CONTINUE) {
+			; //TODO
+		}
+	}
 }
 
 error_t Server::_loadMimeTypes(void)
