@@ -2,7 +2,7 @@
 # define REQUESTCONTEXT
 
 # include "Response.hpp"
-# include "LocationBlock.hpp"
+# include "ServerBlock.hpp"
 
 # define REQ_BUFFER_SIZE 65535
 # define REQ_DIR_BUFFER_SIZE 128
@@ -73,6 +73,7 @@ class Server;
 
 typedef struct RequestContext_s {
 	const Server		&server;
+	const ServerBlock	*serverBlock;
 	const LocationBlock	*ruleBlock;
 
 	uint32_t		requestState;

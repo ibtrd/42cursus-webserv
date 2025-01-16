@@ -1,8 +1,7 @@
 // function a ranger quand on aura le temps (si nécessaire)
 
 #include "webdef.hpp"
-
-#include <sstream>
+#include "webservHTML.hpp"
 
 std::string		statusCodeToReason(const status_code_t code)
 {
@@ -46,6 +45,49 @@ std::string		statusCodeToReason(const status_code_t code)
 			return ("Service Unavailable");
 		case STATUS_HTTP_VERSION_NOT_SUPPORTED:
 			return ("HTTP Version Not Supported");
+		default:
+			return ("Invalid Status Code");
+	}
+}
+
+std::string		statusCodeToMsg(const status_code_t code)
+{
+	switch (code)
+	{
+		case STATUS_BAD_REQUEST:
+			return (ERROR400MSG);
+		case STATUS_UNAUTHORIZED:
+			return (ERROR401MSG);
+		case STATUS_FORBIDDEN:
+			return (ERROR403MSG);
+		case STATUS_NOT_FOUND:
+			return (ERROR404MSG);
+		case STATUS_METHOD_NOT_ALLOWED:
+			return (ERROR405MSG);
+		case STATUS_REQUEST_TIMEOUT:
+			return (ERROR408MSG);
+		case STATUS_CONFLICT:	
+			return (ERROR409MSG);
+		case STATUS_LENGTH_REQUIRED:
+			return (ERROR411MSG);
+		case STATUS_PAYLOAD_TOO_LARGE:
+			return (ERROR413MSG);
+		case STATUS_URI_TOO_LONG:
+			return (ERROR414MSG);
+		case STATUS_UNSUPPORTED_MEDIA_TYPE:
+			return (ERROR415MSG);
+		case STATUS_I_AM_A_TEAPOT:
+			return (ERROR418MSG);
+		case STATUS_TOO_MANY_REQUESTS:
+			return (ERROR429MSG);
+		case STATUS_INTERNAL_SERVER_ERROR:
+			return (ERROR500MSG);
+		case STATUS_NOT_IMPLEMENTED:
+			return (ERROR501MSG);
+		case STATUS_SERVICE_UNAVAILABLE:
+			return (ERROR503MSG);
+		case STATUS_HTTP_VERSION_NOT_SUPPORTED:
+			return (ERROR505MSG);
 		default:
 			return ("Invalid Status Code");
 	}
