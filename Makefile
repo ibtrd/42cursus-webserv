@@ -6,7 +6,7 @@
 #    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2025/01/09 15:22:10 by ibertran         ###   ########lyon.fr    #
+#    Updated: 2025/01/16 17:36:41 by ibertran         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -41,6 +41,8 @@ CPPFLAGS 	=	$(addprefix -I, $(INCS)) \
 				-MD -MP \
 
 MAKEFLAGS	=	--no-print-directory
+
+FORMAT_STYLE = Google
 
 # *** MODES ****************************************************************** #
 
@@ -105,6 +107,10 @@ re : fclean
 .PHONY : run
 run : $(NAME)
 	./$(NAME)
+
+.PHONY : clang-format
+clang-format:
+	clang-format -i $(addprefix $(SRCS_DIR), $(SRCS)) $(shell find $(INCS_DIR) -type f -name '*.hpp')
 
 .PHONY : print-%
 print-% :
