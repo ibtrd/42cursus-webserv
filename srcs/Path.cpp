@@ -45,6 +45,10 @@ Path &Path::operator=(const Path &other) {
 
 /* ************************************************************************** */
 
+bool Path::empty(void) const {
+	return this->_str.empty();
+}
+
 bool Path::isOriginForm(void) const {
 	return (!this->_str.empty() && '/' == *this->_str.begin());
 }

@@ -1,7 +1,6 @@
 #ifndef CONFFILE_HPP
 # define CONFFILE_HPP
 
-# include <map>
 
 # include <ConfToken.hpp>
 # include <ServerBlock.hpp>
@@ -23,6 +22,7 @@ public:
 	void	setPath(const std::string &path);
 
 private:
+	Path 						_root;
 	std::string					_path;
 	std::vector<ConfToken>		_tokens;
 	std::vector<ServerBlock>	*_blocks;
@@ -34,6 +34,7 @@ private:
 	void	_listenDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void	_serverNameDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void	_locationDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
+	void	_errorPageDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 
 	void	_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);

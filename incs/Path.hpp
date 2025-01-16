@@ -17,6 +17,7 @@ public:
 
 	Path	&operator=(const Path &other);
 
+	bool	empty(void) const;
 	bool	isOriginForm(void) const;
 	bool	isFileFormat(void) const;
 	bool	isDirFormat(void) const;

@@ -40,6 +40,7 @@ ConfFile::serverDirectives ConfFile::_initServerDirectives(void) {
 	map["listen"] = &ConfFile::_listenDirective;
 	map["server_name"] = &ConfFile::_serverNameDirective; 
 	map["location"] = &ConfFile::_locationDirective;
+	map["error_page"] = &ConfFile::_errorPageDirective;
 	return map;
 }
 
