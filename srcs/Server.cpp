@@ -47,7 +47,7 @@ void Server::configure(const Configuration &config) {
 }
 
 void Server::routine(void) {
-	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, 5000);
+	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, EPOLL_TIMEOUT);
 	if (nfds == -1) {
 		if (g_signal != SIGQUIT)
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
@@ -233,8 +233,9 @@ void Server::_checkClientsTimeout(void) {
 
 	for (std::list<Client>::iterator it = this->_clients.begin();  it != this->_clients.end(); ++it) {
 		error_t status =  it->timeoutCheck(now);
-		if (status != REQ_CONTINUE) {
-			; //TODO
+		if (status == REQ_ERROR) {
+			std::cerr << "Error: timeoutCheck" << std::endl;
+			this->_removeConnection(it->socket());
 		}
 	}
 }

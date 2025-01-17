@@ -10,7 +10,8 @@
 # include <list>
 
 # define MAX_EVENTS 64
-# define REQUEST_TIMEOUT 15
+# define EPOLL_TIMEOUT 1000
+# define REQUEST_TIMEOUT 2
 # define MIME_TYPE_FILE "/etc/mime.types"
 
 typedef std::map<fd_t, std::vector<ServerBlock> > servermap_t;

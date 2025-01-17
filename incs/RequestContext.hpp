@@ -89,7 +89,9 @@ typedef struct RequestContext_s {
 	std::string		responseBuffer;
 
 	RequestContext_s(const Server &server)
-		: server(server) {}
+		: server(server),
+		serverBlock(NULL),
+		ruleBlock(NULL) {}
 
 } RequestContext_t;
 

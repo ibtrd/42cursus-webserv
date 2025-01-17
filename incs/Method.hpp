@@ -5,11 +5,12 @@
 # include <string>
 
 typedef enum {
-	GET,
-	POST,
-	DELETE,
-	PUT,
-	INVAL_METHOD
+	METHOD_GET,
+	METHOD_POST,
+	METHOD_DELETE,
+	METHOD_PUT,
+	METHOD_INVAL_METHOD,
+	METHOD_UNDEFINED = -1
 } method_t;
 
 
