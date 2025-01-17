@@ -12,13 +12,17 @@
 ARequest::ARequest(RequestContext_t &context) : _context(context)
 {
 	// std::cerr << "ARequest created" << std::endl;
-	this->_path = this->_context.ruleBlock->getRoot().concat(this->_context.target);;
+	Path target(this->_context.target);
+	target = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
+	this->_path = this->_context.ruleBlock->getRoot().concat(target);
 }
 
 ARequest::ARequest(const ARequest &other) : _context(other._context)
 {
 	// std::cerr << "ARequest copy" << std::endl;
-	this->_path = this->_context.ruleBlock->getRoot().concat(this->_context.target);
+	Path target(this->_context.target);
+	target = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
+	this->_path = this->_context.ruleBlock->getRoot().concat(target);
 }
 
 ARequest::~ARequest(void)
