@@ -143,6 +143,20 @@ std::string Path::concat(const Path &other) const {
 	return this->_str + other._str;
 }
 
+Path Path::subPath(size_t pos, size_t count) const {
+	std::string ret;
+
+	count = pos + count > this->_chunks.size() ? this->_chunks.size() - pos : count;
+	while (count--) {
+		ret += '/';
+		ret += this->_chunks[pos++];
+	}
+	if (this->isDirFormat()) {
+		ret += '/';
+	}
+	return ret;
+}
+
 /* GETTERS ****************************************************************** */
 
 const std::string &Path::string(void) const {

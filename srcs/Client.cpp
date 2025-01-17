@@ -329,7 +329,6 @@ error_t Client::_resolveARequest(void) {
 		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
 		return REQ_CONTINUE;
 	}
-	
 	this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
 	return REQ_DONE;
 }

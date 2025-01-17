@@ -37,6 +37,7 @@ public:
 	uint32_t	prefixLength(void) const;
 	bool		prefixMatch(const Path &other) const;
 	std::string	concat(const Path &other) const;
+	Path		subPath(size_t pos, size_t count) const;
 
 private:
 	std::string					_str;
