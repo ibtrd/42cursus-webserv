@@ -5,16 +5,16 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-Method::Method(void) : _index(INVAL_METHOD) {}
+Method::Method(void) : _index(METHOD_UNDEFINED) {}
 
 Method::Method(const Method &other) {
 	*this = other;
 }
 
 Method::Method(const std::string &str) {
-	std::vector<std::string>::const_iterator it = std::find(methods.begin(), methods.end(), str);
-	if (it == methods.end()) {
-		this->_index = INVAL_METHOD;
+	std::vector<std::string>::const_iterator it = std::find(this->methods.begin(), this->methods.end(), str);
+	if (it == this->methods.end()) {
+		this->_index = METHOD_INVAL_METHOD;
 	} else {
 		this->_index = (method_t)std::distance(methods.begin(), it);
 	}
@@ -50,7 +50,7 @@ bool Method::operator!=(const method_t method) {
 /* ************************************************************************** */
 
 bool Method::isValid(void) const {
-	return (this->_index != INVAL_METHOD);
+	return (this->_index != METHOD_INVAL_METHOD && this->_index != METHOD_UNDEFINED);
 }
 
 /* GETTERS ****************************************************************** */

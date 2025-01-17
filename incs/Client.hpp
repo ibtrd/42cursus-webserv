@@ -15,7 +15,7 @@ class Client {
 private:
 	static	char		_readBuffer[REQ_BUFFER_SIZE];
 	static	int32_t		_epollFd;
-	static	ARequest	*(*_requestsBuilder[INVAL_METHOD])(RequestContext_t &);
+	static	ARequest	*(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 	
 	const time_t				_timestamp;
 	const fd_t					_idSocket;
@@ -64,9 +64,8 @@ public:
 	error_t		timeoutCheck(const time_t now);
 
 	// GETTERS
-	const RequestContext_t		&context(void) const;
-	const struct sockaddr_in	&addr(void) const;
 	time_t						timestamp(void) const;
+	fd_t						socket(void) const;
 	void						sockets(fd_t fds[2]) const;
 
 	// SETTERS

@@ -17,7 +17,7 @@ char	Client::_readBuffer[REQ_BUFFER_SIZE];
 
 int32_t	Client::_epollFd = -1;
 
-ARequest	*(*Client::_requestsBuilder[INVAL_METHOD])(RequestContext_t &) = {
+ARequest	*(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) = {
 	createRequestGET,
 	createRequestPOST,
 	createRequestDELETE,
@@ -57,6 +57,7 @@ Client::Client(const Client &other) :
 Client::~Client(void)
 {
 	// std::cerr << "Client destroyed" << std::endl;
+	// if (this->)
 	std::cout << *this;
 	if (this->_request)
 		delete this->_request;
@@ -211,7 +212,7 @@ error_t Client::_parseRequestLine(void)
 
 	// Parse request line
 
-	// method_t
+	// Method
 	pos = requestLine.find(' ');
 	if (pos == std::string::npos)
 	{
@@ -375,6 +376,7 @@ error_t	Client::_sendResponse(void)
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
 	if (bytes > 0)
 	{
+		// std::cerr << this->_context.responseBuffer.substr(0, bytes) << std::endl;
 		bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -396,9 +398,13 @@ void	Client::_loadErrorPage(void)
 {
 	// std::cerr << "Loading error page" << std::endl;
 
-	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
+	const Path *errorPathPtr = NULL;
 	Path	errorPath;
 
+	if (!this->_context.serverBlock) {
+		goto to_default_error_page;
+	}
+	errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
 	if (!errorPathPtr) {
 		goto to_default_error_page;
 	}
@@ -554,22 +560,23 @@ error_t Client::timeoutCheck(const time_t now) {
 		std::cerr << "Client(" << this->_socket << ") timeout detected!" << std::endl; //DEBUG
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		//TODO
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		this->_loadErrorPage();
+
+		this->_context.responseBuffer = this->_context.response.response();
+		this->_context.response.clearBody();
+
+		if (this->_switchToWrite() == -1)
+			return (REQ_ERROR);
 	}
 	return (REQ_CONTINUE);
 }
 
 /* GETTERS ****************************************************************** */
 
+fd_t	Client::socket(void) const { return this->_socket; }
+
 void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
-
-const RequestContext_t &Client::context(void) const {
-	return this->_context;
-}
-
-const struct sockaddr_in &Client::addr(void) const {
-	return this->_addr;
-}
 
 time_t Client::timestamp(void) const {
 	return this->_timestamp;
@@ -589,7 +596,7 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	char clientIP[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";
-	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(client._context.requestState)) {
+	if (client._context.method.isValid()) {
 		os << '"' << client._context.method.string() << " "
 			<< client._context.target << " "
 			<< client._context.protocolVersion << "\" ";

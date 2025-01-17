@@ -47,3 +47,7 @@ YoupiBanane/
 test.cpp
 tests/
 bin/
+.*
+!.gitignore
+!.clang-format
+!.github
