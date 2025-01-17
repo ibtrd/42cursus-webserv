@@ -64,8 +64,6 @@ public:
 	error_t		timeoutCheck(const time_t now);
 
 	// GETTERS
-	const RequestContext_t		&context(void) const;
-	const struct sockaddr_in	&addr(void) const;
 	time_t						timestamp(void) const;
 	fd_t						socket(void) const;
 	void						sockets(fd_t fds[2]) const;

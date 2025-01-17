@@ -57,6 +57,7 @@ Client::Client(const Client &other) :
 Client::~Client(void)
 {
 	// std::cerr << "Client destroyed" << std::endl;
+	// if (this->)
 	std::cout << *this;
 	if (this->_request)
 		delete this->_request;
@@ -578,14 +579,6 @@ fd_t	Client::socket(void) const { return this->_socket; }
 
 void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
 
-const RequestContext_t &Client::context(void) const {
-	return this->_context;
-}
-
-const struct sockaddr_in &Client::addr(void) const {
-	return this->_addr;
-}
-
 time_t Client::timestamp(void) const {
 	return this->_timestamp;
 }
@@ -604,7 +597,7 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	char clientIP[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";
-	if (client._context.method.index() != METHOD_UNDEFINED) {
+	if (client._context.method.isValid()) {
 		os << '"' << client._context.method.string() << " "
 			<< client._context.target << " "
 			<< client._context.protocolVersion << "\" ";
