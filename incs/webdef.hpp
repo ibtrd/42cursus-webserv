@@ -42,6 +42,13 @@ typedef enum {
 
 typedef uint16_t	status_code_t;
 
+enum timeout {
+	CLIENT_HEADER_TIMEOUT,
+	CLIENT_BODY_TIMEOUT,
+	SEND_TIMEOUT,
+	TIMEOUT_COUNT
+};
+
 std::string	statusCodeToReason(const status_code_t code);
 std::string	statusCodeToMsg(const status_code_t code);
 

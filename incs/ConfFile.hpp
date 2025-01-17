@@ -1,9 +1,8 @@
 #ifndef CONFFILE_HPP
 # define CONFFILE_HPP
 
-
-# include <ConfToken.hpp>
-# include <ServerBlock.hpp>
+# include "ConfToken.hpp"
+# include "ServerBlock.hpp"
 
 class ConfFile {
 public:
@@ -21,6 +20,8 @@ public:
 	// SETTERS
 	void	setPath(const std::string &path);
 
+	int32_t	timeouts[TIMEOUT_COUNT];
+
 private:
 	Path 						_root;
 	std::string					_path;
@@ -30,6 +31,9 @@ private:
 	void	_tokenize(const std::string &line, const uint32_t index);
 
 	void	_serverDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_clientHeaderTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_clientBodyTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_sendTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
 
 	void	_listenDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void	_serverNameDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);

@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-/* STATICS ****************************************************************** */
-
 bool	ConfFile::_isMetachar(int c) {
 	return (c == ';' || c == BLOCK_OPEN || c == BLOCK_CLOSE);
 }
@@ -29,6 +27,9 @@ ConfFile::directives ConfFile::_initializeDirectives(void) {
 	directives map;
 
 	map["server"] = &ConfFile::_serverDirective;
+	map["client_header_timeout"] = &ConfFile::_clientHeaderTimeoutDirective;
+	map["client_body_timeout"] = &ConfFile::_clientBodyTimeoutDirective;
+	map["send_timeout"] = &ConfFile::_sendTimeoutDirective;
 	return map;
 }
 

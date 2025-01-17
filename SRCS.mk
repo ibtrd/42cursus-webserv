@@ -17,6 +17,7 @@ CONFIGURATION_DIR=Configuration/
 
 CONFIGURATION_SRC = \
 	ConfFile \
+	ConfFile-directives \
 	ConfFile-errors \
 	ConfFile-locations \
 	ConfFile-servers \

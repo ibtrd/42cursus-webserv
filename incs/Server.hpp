@@ -37,10 +37,11 @@ private:
 	std::list<Client>					_clients;
 	clientbindmap_t						_fdClientMap;
 	std::map<std::string, std::string>	_mimetypes;
+	int32_t								_timeouts[TIMEOUT_COUNT];
 
 	fd_t	_addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t	_addConnection(const int32_t socket);
-	void	_removeConnection(const int32_t socket);
+	void	_removeConnection(const fd_t fd);
 	void	_checkClientsTimeout(void);
 	error_t	_loadMimeTypes(void);
 };

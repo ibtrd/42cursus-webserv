@@ -81,9 +81,6 @@ void ConfFile::_serverNameDirective(std::vector<ConfToken>::const_iterator &toke
 	}
 }
 
-
-#include <iostream>
-
 void ConfFile::_errorPageDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
 	const uint32_t 									args = this->_countArgs(token);
 	const std::vector<ConfToken>::const_iterator	directive = token++;
