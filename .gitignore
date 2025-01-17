@@ -35,7 +35,6 @@
 webserv
 en.subject.pdf
 .vscode/
-.*
 cgi_tester
 client
 client.cpp
