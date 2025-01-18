@@ -165,6 +165,10 @@ const std::string &Path::string(void) const {
 	return this->_str;
 }
 
+const char *Path::c_str(void) const {
+	return this->_str.c_str();
+}
+
 /* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const Path &path) {

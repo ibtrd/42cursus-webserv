@@ -334,6 +334,15 @@ error_t Client::_resolveARequest(void) {
 		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
 		return REQ_CONTINUE;
 	}
+
+	const redirect_t	&redirect = this->_context.ruleBlock->getRedirect();
+	if (redirect.first != STATUS_NONE) {
+		this->_context.response.setStatusCode(redirect.first);
+		this->_context.response.setHeader(HEADER_LOCATION, redirect.second);
+		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+		return REQ_CONTINUE;
+	}
+
 	this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
 	return REQ_DONE;
 }
