@@ -11,6 +11,8 @@ std::string		statusCodeToReason(const status_code_t code)
 			return ("STATUS_OK");
 		case STATUS_CREATED:
 			return ("Created");
+		case STATUS_NO_CONTENT:
+			return ("No content");
 		case STATUS_BAD_REQUEST:
 			return ("Bad Request");
 		case STATUS_UNAUTHORIZED:

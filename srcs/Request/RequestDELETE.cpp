@@ -54,10 +54,44 @@ error_t	RequestDELETE::parse(void)
 error_t	RequestDELETE::processIn(void)
 {
 	std::cerr << "RequestDELETE processIn" << std::endl;
-	if (0 != std::remove(((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target).c_str())) {
+	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != this->_path.stat()) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	// if (!this->_path.hasPermission(R_OK)) {
+	// 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	// 	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	// 	return (REQ_DONE);
+	// }
+	if (!this->_path.isDir()) {
+		if (0 != std::remove(this->_path.c_str())) {
+			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		} else {
+			this->_context.response.setStatusCode(STATUS_NO_CONTENT);
+		}
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (this->_path.isDirFormat()) {
+		this->_context.response.setStatusCode(STATUS_CONFLICT);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != this->_path.access(W_OK)) {
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != std::remove(this->_path.c_str())) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
-		this->_context.response.setStatusCode(STATUS_OK);
+		this->_context.response.setStatusCode(STATUS_NO_CONTENT);
 	}
 	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);

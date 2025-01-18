@@ -31,6 +31,7 @@ public:
 	long			size(void) const;
 
 	const std::string	&string(void) const;
+	const char 			*c_str(void) const;
 
 	std::string	extension(void) const;
 	uint32_t	length(void) const;
