@@ -273,9 +273,9 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 
-		// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
-		// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-		// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
+	// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
+	// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+	// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
@@ -375,7 +375,8 @@ error_t Client::_switchToWrite(void)
 
 error_t	Client::_sendResponse(void)
 {
-	std::cerr << "Sending response..." << std::endl;
+	// std::cerr << "Sending response..." << std::endl;
+	std::cerr << ".";
 	ssize_t	bytes;
 
 	this->_timestamp[SEND_TIMEOUT] = time(NULL);
@@ -389,14 +390,14 @@ error_t	Client::_sendResponse(void)
 			return (REQ_ERROR);
 		}
 		this->_bytesSent += bytes;
-		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
 	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	std::cerr << "Response not fully sent" << std::endl;
+	// std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -555,26 +556,6 @@ error_t	Client::handleOut(fd_t fd)
 		return (this->_handleCGIOut());
 }
 
-// error_t Client::timeoutCheck(const time_t now) {
-// 	if (IS_REQ_READ_BODY_COMPLETE(this->_context.requestState)) {
-// 			return (REQ_CONTINUE);
-// 	}
-// 	if (now - this->_timestamp >= REQUEST_TIMEOUT) {
-// 		std::cerr << "Client(" << this->_socket << ") timeout detected!" << std::endl; //DEBUG
-// 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-// 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-// 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-// 		this->_loadErrorPage();
-
-// 		this->_context.responseBuffer = this->_context.response.response();
-// 		this->_context.response.clearBody();
-
-// 		if (this->_switchToWrite() == -1)
-// 			return (REQ_ERROR);
-// 	}
-// 	return (REQ_CONTINUE);
-// }
-
 error_t Client::timeoutCheck(const time_t now) {
 	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState)
 		&& this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)
@@ -614,14 +595,14 @@ error_t Client::timeoutCheck(const time_t now) {
 		return (REQ_CONTINUE);
 	}
 
-	// if (IS_REQ_CAN_WRITE(this->_context.requestState)
-	// 	&& this->_context.server.getTimeout(SEND_TIMEOUT)
-	// 	&& now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
+	if (IS_REQ_CAN_WRITE(this->_context.requestState)
+		&& this->_context.server.getTimeout(SEND_TIMEOUT)
+		&& now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
 		
-	// 	std::cerr << "Client(" << this->_socket << ") send timeout detected!" << std::endl; //DEBUG
+		std::cerr << "Client(" << this->_socket << ") send timeout detected!" << std::endl; //DEBUG
 
-	// 	return (REQ_DONE);
-	// }
+		return (REQ_DONE);
+	}
 
 	return (REQ_CONTINUE);
 }

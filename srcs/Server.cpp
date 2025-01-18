@@ -221,32 +221,35 @@ void Server::_removeConnection(const fd_t fd) {
 		return;
 	}
 
-	fd_t fds[2];
-	client->sockets(fds);
-	this->_fdClientMap.erase(fds[0]);
-	close(fds[0]);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL);
-	if (fds[1] != -1) {
-		this->_fdClientMap.erase(fds[1]);
-		close(fds[1]);
-		epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
-	}
+	std::cerr << "Removing client: " << fd << std::endl;
+
+	const fd_t clientSocket = client->socket();
+	this->_fdClientMap.erase(clientSocket);
+	close(clientSocket);
+	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+	// if (fds[1] != -1) {
+	// 	this->_fdClientMap.erase(fds[1]);
+	// 	close(fds[1]);
+	// 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
+	// }
 	this->_clients.erase(client);
 }
 
 void Server::_checkClientsTimeout(void) {
 	const time_t now = time(NULL);
 
-	for (std::list<Client>::iterator it = this->_clients.begin();  it != this->_clients.end(); ++it) {
-		switch (it->timeoutCheck(now))
+	for (std::list<Client>::iterator it = this->_clients.begin();  it != this->_clients.end();) {
+		std::list<Client>::iterator tmp = it++;
+		switch (tmp->timeoutCheck(now))
 		{
 		case REQ_DONE:
-			this->_removeConnection(it->socket());
+			std::cerr << "Done: timeoutCheck" << std::endl;
+			this->_removeConnection(tmp->socket());
 			break;
 
 		case REQ_ERROR:
 			std::cerr << "Error: timeoutCheck" << std::endl;
-			this->_removeConnection(it->socket());
+			this->_removeConnection(tmp->socket());
 			break;
 		
 		default:
