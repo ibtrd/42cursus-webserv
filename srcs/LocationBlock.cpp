@@ -1,23 +1,22 @@
 
 #include "LocationBlock.hpp"
+
 #include "Method.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = UNDEFINED;
+	this->_allowed     = DEFAULT_ALLOW;
+	this->_dirListing  = UNDEFINED;
 	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
-LocationBlock::LocationBlock(const LocationBlock &other) {
-	*this = other;
-}
+LocationBlock::LocationBlock(const LocationBlock &other) { *this = other; }
 
 LocationBlock::LocationBlock(const Path &path) : _path(path) {
-	this->_allowed = DEFAULT_ALLOW;
-	this->_dirListing = UNDEFINED;
+	this->_allowed     = DEFAULT_ALLOW;
+	this->_dirListing  = UNDEFINED;
 	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
@@ -27,23 +26,20 @@ LocationBlock::~LocationBlock(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
-	if (this == &other)
-		return (*this);
-	this->_path = other._path;
-	this->_dirListing = other._dirListing;
+	if (this == &other) return (*this);
+	this->_path        = other._path;
+	this->_dirListing  = other._dirListing;
 	this->_maxBodySize = other._maxBodySize;
-	this->_root = other._root;
-	this->_allowed = other._allowed;
+	this->_root        = other._root;
+	this->_allowed     = other._allowed;
 	this->_redirection = other._redirection;
-	this->_indexes = other._indexes;
+	this->_indexes     = other._indexes;
 	return (*this);
 }
 
 /* ************************************************************************** */
 
-bool LocationBlock::match(const Path &target) const {
-	return this->_path.prefixMatch(target);
-}
+bool LocationBlock::match(const Path &target) const { return this->_path.prefixMatch(target); }
 
 void LocationBlock::fill(const LocationBlock &other) {
 	if (-1 == this->_dirListing) {
@@ -94,9 +90,7 @@ error_t LocationBlock::setDirListing(const std::string &str) {
 	return -1;
 }
 
-void LocationBlock::setMaxBodySize(const int32_t size) {
-	this->_maxBodySize = size;
-}
+void LocationBlock::setMaxBodySize(const int32_t size) { this->_maxBodySize = size; }
 
 error_t LocationBlock::setRoot(const std::string &str) {
 	Path path(str);
@@ -125,9 +119,7 @@ void LocationBlock::setRedirect(const uint16_t status, const std::string &body) 
 	this->_redirection.second = body;
 }
 
-void LocationBlock::addIndex(const std::string &str) {
-	this->_indexes.push_back(str);
-}
+void LocationBlock::addIndex(const std::string &str) { this->_indexes.push_back(str); }
 
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
@@ -136,29 +128,17 @@ void LocationBlock::setDefaults(void) {
 
 /* GETTERS ****************************************************************** */
 
-const Path &LocationBlock::path(void) const {
-	return this->_path;
-}
+const Path &LocationBlock::path(void) const { return this->_path; }
 
-bool LocationBlock::isDirListing(void) const {
-	return this->_dirListing == 1;
-}
+bool LocationBlock::isDirListing(void) const { return this->_dirListing == 1; }
 
-int32_t LocationBlock::getMaxBodySize(void) const {
-	return this->_maxBodySize;
-}
+int32_t LocationBlock::getMaxBodySize(void) const { return this->_maxBodySize; }
 
-const Path &LocationBlock::getRoot(void) const {
-	return this->_root;
-}
+const Path &LocationBlock::getRoot(void) const { return this->_root; }
 
-const redirect_t &LocationBlock::getRedirect(void) const {
-	return this->_redirection;
-}
+const redirect_t &LocationBlock::getRedirect(void) const { return this->_redirection; }
 
-const std::vector<std::string> &LocationBlock::indexes(void) const {
-	return this->_indexes;
-}
+const std::vector<std::string> &LocationBlock::indexes(void) const { return this->_indexes; }
 
 bool LocationBlock::isAllowed(const Method &method) const {
 	return this->_allowed & (1 << method.index());
@@ -168,18 +148,18 @@ bool LocationBlock::isAllowed(const Method &method) const {
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 	os << "Location '" << location._path << "' {\n"
-		<< "\troot: " << location._root << "\n"
-		<< "\tindexes: ";
+	   << "\troot: " << location._root << "\n"
+	   << "\tindexes: ";
 	for (uint32_t i = 0; i < location.indexes().size(); ++i) {
 		os << location.indexes()[i] << " ";
 	}
-		os << "\n\tdirListing: ";
+	os << "\n\tdirListing: ";
 	if (location._dirListing == -1) {
 		os << "undefined";
 	} else {
 		os << (location._dirListing ? DIRLISTING_ON : DIRLISTING_OFF);
 	}
-		os << "\n\tallowed: ";
+	os << "\n\tallowed: ";
 	for (uint32_t i = 0; i < Method::methods.size(); ++i) {
 		if (location.isAllowed(Method::methods[i])) {
 			os << Method::methods[i] << " ";

@@ -1,25 +1,24 @@
 #ifndef REQUESTPOST_HPP
-# define REQUESTPOST_HPP
+#define REQUESTPOST_HPP
 
-# include "ARequest.hpp"
+#include "ARequest.hpp"
 
 class RequestPOST : public ARequest {
-private:
-
-public:
+   private:
+   public:
 	RequestPOST(RequestContext_t &context);
 	RequestPOST(const RequestPOST &other);
 
 	~RequestPOST(void);
 
-	RequestPOST	&operator=(const RequestPOST &other);
+	RequestPOST &operator=(const RequestPOST &other);
 
-	error_t		parse(void);
-	error_t		processIn(void);
-	error_t		processOut(void);
-	ARequest	*clone(void) const;
+	error_t   parse(void);
+	error_t   processIn(void);
+	error_t   processOut(void);
+	ARequest *clone(void) const;
 };
 
-ARequest	*createRequestPOST(RequestContext_t &context);
+ARequest *createRequestPOST(RequestContext_t &context);
 
 #endif /* ******************************************************************* */

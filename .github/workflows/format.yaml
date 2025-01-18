@@ -2,7 +2,7 @@ name: Format
 run-name: Code formating
 
 on:
-  pull_request:
+  push:
     branches:
       - 'main'
   workflow_dispatch:
@@ -14,9 +14,6 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
-      with:
-        repository: ${{ github.event.pull_request.head.repo.full_name }}
-        ref: ${{ github.event.pull_request.head.ref }}
 
     - name: Install dependencies
       run: |
@@ -31,7 +28,7 @@ jobs:
 
     - name: Create new branch
       run: |
-        git checkout -b formatted-${{ github.event.pull_request.head.ref}}
+        git checkout -b formatted-main
   
     - name: Add Commit Push
       uses: EndBug/add-and-commit@v9
@@ -39,5 +36,5 @@ jobs:
         default_author: github_actions
         add: .
         message: "Commit from GitHub Actions (Format)"
-        push: origin formatted-${{ github.event.pull_request.head.ref }}
+        push: origin formatted-main
         github_token: ${{ secrets.ACTIONS_PAT }}

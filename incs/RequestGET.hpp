@@ -1,39 +1,40 @@
 #ifndef REQUESTGET_HPP
-# define REQUESTGET_HPP
+#define REQUESTGET_HPP
 
-# include <fstream>
-# include <dirent.h>
+#include <dirent.h>
 
-# include "ARequest.hpp"
+#include <fstream>
+
+#include "ARequest.hpp"
 
 class RequestGET : public ARequest {
-private:
-	std::ifstream	_file;
-	DIR				*_dir;
+   private:
+	std::ifstream _file;
+	DIR          *_dir;
 
-	void	_openFile(void);
-	void	_openDir(void);
+	void _openFile(void);
+	void _openDir(void);
 
-	error_t	_readFile(void);
-	error_t	_readDir(void);
+	error_t _readFile(void);
+	error_t _readDir(void);
 
 	error_t _fetchIndexes(void);
-	error_t	_validateLocalFile(void);
+	error_t _validateLocalFile(void);
 
-public:
+   public:
 	RequestGET(RequestContext_t &context);
 	RequestGET(const RequestGET &other);
 
 	~RequestGET(void);
 
-	RequestGET	&operator=(const RequestGET &other);
+	RequestGET &operator=(const RequestGET &other);
 
-	error_t		parse(void);
-	error_t		processIn(void);
-	error_t		processOut(void);
-	ARequest	*clone(void) const;
+	error_t   parse(void);
+	error_t   processIn(void);
+	error_t   processOut(void);
+	ARequest *clone(void) const;
 };
 
-ARequest	*createRequestGET(RequestContext_t &context);
+ARequest *createRequestGET(RequestContext_t &context);
 
 #endif /* ******************************************************************* */

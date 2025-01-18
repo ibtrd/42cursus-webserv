@@ -1,6 +1,6 @@
 #ifndef WEBSERV_HPP
-# define WEBSERV_HPP
+#define WEBSERV_HPP
 
-int	setupSignalHandlers(void);
+int setupSignalHandlers(void);
 
 #endif

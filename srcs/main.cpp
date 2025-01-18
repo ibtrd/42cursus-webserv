@@ -6,12 +6,11 @@
 int g_signal = 0;
 
 int main(int argc, char *argv[]) {
-
 	if (0 > setupSignalHandlers()) {
 		return (1);
 	}
 
-	Server	server;
+	Server server;
 
 	try {
 		Configuration conf(argc, argv);

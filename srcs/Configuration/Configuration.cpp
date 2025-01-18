@@ -1,11 +1,8 @@
-#include <iostream>
-
 #include "Configuration.hpp"
 
-Configuration::Configuration(int argc, char *argv[]) :
-	_conf(&_blocks),
-	_options(DEFAULT_OPTIONS)
-{
+#include <iostream>
+
+Configuration::Configuration(int argc, char *argv[]) : _conf(&_blocks), _options(DEFAULT_OPTIONS) {
 	for (int i = 1; i < argc; ++i) {
 		if (_isOption(argv[i])) {
 			this->_parseOption(argv[i]);
@@ -41,28 +38,21 @@ void Configuration::_parseOption(const std::string arg) {
 
 /* GETTERS ****************************************************************** */
 
-bool	Configuration::noRun(void) const {
+bool Configuration::noRun(void) const {
 	if (this->_options & NORUN_OPTION) {
-		std::cout << "Success: the configuration file " << this->file() << " syntax is ok" << std::endl;
+		std::cout << "Success: the configuration file " << this->file() << " syntax is ok"
+		          << std::endl;
 		return true;
 	}
 	return false;
 }
 
-int32_t	Configuration::timeout(const uint32_t type) const {
-	return this->_conf.timeouts[type];
-}
+int32_t Configuration::timeout(const uint32_t type) const { return this->_conf.timeouts[type]; }
 
-const std::string &Configuration::file(void) const {
-	return (this->_conf.path());
-}
+const std::string &Configuration::file(void) const { return (this->_conf.path()); }
 
-const std::vector<ServerBlock> &Configuration::blocks(void) const {
-	return this->_blocks;
-}
+const std::vector<ServerBlock> &Configuration::blocks(void) const { return this->_blocks; }
 
 /* STATICS ****************************************************************** */
 
-bool Configuration::_isOption(const char *arg) {
-	return (*arg == '-');
-}
+bool Configuration::_isOption(const char *arg) { return (*arg == '-'); }

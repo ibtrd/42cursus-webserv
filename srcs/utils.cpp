@@ -3,10 +3,8 @@
 #include "webdef.hpp"
 #include "webservHTML.hpp"
 
-std::string		statusCodeToReason(const status_code_t code)
-{
-	switch (code)
-	{
+std::string statusCodeToReason(const status_code_t code) {
+	switch (code) {
 		case STATUS_OK:
 			return ("STATUS_OK");
 		case STATUS_CREATED:
@@ -52,10 +50,8 @@ std::string		statusCodeToReason(const status_code_t code)
 	}
 }
 
-std::string		statusCodeToMsg(const status_code_t code)
-{
-	switch (code)
-	{
+std::string statusCodeToMsg(const status_code_t code) {
+	switch (code) {
 		case STATUS_BAD_REQUEST:
 			return (ERROR400MSG);
 		case STATUS_UNAUTHORIZED:
@@ -68,7 +64,7 @@ std::string		statusCodeToMsg(const status_code_t code)
 			return (ERROR405MSG);
 		case STATUS_REQUEST_TIMEOUT:
 			return (ERROR408MSG);
-		case STATUS_CONFLICT:	
+		case STATUS_CONFLICT:
 			return (ERROR409MSG);
 		case STATUS_LENGTH_REQUIRED:
 			return (ERROR411MSG);
