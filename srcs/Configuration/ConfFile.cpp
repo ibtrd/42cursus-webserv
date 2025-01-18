@@ -1,20 +1,20 @@
-#include <fstream>
 #include <cstring>
+#include <fstream>
 #include <sstream>
 
 #include "Configuration.hpp"
 #include "ft.hpp"
 
-# define DEFAULT_CLIENT_HEADER_TIMEOUT 10
-# define DEFAULT_CLIENT_BODY_TIMEOUT 60
-# define DEFAULT_SEND_TIMEOUT 60
+#define DEFAULT_CLIENT_HEADER_TIMEOUT 10
+#define DEFAULT_CLIENT_BODY_TIMEOUT 60
+#define DEFAULT_SEND_TIMEOUT 60
 
 /* CONSTRUCTORS ************************************************************* */
 
 ConfFile::ConfFile(std::vector<ServerBlock> *blocks) : _blocks(blocks) {
 	this->timeouts[CLIENT_HEADER_TIMEOUT] = DEFAULT_CLIENT_HEADER_TIMEOUT;
-	this->timeouts[CLIENT_BODY_TIMEOUT] = DEFAULT_CLIENT_BODY_TIMEOUT;
-	this->timeouts[SEND_TIMEOUT] = DEFAULT_SEND_TIMEOUT;
+	this->timeouts[CLIENT_BODY_TIMEOUT]   = DEFAULT_CLIENT_BODY_TIMEOUT;
+	this->timeouts[SEND_TIMEOUT]          = DEFAULT_SEND_TIMEOUT;
 }
 
 ConfFile::~ConfFile(void) {}
@@ -22,14 +22,14 @@ ConfFile::~ConfFile(void) {}
 /* ************************************************************************** */
 
 void ConfFile::parse(void) {
-	std::ifstream	conf(this->_path.c_str(), std::ios::in);
+	std::ifstream conf(this->_path.c_str(), std::ios::in);
 
 	if (false == conf.is_open()) {
 		throw Configuration::ConfigurationException(this->_path + ": " + std::strerror(errno));
 	}
 
 	std::string line;
-	uint32_t	index = 0;
+	uint32_t    index = 0;
 
 	while (std::getline(conf, line)) {
 		this->_tokenize(line, ++index);
@@ -75,8 +75,8 @@ void ConfFile::_tokenize(const std::string &line, const uint32_t index) {
 }
 
 uint32_t ConfFile::_countArgs(const std::vector<ConfToken>::const_iterator &directive) const {
-	std::vector<ConfToken>::const_iterator	token = directive;
-	uint32_t								args = 0;
+	std::vector<ConfToken>::const_iterator token = directive;
+	uint32_t                               args  = 0;
 
 	while (++token != this->_tokens.end()) {
 		if (*token == ';') {
@@ -90,8 +90,8 @@ uint32_t ConfFile::_countArgs(const std::vector<ConfToken>::const_iterator &dire
 }
 
 uint32_t ConfFile::_countBlockArgs(const std::vector<ConfToken>::const_iterator &directive) const {
-	std::vector<ConfToken>::const_iterator	token = directive;
-	uint32_t								args = 0;
+	std::vector<ConfToken>::const_iterator token = directive;
+	uint32_t                               args  = 0;
 
 	while (++token != this->_tokens.end()) {
 		if (*token == BLOCK_OPEN) {
@@ -106,13 +106,9 @@ uint32_t ConfFile::_countBlockArgs(const std::vector<ConfToken>::const_iterator 
 
 /* GETTERS ****************************************************************** */
 
-const std::string &ConfFile::path(void) const {
-	return this->_path;
-}
+const std::string &ConfFile::path(void) const { return this->_path; }
 
-const std::vector<ConfToken> &ConfFile::tokens(void) const {
-	return this->_tokens;
-}
+const std::vector<ConfToken> &ConfFile::tokens(void) const { return this->_tokens; }
 
 bool ConfFile::eof(std::vector<ConfToken>::const_iterator &it) const {
 	return (this->_tokens.end() == it);
@@ -120,6 +116,4 @@ bool ConfFile::eof(std::vector<ConfToken>::const_iterator &it) const {
 
 /* SETTERS ****************************************************************** */
 
-void ConfFile::setPath(const std::string &path) {
-	this->_path = path;
-}
+void ConfFile::setPath(const std::string &path) { this->_path = path; }

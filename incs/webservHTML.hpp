@@ -1,14 +1,17 @@
 #ifndef WEBSERVHTML_HPP
-# define WEBSERVHTML_HPP
+#define WEBSERVHTML_HPP
 
-# define INDEXOF(path) "\
+#define INDEXOF(path)   \
+	"\
 <!DOCTYPE html>\
 <html lang=\"en\">\
 \
 <head>\
 	<meta charset=\"UTF-8\">\
 	<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\
-	<title>Index of " + path + "</title>\
+	<title>Index of " + \
+	    path +          \
+	    "</title>\
 	<style>\
 		body {\
 			font-family: \"Noto Sans Mono\", sans-serif;\
@@ -48,7 +51,9 @@
 	</style>\
 </head>\
 <body>\
-	<h1>Index of " + path + "</h1>\
+	<h1>Index of " +    \
+	    path +          \
+	    "</h1>\
 	<table>\
 		<tr>\
 			<th></th> <th><span>Name</span></a></th> <th>Last modified</th> <th><span>Size</span></th>\
@@ -57,14 +62,26 @@
 			<td colspan=\"5\"><hr></td>\
 		</tr>"
 
-# define HTMLFILE(path, name, time, size) "<tr><td>📄</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>" + size + "</span></td></tr>"
-# define HTMLDIR(path, name, time) "<tr><td>📁</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>-</span></td></tr>"
-# define HTMLOTHER(path, name, time) "<tr><td>❓</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>-</span></td></tr>"
-# define HTMLWEIRD(path, name) "<tr><td>❌</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + "</span></a></td> <td></td> <td class=\"size-column\"><span>-</span></td></tr>"
+#define HTMLFILE(path, name, time, size)                                                      \
+	"<tr><td>📄</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + \
+	    "</span></a></td> <td>" + time + "</td> <td class=\"size-column\"><span>" + size +    \
+	    "</span></td></tr>"
+#define HTMLDIR(path, name, time)                                                             \
+	"<tr><td>📁</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + \
+	    "</span></a></td> <td>" + time +                                                      \
+	    "</td> <td class=\"size-column\"><span>-</span></td></tr>"
+#define HTMLOTHER(path, name, time)                                                           \
+	"<tr><td>❓</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + \
+	    "</span></a></td> <td>" + time +                                                      \
+	    "</td> <td class=\"size-column\"><span>-</span></td></tr>"
+#define HTMLWEIRD(path, name)                                                                 \
+	"<tr><td>❌</td> <td><a href=\"http://" + path + "\"><span class=\"file-name\">" + name + \
+	    "</span></a></td> <td></td> <td class=\"size-column\"><span>-</span></td></tr>"
 
-# define HTMLFOOTER "</table></body></html>"
+#define HTMLFOOTER "</table></body></html>"
 
-# define HTMLERROR(code, message) "\
+#define HTMLERROR(code, message)       \
+	"\
 <!DOCTYPE html>\
 <html lang=\"en\">\
 <head>\
@@ -125,7 +142,9 @@
 <body>\
 	<div id=\"main\">\
 		<div class=\"fof\">\
-			<h1>Error " + code + "</h1><br>" + message + "<br>\
+			<h1>Error " +              \
+	    code + "</h1><br>" + message + \
+	    "<br>\
 		</div>\
 	</div>\
 	<div class=\"footer\">webserv |\
@@ -142,7 +161,8 @@
 #define ERROR404MSG "It looks like the page you were looking for doesn't exist."
 #define ERROR405MSG "The HTTP method you used is not allowed for this resource."
 #define ERROR408MSG "The server timed out waiting for your request. Please try again."
-#define ERROR409MSG "A conflict occurred. Your request could not be processed due to conflicting data."
+#define ERROR409MSG \
+	"A conflict occurred. Your request could not be processed due to conflicting data."
 #define ERROR411MSG "The server requires a valid Content-Length header in your request."
 #define ERROR413MSG "The request payload is too large. Please reduce its size and try again."
 #define ERROR414MSG "The request URI is too long. Please shorten the URL and try again."
@@ -155,6 +175,5 @@
 #define ERROR501MSG "The server does not support the functionality required to fulfill the request."
 #define ERROR503MSG "The service is currently unavailable. Please try again later."
 #define ERROR505MSG "The HTTP version used in your request is not supported."
-
 
 #endif /* ******************************************************************* */

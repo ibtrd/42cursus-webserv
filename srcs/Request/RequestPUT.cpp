@@ -1,6 +1,6 @@
-#include <iostream>
-
 #include "RequestPUT.hpp"
+
+#include <iostream>
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -9,26 +9,22 @@
 // 	// std::cerr << "RequestPUT created" << std::endl;
 // }
 
-RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context)
-{
+RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context) {
 	std::cerr << "RequestPUT created" << std::endl;
 }
 
-RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other)
-{
+RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) {
 	// std::cerr << "RequestPUT copy" << std::endl;
 	*this = other;
 }
 
-RequestPUT::~RequestPUT(void)
-{
+RequestPUT::~RequestPUT(void) {
 	// std::cerr << "RequestPUT destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-RequestPUT	&RequestPUT::operator=(const RequestPUT &other)
-{
+RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 	std::cerr << "RequestPUT assign" << std::endl;
 	(void)other;
 	return (*this);
@@ -36,14 +32,12 @@ RequestPUT	&RequestPUT::operator=(const RequestPUT &other)
 
 /* ************************************************************************** */
 
-error_t	RequestPUT::parse(void)
-{
+error_t RequestPUT::parse(void) {
 	std::cerr << "RequestPUT parse" << std::endl;
 	return (REQ_DONE);
 }
 
-error_t	RequestPUT::processIn(void)
-{
+error_t RequestPUT::processIn(void) {
 	std::cerr << "RequestPUT processIn" << std::endl;
 	// debug start
 	this->_context.response.setStatusCode(STATUS_OK);
@@ -53,14 +47,12 @@ error_t	RequestPUT::processIn(void)
 	return (REQ_DONE);
 }
 
-error_t	RequestPUT::processOut(void)
-{
+error_t RequestPUT::processOut(void) {
 	std::cerr << "RequestPUT processOut" << std::endl;
 	return (REQ_DONE);
 }
 
-ARequest	*RequestPUT::clone(void) const
-{
+ARequest *RequestPUT::clone(void) const {
 	std::cerr << "RequestPUT clone" << std::endl;
 	return (new RequestPUT(*this));
 }
@@ -73,8 +65,7 @@ ARequest	*RequestPUT::clone(void) const
 
 /* OTHERS *********************************************************************/
 
-ARequest	*createRequestPUT(RequestContext_t &context)
-{
+ARequest *createRequestPUT(RequestContext_t &context) {
 	std::cerr << "createRequestPUT" << std::endl;
 	return (new RequestPUT(context));
 }

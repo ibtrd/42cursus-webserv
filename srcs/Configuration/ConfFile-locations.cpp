@@ -1,24 +1,25 @@
+#include <iostream>
+
 #include "ConfFile.hpp"
 #include "Configuration.hpp"
 #include "ft.hpp"
 
-#include <iostream>
-
-void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server) {
-	const uint32_t									args = this->_countBlockArgs(token);
-	const std::vector<ConfToken>::const_iterator 	directive = token++;
+void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token,
+                                  ServerBlock                            &server) {
+	const uint32_t                               args      = this->_countBlockArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 
-	Path	path(token->str() + '/');
+	Path path(token->str() + '/');
 	if (!path.isOriginForm()) {
 		throw Configuration::ConfigurationException(this->_invalidPath(*directive, *token));
 	}
 	++token;
 
-	LocationBlock	location(path);
+	LocationBlock location(path);
 
 	while (++token != this->_tokens.end() && !token->isMetatoken()) {
 		locationDirectives::const_iterator dir = _locationDirectives.find(token->str());
@@ -27,20 +28,23 @@ void ConfFile::_locationDirective(std::vector<ConfToken>::const_iterator &token,
 		} else if (dir == _locationDirectives.end()) {
 			throw Configuration::ConfigurationException(this->_unkwownDirective(*token));
 		} else {
-			throw Configuration::ConfigurationException(this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));
+			throw Configuration::ConfigurationException(
+			    this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));
 		}
 	}
 	if (token == this->_tokens.end()) {
-		throw Configuration::ConfigurationException(this->_unexpectedEOF(*(token - 1), BLOCK_CLOSE));
+		throw Configuration::ConfigurationException(
+		    this->_unexpectedEOF(*(token - 1), BLOCK_CLOSE));
 	} else if (*token != BLOCK_CLOSE) {
 		throw Configuration::ConfigurationException(this->_unexpectedToken(*token));
 	}
 	server.addLocation(location);
 }
 
-void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
+void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token,
+                              LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
@@ -51,9 +55,10 @@ void ConfFile::_rootDirective(std::vector<ConfToken>::const_iterator &token, Loc
 	++token;
 }
 
-void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
+void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token,
+                               LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (0 == args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
@@ -66,10 +71,11 @@ void ConfFile::_allowDirective(std::vector<ConfToken>::const_iterator &token, Lo
 	}
 }
 
-void ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
-	
+void ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token,
+                                           LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
+
 	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
@@ -81,22 +87,25 @@ void ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterato
 	}
 }
 
-void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
+void ConfFile::_autoindexDirective(std::vector<ConfToken>::const_iterator &token,
+                                   LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (1 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
 	}
 	if (0 != location.setDirListing(token->str())) {
-		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token, DIRLISTING_ON, DIRLISTING_OFF));
+		throw Configuration::ConfigurationException(
+		    this->_invalidValue(*directive, *token, DIRLISTING_ON, DIRLISTING_OFF));
 	}
 	++token;
 }
 
-void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
+void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &token,
+                                     LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (2 != args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
@@ -111,9 +120,10 @@ void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &tok
 	}
 }
 
-void ConfFile::_indexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
-	const uint32_t									args = this->_countArgs(token);
-	const std::vector<ConfToken>::const_iterator	directive = token++;
+void ConfFile::_indexDirective(std::vector<ConfToken>::const_iterator &token,
+                               LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
 
 	if (0 == args) {
 		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
