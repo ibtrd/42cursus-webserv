@@ -2,8 +2,6 @@
 
 #include <cstring>
 
-/* STATICS ****************************************************************** */
-
 bool	ConfFile::_isMetachar(int c) {
 	return (c == ';' || c == BLOCK_OPEN || c == BLOCK_CLOSE);
 }
@@ -29,6 +27,9 @@ ConfFile::directives ConfFile::_initializeDirectives(void) {
 	directives map;
 
 	map["server"] = &ConfFile::_serverDirective;
+	map["client_header_timeout"] = &ConfFile::_clientHeaderTimeoutDirective;
+	map["client_body_timeout"] = &ConfFile::_clientBodyTimeoutDirective;
+	map["send_timeout"] = &ConfFile::_sendTimeoutDirective;
 	return map;
 }
 
@@ -40,6 +41,7 @@ ConfFile::serverDirectives ConfFile::_initServerDirectives(void) {
 	map["listen"] = &ConfFile::_listenDirective;
 	map["server_name"] = &ConfFile::_serverNameDirective; 
 	map["location"] = &ConfFile::_locationDirective;
+	map["error_page"] = &ConfFile::_errorPageDirective;
 	return map;
 }
 
@@ -53,6 +55,7 @@ ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	map["client_max_body_size"] = &ConfFile::_clientMaxBodySizeDirective;
 	map["autoindex"] = &ConfFile::_autoindexDirective;
 	map["redirect"] = &ConfFile::_redirectionDirective;
+	map["index"] = &ConfFile::_indexDirective;
 	// map["cgi_exe"] = &ConfFile::_cgiExeDirective;
 	return map;
 }

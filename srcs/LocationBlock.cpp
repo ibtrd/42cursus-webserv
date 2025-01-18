@@ -1,14 +1,13 @@
-#include <stdexcept>
 
 #include "LocationBlock.hpp"
-#include "webdef.hpp"
+#include "Method.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed = DEFAULT_METHODS;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_allowed = DEFAULT_ALLOW;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -17,9 +16,9 @@ LocationBlock::LocationBlock(const LocationBlock &other) {
 }
 
 LocationBlock::LocationBlock(const Path &path) : _path(path) {
-	this->_allowed = DEFAULT_METHODS;
-	this->_dirListing = DEFAULT_DIRLISTING;
-	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_allowed = DEFAULT_ALLOW;
+	this->_dirListing = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
 }
 
@@ -36,6 +35,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_root = other._root;
 	this->_allowed = other._allowed;
 	this->_redirection = other._redirection;
+	this->_indexes = other._indexes;
 	return (*this);
 }
 
@@ -61,13 +61,20 @@ void LocationBlock::fill(const LocationBlock &other) {
 	if (0 == this->_redirection.first) {
 		this->_redirection = other._redirection;
 	}
+	if (0 == this->_indexes.size()) {
+		if (0 != other._indexes.size()) {
+			this->_indexes = other._indexes;
+		} else {
+			this->_indexes.push_back(DEFAULT_INDEX);
+		}
+	}
 }
 
 /* SETTERS ****************************************************************** */
 
 error_t LocationBlock::allowMethod(const std::string &str) {
-	for (std::size_t i = 0; i < LocationBlock::methods.size(); ++i) {
-		if (0 == LocationBlock::methods[i].compare(str)) {
+	for (std::size_t i = 0; i < Method::methods.size(); ++i) {
+		if (0 == Method::methods[i].compare(str)) {
 			this->_allowed |= (1 << i);
 			return 0;
 		}
@@ -103,19 +110,28 @@ error_t LocationBlock::setRoot(const std::string &str) {
 
 void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
 	switch (status) {
-		case MULTIPLE_CHOICES:
-		case MOVED_PERMANENTLY:
-		case FOUND:
-		case SEE_OTHER:
-		case NOT_MODIFIED:
-		case TEMPORARY_REDIRECT:
-		case PERMANENT_REDIRECT:
+		case STATUS_MULTIPLE_CHOICES:
+		case STATUS_MOVED_PERMANENTLY:
+		case STATUS_FOUND:
+		case STATUS_SEE_OTHER:
+		case STATUS_NOT_MODIFIED:
+		case STATUS_TEMPORARY_REDIRECT:
+		case STATUS_PERMANENT_REDIRECT:
 			this->_redirection.first = status;
 			break;
 		default:
 			throw std::invalid_argument("invalid redirection status");
 	}
 	this->_redirection.second = body;
+}
+
+void LocationBlock::addIndex(const std::string &str) {
+	this->_indexes.push_back(str);
+}
+
+void LocationBlock::setDefaults(void) {
+	this->setDirListing(DEFAULT_DIRLISTING);
+	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 }
 
 /* GETTERS ****************************************************************** */
@@ -140,42 +156,33 @@ const redirect_t &LocationBlock::getRedirect(void) const {
 	return this->_redirection;
 }
 
-bool LocationBlock::isAllowed(const std::string &method) const {
-	const std::vector<std::string> &methods = LocationBlock::methods;
-
-	for (std::size_t i = 0; i < methods.size(); ++i) {
-		if (0 == methods[i].compare(method)) {
-			return this->_allowed & (1 << i);
-		}
-	}
-	return false;
+const std::vector<std::string> &LocationBlock::indexes(void) const {
+	return this->_indexes;
 }
 
-/* STATICS ****************************************************************** */
-
-const std::vector<std::string> LocationBlock::methods = LocationBlock::_initMethods();
-
-std::vector<std::string> LocationBlock::_initMethods(void) {
-	std::vector<std::string>	methods;
-	methods.push_back("GET");
-	methods.push_back("POST");
-	methods.push_back("DELETE");
-	return methods;
+bool LocationBlock::isAllowed(const Method &method) const {
+	return this->_allowed & (1 << method.index());
 }
+
+/* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 	os << "Location '" << location._path << "' {\n"
 		<< "\troot: " << location._root << "\n"
-		<< "\tdirListing: ";
+		<< "\tindexes: ";
+	for (uint32_t i = 0; i < location.indexes().size(); ++i) {
+		os << location.indexes()[i] << " ";
+	}
+		os << "\n\tdirListing: ";
 	if (location._dirListing == -1) {
 		os << "undefined";
 	} else {
 		os << (location._dirListing ? DIRLISTING_ON : DIRLISTING_OFF);
 	}
 		os << "\n\tallowed: ";
-	for (uint32_t i = 0; i < LocationBlock::methods.size(); ++i) {
-		if (location.isAllowed(LocationBlock::methods[i])) {
-			os << LocationBlock::methods[i] << " ";
+	for (uint32_t i = 0; i < Method::methods.size(); ++i) {
+		if (location.isAllowed(Method::methods[i])) {
+			os << Method::methods[i] << " ";
 		}
 	}
 	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;

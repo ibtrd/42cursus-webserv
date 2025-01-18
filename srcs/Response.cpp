@@ -6,6 +6,7 @@
 #include <cstring>
 
 #include "Response.hpp"
+#include "RequestContext.hpp"
 #include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -13,9 +14,9 @@
 Response::Response(void)
 {
 	// std::cerr << "Response created" << std::endl;
-	this->_statusCode = NONE;
+	this->_statusCode = STATUS_NONE;
 	this->_reasonPhrase = "";
-	this->_headers["Server"] = "webserv/0.5";
+	this->_headers[HEADER_SERVER] = "webserv/0.5";
 };
 
 Response::Response(const Response &other)
@@ -48,7 +49,7 @@ Response	&Response::operator=(const Response &other)
 
 /* GETTERS ****************************************************************** */
 
-StatusCode	Response::statusCode(void) const
+status_code_t	Response::statusCode(void) const
 {
 	return (this->_statusCode);
 }
@@ -85,9 +86,14 @@ std::string	Response::response(void) const
 	return (response);
 }
 
+size_t	Response::bodySize(void) const
+{
+	return (this->_body.size());
+}
+
 /* SETTERS ****************************************************************** */
 
-void	Response::setStatusCode(const StatusCode &code)
+void	Response::setStatusCode(const status_code_t &code)
 {
 	this->_statusCode = code;
 	this->_reasonPhrase = statusCodeToReason(code);
@@ -101,7 +107,16 @@ void	Response::setHeader(const std::string &key, const std::string &value)
 void	Response::setBody(const std::string &body)
 {
 	this->_body = body;
-	this->_headers["Content-Length"] = ft::numToStr(body.length());
+}
+
+void	Response::addBody(const std::string &body)
+{
+	this->_body += body;
+}
+
+void	Response::clearBody(void)
+{
+	this->_body.clear();
 }
 
 /* EXCEPTIONS *************************************************************** */

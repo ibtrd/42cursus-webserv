@@ -49,6 +49,10 @@ bool	Configuration::noRun(void) const {
 	return false;
 }
 
+int32_t	Configuration::timeout(const uint32_t type) const {
+	return this->_conf.timeouts[type];
+}
+
 const std::string &Configuration::file(void) const {
 	return (this->_conf.path());
 }

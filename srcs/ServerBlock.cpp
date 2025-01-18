@@ -18,6 +18,7 @@ ServerBlock	&ServerBlock::operator=(const ServerBlock &other) {
 	this->_hosts = other._hosts;
 	this->_names = other._names;
 	this->_locations = other._locations;
+	this->_errorPages = other._errorPages;
 	return (*this);
 }
 
@@ -35,6 +36,10 @@ const std::vector<std::string> &ServerBlock::names(void) const {
 
 const std::vector<LocationBlock> &ServerBlock::locations(void) const {
 	return this->_locations;
+}
+
+const error_pages_t &ServerBlock::errorPages(void) const {
+	return this->_errorPages;
 }
 
 const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
@@ -59,6 +64,14 @@ const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 	return selected;
 }
 
+const Path *ServerBlock::findErrorPage(status_code_t code) const {
+	error_pages_t::const_iterator it = this->_errorPages.find(code);
+	if (it != this->_errorPages.end()) {
+		return &it->second;
+	}
+	return NULL;
+}
+
 void ServerBlock::fillLocations(const LocationBlock &location) {
 	for (uint32_t i = 0; i < this->_locations.size() ;++i) {
 		this->_locations[i].fill(location);
@@ -77,4 +90,8 @@ void ServerBlock::addName(const std::string &name) {
 
 void ServerBlock::addLocation(const LocationBlock &location) {
 	this->_locations.push_back(location);
+}
+
+void ServerBlock::addErrorPage(const status_code_t code, const Path &file) {
+	this->_errorPages[code] = file;
 }

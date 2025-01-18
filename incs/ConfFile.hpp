@@ -1,10 +1,8 @@
 #ifndef CONFFILE_HPP
 # define CONFFILE_HPP
 
-# include <map>
-
-# include <ConfToken.hpp>
-# include <ServerBlock.hpp>
+# include "ConfToken.hpp"
+# include "ServerBlock.hpp"
 
 class ConfFile {
 public:
@@ -22,7 +20,10 @@ public:
 	// SETTERS
 	void	setPath(const std::string &path);
 
+	int32_t	timeouts[TIMEOUT_COUNT];
+
 private:
+	Path 						_root;
 	std::string					_path;
 	std::vector<ConfToken>		_tokens;
 	std::vector<ServerBlock>	*_blocks;
@@ -30,16 +31,21 @@ private:
 	void	_tokenize(const std::string &line, const uint32_t index);
 
 	void	_serverDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_clientHeaderTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_clientBodyTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
+	void	_sendTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
 
 	void	_listenDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void	_serverNameDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void	_locationDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
+	void	_errorPageDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 
 	void	_rootDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_allowDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_autoindexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void	_redirectionDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
+	void	_indexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 
 	uint32_t	_countArgs(const std::vector<ConfToken>::const_iterator &directive) const;
 	uint32_t	_countBlockArgs(const std::vector<ConfToken>::const_iterator &directive) const;

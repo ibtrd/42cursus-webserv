@@ -5,9 +5,17 @@
 #include "Configuration.hpp"
 #include "ft.hpp"
 
+# define DEFAULT_CLIENT_HEADER_TIMEOUT 10
+# define DEFAULT_CLIENT_BODY_TIMEOUT 60
+# define DEFAULT_SEND_TIMEOUT 60
+
 /* CONSTRUCTORS ************************************************************* */
 
-ConfFile::ConfFile(std::vector<ServerBlock> *blocks) : _blocks(blocks) {}
+ConfFile::ConfFile(std::vector<ServerBlock> *blocks) : _blocks(blocks) {
+	this->timeouts[CLIENT_HEADER_TIMEOUT] = DEFAULT_CLIENT_HEADER_TIMEOUT;
+	this->timeouts[CLIENT_BODY_TIMEOUT] = DEFAULT_CLIENT_BODY_TIMEOUT;
+	this->timeouts[SEND_TIMEOUT] = DEFAULT_SEND_TIMEOUT;
+}
 
 ConfFile::~ConfFile(void) {}
 

@@ -10,12 +10,14 @@ SRC = \
 	signal \
 	utils \
 	Path \
+	Method \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/
 
 CONFIGURATION_SRC = \
 	ConfFile \
+	ConfFile-directives \
 	ConfFile-errors \
 	ConfFile-locations \
 	ConfFile-servers \
@@ -31,5 +33,7 @@ REQUEST_SRC = \
 	RequestGET \
 	RequestPOST \
 	RequestDELETE \
+	RequestPUT \
+	RequestGET-autoindex \
 
 SRCS := $(addsuffix .cpp, $(SRC))

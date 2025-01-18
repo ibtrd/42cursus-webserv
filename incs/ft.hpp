@@ -1,26 +1,27 @@
 #ifndef FT_HPP
 # define FT_HPP
 
-# include <string>
 # include <cstring>
 # include <sstream>
-# include <stdexcept>
 # include <map>
 # include <vector>
+# include <cstdlib>
+# include <limits>
+# include <errno.h>
 
 namespace ft {
-	template<typename T>
+template <typename T>
 	T stoi(const std::string& str) {
-		std::stringstream ss(str);
-		T value;
+		char* endptr;
+		errno = 0;
+		long value = std::strtol(str.c_str(), &endptr, 10);
 
-		if (!(ss >> value) || !ss.eof()) {
-			throw std::invalid_argument("Failed to convert value");
-		}
-		if (ss.peek() != std::stringstream::traits_type::eof()) {
+		if (*endptr != '\0') {
 			throw std::invalid_argument("Trailing characters found after value");
+		} else if (errno == ERANGE || value < std::numeric_limits<T>::min() || value > std::numeric_limits<T>::max()) {
+			throw std::invalid_argument("Value out of range");
 		}
-		return value;
+		return static_cast<T>(value);
 	}
 
 	template<typename T>

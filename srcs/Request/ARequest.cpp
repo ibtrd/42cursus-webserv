@@ -1,11 +1,5 @@
-#include <sys/epoll.h>
-#include <unistd.h>
 #include <iostream>
-#include <sys/socket.h>
-#include <cerrno>
-#include <cstring>
 
-#include "ARequest.hpp"
 #include "Client.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
@@ -18,11 +12,17 @@
 ARequest::ARequest(RequestContext_t &context) : _context(context)
 {
 	// std::cerr << "ARequest created" << std::endl;
+	Path target(this->_context.target);
+	target = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
+	this->_path = this->_context.ruleBlock->getRoot().concat(target);
 }
 
 ARequest::ARequest(const ARequest &other) : _context(other._context)
 {
 	// std::cerr << "ARequest copy" << std::endl;
+	Path target(this->_context.target);
+	target = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
+	this->_path = this->_context.ruleBlock->getRoot().concat(target);
 }
 
 ARequest::~ARequest(void)
@@ -37,7 +37,7 @@ ARequest	&ARequest::operator=(const ARequest &other)
 	std::cerr << "ARequest assign" << std::endl;
 	if (this == &other)
 		return (*this);
-	this->_context = other._context;
+	// this->_context = other._context;
 	return (*this);
 }
 
