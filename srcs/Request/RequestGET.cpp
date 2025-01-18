@@ -114,7 +114,7 @@ error_t RequestGET::_validateLocalFile(void) {
 error_t RequestGET::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin(); it != this->_context.ruleBlock->indexes().end(); ++it) {
 		std::string test = this->_path.concat(*it);
-		std::cerr << "testing indexfile: " << test << std::endl;
+		// std::cerr << "testing indexfile: " << test << std::endl;
 		if (0 == access(test.c_str(), F_OK)) {
 			this->_path = test;
 			return 0;

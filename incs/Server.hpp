@@ -10,7 +10,7 @@
 # include <list>
 
 # define MAX_EVENTS 64
-# define EPOLL_TIMEOUT 1000
+# define EPOLL_WAIT_TIMEOUT 1000
 # define REQUEST_TIMEOUT 2
 # define MIME_TYPE_FILE "/etc/mime.types"
 
@@ -28,6 +28,8 @@ public:
 
 	const std::string	&getMimeType(const std::string &ext) const;
 	const ServerBlock	&findServerBlock(const fd_t socket, const std::string &host) const;
+	int32_t				getTimeout(const uint32_t type) const;
+	// const int32_t		*getTimeouts(void) const;
 
 	int32_t	epollFd(void) const;
 

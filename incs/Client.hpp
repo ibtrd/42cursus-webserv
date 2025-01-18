@@ -17,7 +17,7 @@ private:
 	static	int32_t		_epollFd;
 	static	ARequest	*(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 	
-	const time_t				_timestamp;
+	time_t						_timestamp[TIMEOUT_COUNT];
 	const fd_t					_idSocket;
 	const fd_t					_socket;
 	const struct sockaddr_in	_addr;
@@ -64,7 +64,6 @@ public:
 	error_t		timeoutCheck(const time_t now);
 
 	// GETTERS
-	time_t						timestamp(void) const;
 	fd_t						socket(void) const;
 	void						sockets(fd_t fds[2]) const;
 

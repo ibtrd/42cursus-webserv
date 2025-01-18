@@ -27,7 +27,6 @@ ARequest	*(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 /* CONSTRUCTORS ************************************************************* */
 
 Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server, const struct sockaddr_in &addr) :
-	_timestamp(time(NULL)),
 	_idSocket(idSocket),
 	_socket(requestSocket),
 	_addr(addr),
@@ -36,12 +35,15 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
 	_bytesSent(0)
 {
 	// std::cerr << "Client created" << std::endl;
+	if (server.getTimeout(CLIENT_HEADER_TIMEOUT))
+		this->_timestamp[CLIENT_HEADER_TIMEOUT] = time(NULL);
+	this->_timestamp[CLIENT_BODY_TIMEOUT] = std::numeric_limits<time_t>::max();
+	this->_timestamp[SEND_TIMEOUT] = std::numeric_limits<time_t>::max();
 	this->_context.requestState = REQ_STATE_NONE;
 	this->_request = NULL;
 }
 
 Client::Client(const Client &other) :
-	_timestamp(other._timestamp),
 	_idSocket(other._idSocket),
 	_socket(other._socket),
 	_addr(other._addr),
@@ -77,6 +79,9 @@ Client	&Client::operator=(const Client &other)
 		this->_request = other._request->clone();
 	else
 		this->_request = NULL;
+
+	for (int i = 0; i < TIMEOUT_COUNT; ++i)
+		this->_timestamp[i] = other._timestamp[i];
 
 	this->_context.serverBlock = other._context.serverBlock;
 	this->_context.ruleBlock = other._context.ruleBlock;
@@ -268,9 +273,9 @@ error_t Client::_parseRequestLine(void)
 		return (REQ_DONE);
 	}
 
-		// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
-		// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-		// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
+	// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
+	// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+	// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
@@ -370,9 +375,11 @@ error_t Client::_switchToWrite(void)
 
 error_t	Client::_sendResponse(void)
 {
-	std::cerr << "Sending response..." << std::endl;
+	// std::cerr << "Sending response..." << std::endl;
+	std::cerr << ".";
 	ssize_t	bytes;
 
+	this->_timestamp[SEND_TIMEOUT] = time(NULL);
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.length() ? this->_context.responseBuffer.length() : REQ_BUFFER_SIZE;
 	if (bytes > 0)
 	{
@@ -383,14 +390,14 @@ error_t	Client::_sendResponse(void)
 			return (REQ_ERROR);
 		}
 		this->_bytesSent += bytes;
-		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
 	if (0 == this->_context.responseBuffer.length() && IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	std::cerr << "Response not fully sent" << std::endl;
+	// std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -499,12 +506,9 @@ error_t	Client::_handleSocketOut(void)
 
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
-	{
-		close(this->_socket);
-		return (REQ_ERROR);
-	}
 	close(this->_socket);
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL))
+		return (REQ_ERROR);
 	return (REQ_DONE);
 }
 
@@ -553,11 +557,12 @@ error_t	Client::handleOut(fd_t fd)
 }
 
 error_t Client::timeoutCheck(const time_t now) {
-	if (IS_REQ_READ_BODY_COMPLETE(this->_context.requestState)) {
-			return (REQ_CONTINUE);
-	}
-	if (now - this->_timestamp >= REQUEST_TIMEOUT) {
-		std::cerr << "Client(" << this->_socket << ") timeout detected!" << std::endl; //DEBUG
+	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState)
+		&& this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)
+		&& now - this->_timestamp[CLIENT_HEADER_TIMEOUT] >= this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
+
+		std::cerr << "Client(" << this->_socket << ") header timeout detected!" << std::endl; //DEBUG
+
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
@@ -568,7 +573,37 @@ error_t Client::timeoutCheck(const time_t now) {
 
 		if (this->_switchToWrite() == -1)
 			return (REQ_ERROR);
+		return (REQ_CONTINUE);
 	}
+
+	if (!IS_REQ_READ_BODY_COMPLETE(this->_context.requestState)
+		&& this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)
+		&& now - this->_timestamp[CLIENT_BODY_TIMEOUT] >= this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
+
+		std::cerr << "Client(" << this->_socket << ") body timeout detected!" << std::endl; //DEBUG
+
+		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
+		SET_REQ_READ_COMPLETE(this->_context.requestState);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		this->_loadErrorPage();
+
+		this->_context.responseBuffer = this->_context.response.response();
+		this->_context.response.clearBody();
+
+		if (this->_switchToWrite() == -1)
+			return (REQ_ERROR);
+		return (REQ_CONTINUE);
+	}
+
+	if (IS_REQ_CAN_WRITE(this->_context.requestState)
+		&& this->_context.server.getTimeout(SEND_TIMEOUT)
+		&& now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
+		
+		std::cerr << "Client(" << this->_socket << ") send timeout detected!" << std::endl; //DEBUG
+
+		return (REQ_DONE);
+	}
+
 	return (REQ_CONTINUE);
 }
 
@@ -577,10 +612,6 @@ error_t Client::timeoutCheck(const time_t now) {
 fd_t	Client::socket(void) const { return this->_socket; }
 
 void	Client::sockets(fd_t fds[2]) const { fds[0] = this->_socket; fds[1] = -1; }
-
-time_t Client::timestamp(void) const {
-	return this->_timestamp;
-}
 
 /* SETTERS ****************************************************************** */
 
@@ -592,7 +623,7 @@ void	Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
 
 std::ostream &operator<<(std::ostream &os, const Client &client) {
 	char buffer[128];
-	std::strftime(buffer, sizeof(buffer), "%c", std::localtime(&client._timestamp));
+	std::strftime(buffer, sizeof(buffer), "%c", std::localtime(&client._timestamp[CLIENT_HEADER_TIMEOUT]));
 	char clientIP[INET_ADDRSTRLEN];
 	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";
