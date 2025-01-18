@@ -49,7 +49,7 @@ void Server::configure(const Configuration &config) {
 }
 
 void Server::routine(void) {
-	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, EPOLL_TIMEOUT);
+	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
 	if (nfds == -1) {
 		if (g_signal != SIGQUIT)
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
@@ -151,6 +151,10 @@ const ServerBlock &Server::findServerBlock(const fd_t socket, const std::string 
 	return blocks.front();
 }
 
+int32_t Server::getTimeout(const uint32_t type) const {
+	return this->_timeouts[type];
+}
+
 fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host) {
 	fd_t fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
 	if (-1 == fd) {
@@ -234,10 +238,19 @@ void Server::_checkClientsTimeout(void) {
 	const time_t now = time(NULL);
 
 	for (std::list<Client>::iterator it = this->_clients.begin();  it != this->_clients.end(); ++it) {
-		error_t status =  it->timeoutCheck(now);
-		if (status == REQ_ERROR) {
+		switch (it->timeoutCheck(now))
+		{
+		case REQ_DONE:
+			this->_removeConnection(it->socket());
+			break;
+
+		case REQ_ERROR:
 			std::cerr << "Error: timeoutCheck" << std::endl;
 			this->_removeConnection(it->socket());
+			break;
+		
+		default:
+			break;
 		}
 	}
 }
