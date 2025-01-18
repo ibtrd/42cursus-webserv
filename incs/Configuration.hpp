@@ -9,13 +9,14 @@
 
 # define NORUN_OPTION (1 << 0)
 
-class Configuration {	
+class Configuration {
 public:
 	Configuration(int argc, char *argv[]);
 	~Configuration(void);
 
 	// GETTERS
 	bool	noRun(void) const;
+	int32_t	timeout(const uint32_t type) const;
 
 	const std::string				&file(void) const;
 	const std::vector<ServerBlock>	&blocks(void) const;

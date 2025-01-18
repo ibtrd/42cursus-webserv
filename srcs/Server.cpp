@@ -40,9 +40,11 @@ void Server::configure(const Configuration &config) {
 			}
 		}
 	}
-
 	if (-1 == this->_loadMimeTypes()) {
 		throw std::runtime_error("Failed to load mime types");
+	}
+	for (uint32_t type = CLIENT_HEADER_TIMEOUT; type != TIMEOUT_COUNT; ++type) {
+		this->_timeouts[type] = config.timeout(type);
 	}
 }
 
