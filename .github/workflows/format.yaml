@@ -4,7 +4,7 @@ run-name: Code formating
 on:
   pull_request:
     branches:
-      - 'clang-formating'
+      - 'main'
   workflow_dispatch:
 
 jobs:
