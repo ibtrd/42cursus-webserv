@@ -50,15 +50,13 @@ bool Path::isFileFormat(void) const { return (!this->_str.empty() && '/' != *thi
 
 bool Path::isDirFormat(void) const { return (!this->_str.empty() && '/' == *this->_str.rbegin()); }
 
-error_t Path::access(int type) const { return ::access(this->_str.c_str(), type); }
+int Path::access(int type) const { return ::access(this->_str.c_str(), type); }
 
 error_t Path::stat(void) {
 	error_t err = ::stat(this->_str.c_str(), &this->_stat);
 	if (!err) this->_statDone = true;
 	return err;
 }
-
-bool Path::hasPermission(int32_t mode) const { return (::access(this->_str.c_str(), mode) != -1); }
 
 bool Path::isFile(void) const {
 	if (!this->_statDone) {
@@ -95,6 +93,14 @@ std::string Path::extension(void) const {
 		return src.substr(pos + 1);
 	}
 	return std::string();
+}
+
+Path Path::dir(void) const {
+	const std::size_t  pos = this->_str.find_last_of('/');
+	if (pos == std::string::npos) {
+		return *this;
+	}
+	return Path(this->_str.substr(0, pos));
 }
 
 uint32_t Path::length(void) const { return this->_chunks.size(); }

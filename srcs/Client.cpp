@@ -394,7 +394,7 @@ void Client::_loadErrorPage(void) {
 	if (0 != errorPath.stat()) {
 		goto to_default_error_page;
 	}
-	if (!errorPath.hasPermission(R_OK)) {
+	if (0 != errorPath.access(R_OK)) {
 		goto to_default_error_page;
 	}
 	if (!errorPath.isFile()) {

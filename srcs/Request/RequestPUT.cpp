@@ -1,6 +1,8 @@
 #include "RequestPUT.hpp"
 
+#include <cstring>
 #include <iostream>
+#include <fcntl.h>
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -35,7 +37,38 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 
 error_t RequestPUT::parse(void) {
 	std::cerr << "RequestPUT parse" << std::endl;
-	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
+	if (this->_path.isDirFormat()) {
+		this->_context.response.setStatusCode(STATUS_CONFLICT);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 == this->_path.access(F_OK)) {
+		if (0 == this->_path.access(W_OK)) {
+			this->_openFile(this->_path.c_str());
+		} else {
+			this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		}
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	Path directory = this->_path.dir();
+	if (0 != directory.access(F_OK)) {
+		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != directory.stat()) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != directory.access(W_OK)) {
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	this->_openFile(this->_path.c_str());
+	// SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
@@ -58,6 +91,16 @@ error_t RequestPUT::processOut(void) {
 ARequest *RequestPUT::clone(void) const {
 	std::cerr << "RequestPUT clone" << std::endl;
 	return (new RequestPUT(*this));
+}
+
+/* ************************************************************************** */
+
+void RequestPUT::_openFile(const char *filepath) {
+	this->_file.open(filepath, std::ios::out | std::ios::trunc | std::ios::binary);
+	if (!this->_file.is_open()) {
+		std::cerr << "open(): " << std::strerror(errno) << std::endl;
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	}
 }
 
 /* GETTERS ****************************************************************** */

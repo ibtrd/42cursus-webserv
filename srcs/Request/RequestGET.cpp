@@ -43,9 +43,9 @@ RequestGET &RequestGET::operator=(const RequestGET &other) {
 
 void RequestGET::_openFile(void) {
 	// std::cerr << "RequestGET _openFile" << std::endl;
-	this->_file.open(this->_path.string().c_str(), std::ios::in | std::ios::binary);
+	this->_file.open(this->_path.c_str(), std::ios::in | std::ios::binary);
 	if (!this->_file.is_open()) {
-		std::cerr << "open: " << strerror(errno) << std::endl;
+		std::cerr << "open(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -91,7 +91,7 @@ error_t RequestGET::_validateLocalFile(void) {
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (!this->_path.hasPermission(R_OK)) {
+	if (0 != this->_path.access(R_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
