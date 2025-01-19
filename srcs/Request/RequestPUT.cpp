@@ -86,7 +86,7 @@ error_t RequestPUT::_checkHeaders(void) {
 			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 			return (REQ_DONE);
 		}
-		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE) {
+		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE || this->_contentLength > this->_context.ruleBlock->getMaxBodySize()) {
 			this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 			return (REQ_DONE);
 		}

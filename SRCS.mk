@@ -6,7 +6,6 @@ SRC = \
 	main \
 	Method \
 	Path \
-	RandomGenerator \
 	Response \
 	Server \
 	ServerBlock \
