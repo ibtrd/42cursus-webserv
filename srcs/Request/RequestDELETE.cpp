@@ -20,6 +20,8 @@
 
 RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context) {
 	std::cerr << "RequestDELETE created" << std::endl;
+	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
+	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 }
 
 RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other) {
@@ -41,47 +43,46 @@ RequestDELETE &RequestDELETE::operator=(const RequestDELETE &other) {
 
 /* ************************************************************************** */
 
-error_t RequestDELETE::parse(void) {
-	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
+void RequestDELETE::processing(void) {
+	std::cerr << "RequestDELETE processing" << std::endl;
+
 	std::cout
 	    << ((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target)
 	    << std::endl;
-	return (REQ_DONE);
-}
 
-error_t RequestDELETE::processIn(void) {
 	std::cerr << this->_path << std::endl;
+
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (0 != this->_path.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (this->_path.isDir() && !this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (0 != this->_path.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (0 != std::remove(this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_context.response.setStatusCode(STATUS_NO_CONTENT);
 	}
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	return;
+}
+
+error_t RequestDELETE::workIn(void) {
+	throw std::logic_error("RequestDELETE::workIn should not be called");
 	return (REQ_DONE);
 }
 
-error_t RequestDELETE::processOut(void) {
-	SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
+error_t RequestDELETE::workOut(void) {
+	throw std::logic_error("RequestDELETE::workOut should not be called");
 	return (REQ_DONE);
 }
 

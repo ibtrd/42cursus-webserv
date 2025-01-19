@@ -18,6 +18,7 @@
 
 RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL) {
 	// std::cerr << "RequestGET created" << std::endl;
+	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);	// No workIn needed
 }
 
 RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
@@ -52,9 +53,9 @@ void RequestGET::_openFile(void) {
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE,
 	                                  this->_context.server.getMimeType(this->_path.extension()));
-	this->_file.seekg(0, std::ios::end);
-	this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(this->_file.tellg()));
-	this->_file.seekg(0, std::ios::beg);
+	// this->_file.seekg(0, std::ios::end);
+	this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(this->_path.size()));
+	// this->_file.seekg(0, std::ios::beg);
 }
 
 void RequestGET::_openDir(void) {
@@ -67,7 +68,6 @@ void RequestGET::_openDir(void) {
 	}
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
-	// this->_context.response.setHeader(HEADER_TRANSFER_ENCODING, "chunked");
 	this->_context.response.setBody(INDEXOF(this->_context.target));
 }
 
@@ -77,7 +77,7 @@ error_t RequestGET::_readFile(void) {
 	this->_file.read(buffer, REQ_BUFFER_SIZE);
 	ssize_t bytes = this->_file.gcount();
 	if (bytes == 0) {
-		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		return (REQ_CONTINUE);
 	}
 
@@ -88,17 +88,17 @@ error_t RequestGET::_readFile(void) {
 error_t RequestGET::_validateLocalFile(void) {
 	if (0 != this->_path.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (0 != this->_path.access(R_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (this->_path.isFile()) {
 		this->_openFile();
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
@@ -119,52 +119,46 @@ error_t RequestGET::_fetchIndexes(void) {
 
 /* ************************************************************************** */
 
-error_t RequestGET::parse(void) {
+void RequestGET::processing(void) {
 	// std::cerr << "RequestGET parse" << std::endl;
-	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
-	return (REQ_DONE);
-}
-
-error_t RequestGET::processIn(void) {
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (REQ_CONTINUE != this->_validateLocalFile()) {
-		return (REQ_DONE);
+		return;
 	}
 	if (!this->_path.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return;
 	}
 	if (0 == this->_fetchIndexes()) {
 		if (REQ_CONTINUE != this->_validateLocalFile()) {
-			return (REQ_DONE);
+			return;
 		}
 	} else {
 		if (this->_context.ruleBlock->isDirListing()) {
 			this->_openDir();
-			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-			return (REQ_DONE);
+			return;
 		}
 	}
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+}
+
+error_t RequestGET::workIn(void) {
+	throw std::logic_error("RequestGET::workIn should not be called");
 	return (REQ_DONE);
 }
 
-error_t RequestGET::processOut(void) {
-	// std::cerr << "RequestGET processOut" << std::endl;
+error_t RequestGET::workOut(void) {
+	// std::cerr << "RequestGET workOut" << std::endl;
 	if (this->_context.response.statusCode() != STATUS_OK) {
-		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		return (REQ_CONTINUE);
 	}
 

@@ -40,23 +40,23 @@ RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 
 /* ************************************************************************** */
 
-error_t RequestPOST::parse(void) {
+void RequestPOST::processing(void) {
 	std::cerr << "RequestPOST parse" << std::endl;
-	return (REQ_DONE);
 }
 
-error_t RequestPOST::processIn(void) {
-	std::cerr << "RequestPOST processIn" << std::endl;
+error_t RequestPOST::workIn(void) {
+	std::cerr << "RequestPOST workIn" << std::endl;
 	// debug start
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setBody("Hello, World!");
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 	// debug end
 	return (REQ_DONE);
 }
 
-error_t RequestPOST::processOut(void) {
-	std::cerr << "RequestPOST processOut" << std::endl;
+error_t RequestPOST::workOut(void) {
+	std::cerr << "RequestPOST workOut" << std::endl;
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 

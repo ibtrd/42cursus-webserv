@@ -18,9 +18,9 @@ class ARequest {
 
 	ARequest &operator=(const ARequest &other);
 
-	virtual error_t parse(void)      = 0;
-	virtual error_t processIn(void)  = 0;
-	virtual error_t processOut(void) = 0;
+	virtual void	processing(void)	= 0;
+	virtual error_t workIn(void)		= 0;
+	virtual error_t workOut(void)	= 0;
 
 	// bool	pathExists(void) const;
 

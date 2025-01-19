@@ -9,10 +9,11 @@ class RequestPUT : public ARequest {
    private:
 	std::ofstream _file;
 
-	void _openFile(const char *filepath);
-
 	bool	_chunked;
 	int32_t	_contentLength;
+
+	void	_openFile(const char *filepath);
+	error_t	_checkHeaders(void);
 
    public:
 	RequestPUT(RequestContext_t &context);
@@ -22,10 +23,10 @@ class RequestPUT : public ARequest {
 
 	RequestPUT &operator=(const RequestPUT &other);
 
-	error_t   parse(void);
-	error_t   processIn(void);
-	error_t   processOut(void);
-	ARequest *clone(void) const;
+	void		processing(void);
+	error_t		workIn(void);
+	error_t		workOut(void);
+	ARequest	*clone(void) const;
 };
 
 ARequest *createRequestPUT(RequestContext_t &context);

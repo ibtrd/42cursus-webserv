@@ -33,7 +33,6 @@ class Client {
 	error_t              _parseRequest(void);
 	error_t              _parseRequestLine(void);
 	error_t              _parseHeaders(void);
-	error_t              _process(void);
 	error_t              _switchToWrite(void);
 	error_t              _sendResponse(void);
 	error_t              _handleSocketIn(void);
@@ -41,7 +40,7 @@ class Client {
 	error_t              _handleCGIIn(void);
 	error_t              _handleCGIOut(void);
 	error_t              _resolveARequest(void);
-	void                 _loadErrorPage(void);
+	error_t              _loadErrorPage(void);
 	void                 _readErrorPage(void);
 	const LocationBlock *_findRuleBlock(void);
 

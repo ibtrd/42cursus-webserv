@@ -105,11 +105,6 @@ const std::string Client::_requestStateStr(void) const {
 		str += "1";
 	else
 		str += "0";
-	str += ", body: ";
-	if (IS_REQ_READ_BODY_COMPLETE(this->_context.requestState))
-		str += "1";
-	else
-		str += "0";
 	str += ", clientRead: ";
 	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState))
 		str += "1";
@@ -120,13 +115,13 @@ const std::string Client::_requestStateStr(void) const {
 		str += "1";
 	else
 		str += "0";
-	str += ", processIn: ";
-	if (IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState))
+	str += ", workIn: ";
+	if (IS_REQ_WORK_IN_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
-	str += ", processOut: ";
-	if (IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState))
+	str += ", workOut: ";
+	if (IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState))
 		str += "1";
 	else
 		str += "0";
@@ -176,14 +171,12 @@ error_t Client::_parseRequest(void) {
 		if (ret != REQ_DONE) return (ret);
 	}
 
-	// SET_REQ_CLIENT_READ_COMPLETE(this->_context.requestState);
-
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
 		if (ret != REQ_CONTINUE) return (ret);
 	}
-	SET_REQ_READ_COMPLETE(this->_context.requestState);  // probably not needed
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+
+	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
@@ -307,29 +300,20 @@ error_t Client::_resolveARequest(void) {
 	if (redirect.first != STATUS_NONE) {
 		this->_context.response.setStatusCode(redirect.first);
 		this->_context.response.setHeader(HEADER_LOCATION, redirect.second);
-		SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
-		return REQ_CONTINUE;
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);	// No work needed for redirect (response is ready)
+		return REQ_DONE;
 	}
 
 	this->_request = Client::_requestsBuilder[this->_context.method.index()](this->_context);
+	if (!this->_request) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return REQ_CONTINUE;
+	}
+	this->_request->processing();
+	if (this->_context.response.statusCode() != STATUS_NONE) {
+		return REQ_CONTINUE;
+	}
 	return REQ_DONE;
-}
-
-error_t Client::_process(void) {
-	error_t ret;
-
-	if (!IS_REQ_READ_BODY_COMPLETE(this->_context.requestState)) {
-		ret = this->_request->parse();
-		if (ret != REQ_DONE) return (ret);
-	}
-
-	std::cerr << "Mystery:" << this->_requestStateStr() << " code:" << this->_context.response.statusCode() << std::endl;
-	if (!IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
-		ret = this->_request->processIn();
-		if (ret != REQ_DONE) return (ret);
-	}
-
-	return (REQ_DONE);
 }
 
 error_t Client::_switchToWrite(void) {
@@ -366,52 +350,44 @@ error_t Client::_sendResponse(void) {
 	}
 
 	if (0 == this->_context.responseBuffer.length() &&
-	    IS_REQ_PROCESS_COMPLETE(this->_context.requestState)) {
+	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
 	// std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
-void Client::_loadErrorPage(void) {
+error_t Client::_loadErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
-	const Path *errorPathPtr = NULL;
-	Path        errorPath;
+	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
+		std::cerr << "Error page requested before workIn" << std::endl;	// DEBUG
+	} else {
+		std::cerr << "Error page requested after workIn" << std::endl;	// DEBUG
+	}
 
 	if (!this->_context.serverBlock) {
-		goto to_default_error_page;
+		return REQ_ERROR;
 	}
-	errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
-	if (!errorPathPtr) {
-		goto to_default_error_page;
-	}
-	errorPath = *errorPathPtr;
-	if (0 != errorPath.access(F_OK)) {
-		goto to_default_error_page;
-	}
-	if (0 != errorPath.stat()) {
-		goto to_default_error_page;
-	}
-	if (0 != errorPath.access(R_OK)) {
-		goto to_default_error_page;
-	}
-	if (!errorPath.isFile()) {
-		goto to_default_error_page;
-	}
-	this->_errorPage.open(errorPath.string().c_str(), std::ios::in | std::ios::binary);
-	if (!this->_errorPage.is_open()) {
-		goto to_default_error_page;
-	}
-	SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
-	return;
 
-to_default_error_page:
-	std::string errorBody;
-	errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-	                      statusCodeToMsg(this->_context.response.statusCode()));
-	this->_context.response.setBody(errorBody);
-	SET_REQ_PROCESS_COMPLETE(this->_context.requestState);
+	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
+	if (!errorPathPtr) {
+		return REQ_ERROR;
+	}
+
+	Path errorPath = *errorPathPtr;
+	if (0 == errorPath.access(F_OK) &&
+		0 == errorPath.stat() &&
+		0 == errorPath.access(R_OK) &&
+		errorPath.isFile()) {
+		this->_errorPage.open(errorPath.string().c_str(), std::ios::in | std::ios::binary);
+		if (this->_errorPage.is_open()) {
+			this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(errorPath.size()));
+			return REQ_DONE;
+			UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
+		}
+	}
+	return REQ_ERROR;
 }
 
 void Client::_readErrorPage(void) {
@@ -420,7 +396,7 @@ void Client::_readErrorPage(void) {
 	this->_errorPage.read(buffer, REQ_BUFFER_SIZE);
 	ssize_t bytes = this->_errorPage.gcount();
 	if (bytes == 0) {
-		SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		return;
 	}
 
@@ -440,13 +416,21 @@ error_t Client::_handleSocketIn(void) {
 		return (ret);
 
 	// Handle request
-	if (this->_request && !IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
-		ret = this->_process();
+	if (this->_request && !IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
+		ret = this->_request->workIn();
 		if (ret != REQ_DONE) return (ret);
 	}
 
 	if (this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
-		this->_loadErrorPage();
+		this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
+		if (this->_loadErrorPage() == REQ_ERROR) {
+			std::string errorBody;
+			errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
+								statusCodeToMsg(this->_context.response.statusCode()));
+			this->_context.response.setBody(errorBody);
+			this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(errorBody.length()));
+			SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		}
 	}
 
 	this->_context.responseBuffer = this->_context.response.response();
@@ -459,11 +443,11 @@ error_t Client::_handleSocketIn(void) {
 error_t Client::_handleSocketOut(void) {
 	error_t ret;
 
-	if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) &&
+	if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) &&
 	    this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
 		this->_readErrorPage();
-	} else if (!IS_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState) && this->_request) {
-		ret = this->_request->processOut();
+	} else if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) && this->_request) {
+		ret = this->_request->workOut();
 		// if (ret != REQ_DONE)
 		// 	return (ret);
 	}
@@ -526,7 +510,7 @@ error_t Client::timeoutCheck(const time_t now) {
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();
@@ -536,7 +520,7 @@ error_t Client::timeoutCheck(const time_t now) {
 		return (REQ_CONTINUE);
 	}
 
-	if (!IS_REQ_READ_BODY_COMPLETE(this->_context.requestState) &&
+	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState) &&
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
@@ -544,7 +528,7 @@ error_t Client::timeoutCheck(const time_t now) {
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();
