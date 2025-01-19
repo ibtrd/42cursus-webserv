@@ -22,10 +22,9 @@ class Path {
 	bool    isOriginForm(void) const;
 	bool    isFileFormat(void) const;
 	bool    isDirFormat(void) const;
-	error_t access(int type) const;
+	int		access(int type) const;
 	error_t stat(void);
 
-	bool          hasPermission(int32_t mode) const;
 	bool          isFile(void) const;
 	bool          isDir(void) const;
 	const time_t &mTime(void) const;
@@ -35,6 +34,7 @@ class Path {
 	const char        *c_str(void) const;
 
 	std::string extension(void) const;
+	Path		dir(void) const;
 	uint32_t    length(void) const;
 	uint32_t    prefixLength(void) const;
 	bool        prefixMatch(const Path &other) const;

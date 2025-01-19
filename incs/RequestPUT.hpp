@@ -7,7 +7,9 @@
 
 class RequestPUT : public ARequest {
    private:
-	std::ifstream _file;
+	std::ofstream _file;
+
+	void _openFile(const char *filepath);
 
    public:
 	RequestPUT(RequestContext_t &context);
