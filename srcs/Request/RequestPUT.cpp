@@ -131,56 +131,7 @@ AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHH
 */
 error_t RequestPUT::_readChunked(void) {
 	std::cerr << "RequestPUT _readChunked" << std::endl;
-	// size_t pos;
-	// std::string chunkSize;
-	// std::string chunk;
-	// while ((pos = this->_context.buffer.find("\r\n")) != std::string::npos) {
-	// 	chunkSize = this->_context.buffer.substr(0, pos);
-	// 	this->_context.buffer.erase(0, pos + 2);
-	// 	if (chunkSize.empty()) {
-	// 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-	// 		return (REQ_DONE);
-	// 	}
-	// 	pos = chunkSize.find(';');
-	// 	if (pos != std::string::npos) chunkSize = chunkSize.substr(0, pos);
-	// 	if (chunkSize.empty()) {
-	// 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-	// 		return (REQ_DONE);
-	// 	}
-	// 	try {
-	// 		size_t size = std::stoul(chunkSize, nullptr, 16);
-	// 		if (size == 0) {
-	// 			this->_file.close();
-	// 			if (0 == this->_path.access(F_OK)) {
-	// 				if (0 != std::remove(this->_path.c_str())) {
-	// 					this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	// 				}
-	// 			}
-	// 			if (0 != rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
-	// 				this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	// 			}
-	// 			std::remove(this->_tmpFilename.c_str());
-	// 			SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-	// 			return (REQ_CONTINUE);
-	// 		}
-	// 		if (size > this->_context.buffer.size()) {
-	// 			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-	// 			return (REQ_DONE);
-	// 		}
-	// 		chunk = this->_context.buffer.substr(0, size);
-	// 		this->_context.buffer.erase(0, size);
-	// 		this->_file.write(chunk.c_str(), size);
-	// 	} catch (const std::invalid_argument &e) {
-	// 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-	// 		return (REQ_DONE);
-	// 	} catch (const std::out_of_range &e) {
-	// 		this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
-	// 		return (REQ_DONE);
-	// 	}
-	// }
-	// return (REQ_CONTINUE);
-
-	// DEBUG
+	this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
