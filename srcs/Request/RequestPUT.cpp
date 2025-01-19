@@ -36,6 +36,34 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 error_t RequestPUT::parse(void) {
 	std::cerr << "RequestPUT parse" << std::endl;
 	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
+	headers_t::const_iterator it = this->_context.headers.find(HEADER_CONTENT_LENGTH);
+	if (it == this->_context.headers.end()) {
+		it = this->_context.headers.find(HEADER_TRANSFER_ENCODING);
+		if (it == this->_context.headers.end()) {
+			this->_context.response.setStatusCode(STATUS_LENGTH_REQUIRED);
+			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+			return (REQ_DONE);
+		}
+		if (it->second != HEADER_TRANSFER_CHUNKE) {
+			this->_context.response.setStatusCode(STATUS_UNSUPPORTED_MEDIA_TYPE);
+			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+			return (REQ_DONE);
+		}
+		this->_chunked = true;
+	}
+	if (!this->_chunked) {
+		this->_contentLength = sToContentLength(it->second);
+		if (this->_contentLength == CONTENT_LENGTH_INVALID) {
+			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+			return (REQ_DONE);
+		}
+		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE) {
+			this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
+			SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+			return (REQ_DONE);
+		}
+	}
 	return (REQ_DONE);
 }
 

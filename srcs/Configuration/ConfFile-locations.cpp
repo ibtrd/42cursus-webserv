@@ -82,7 +82,7 @@ void ConfFile::_clientMaxBodySizeDirective(std::vector<ConfToken>::const_iterato
 	try {
 		location.setMaxBodySize(ft::stoi<uint32_t>(token->str()));
 		++token;
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 }
@@ -115,7 +115,7 @@ void ConfFile::_redirectionDirective(std::vector<ConfToken>::const_iterator &tok
 		++token;
 		location.setRedirect(status, token->str());
 		++token;
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 }

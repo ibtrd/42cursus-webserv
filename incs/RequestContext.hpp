@@ -78,6 +78,11 @@
 #define HEADER_TRANSFER_ENCODING "Transfer-Encoding"
 #define HEADER_SERVER "Server"
 
+# define CONTENT_LENGTH_INVALID -2
+# define CONTENT_LENGTH_TOO_LARGE -1
+
+#define HEADER_TRANSFER_CHUNKE "chunked"
+
 class Server;
 
 typedef struct RequestContext_s {

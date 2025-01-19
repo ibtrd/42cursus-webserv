@@ -9,6 +9,9 @@ class RequestPUT : public ARequest {
    private:
 	std::ifstream _file;
 
+	bool	_chunked;
+	int32_t	_contentLength;
+
    public:
 	RequestPUT(RequestContext_t &context);
 	RequestPUT(const RequestPUT &other);

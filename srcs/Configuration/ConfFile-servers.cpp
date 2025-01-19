@@ -65,7 +65,7 @@ void ConfFile::_listenDirective(std::vector<ConfToken>::const_iterator &token,
 				host.sin_port = htons(ft::stoi<in_addr_t>(token->str()));
 			}
 		}
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_hostNotFound(*directive, *token));
 	}
 	server.addHost(host);
@@ -106,7 +106,7 @@ void ConfFile::_errorPageDirective(std::vector<ConfToken>::const_iterator &token
 				throw std::invalid_argument("");
 			}
 			server.addErrorPage(code, file);
-		} catch (std::invalid_argument &e) {
+		} catch (std::exception &e) {
 			throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 		}
 		++token;
