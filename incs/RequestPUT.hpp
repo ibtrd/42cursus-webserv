@@ -1,10 +1,14 @@
 #ifndef REQUESTPUT_HPP
 #define REQUESTPUT_HPP
 
+#include <fstream>
+
 #include "ARequest.hpp"
 
 class RequestPUT : public ARequest {
    private:
+	std::ifstream _file;
+
    public:
 	RequestPUT(RequestContext_t &context);
 	RequestPUT(const RequestPUT &other);

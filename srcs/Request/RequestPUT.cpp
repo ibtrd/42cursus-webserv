@@ -20,6 +20,7 @@ RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) {
 
 RequestPUT::~RequestPUT(void) {
 	// std::cerr << "RequestPUT destroyed" << std::endl;
+	if (this->_file.is_open()) this->_file.close();
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
@@ -34,6 +35,7 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 
 error_t RequestPUT::parse(void) {
 	std::cerr << "RequestPUT parse" << std::endl;
+	SET_REQ_READ_BODY_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
@@ -49,6 +51,7 @@ error_t RequestPUT::processIn(void) {
 
 error_t RequestPUT::processOut(void) {
 	std::cerr << "RequestPUT processOut" << std::endl;
+	SET_REQ_PROCESS_OUT_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
