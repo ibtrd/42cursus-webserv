@@ -7,7 +7,9 @@
 
 class RequestPUT : public ARequest {
    private:
-	std::ifstream _file;
+	std::ofstream _file;
+
+	void _openFile(const char *filepath);
 
 	bool	_chunked;
 	int32_t	_contentLength;

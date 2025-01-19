@@ -58,8 +58,6 @@ Client::Client(const Client &other)
 
 Client::~Client(void) {
 	// std::cerr << "Client destroyed" << std::endl;
-	// if (this->)
-	std::cout << *this;
 	if (this->_request) delete this->_request;
 }
 
@@ -325,6 +323,7 @@ error_t Client::_process(void) {
 		if (ret != REQ_DONE) return (ret);
 	}
 
+	std::cerr << "Mystery:" << this->_requestStateStr() << " code:" << this->_context.response.statusCode() << std::endl;
 	if (!IS_REQ_PROCESS_IN_COMPLETE(this->_context.requestState)) {
 		ret = this->_request->processIn();
 		if (ret != REQ_DONE) return (ret);
@@ -394,7 +393,7 @@ void Client::_loadErrorPage(void) {
 	if (0 != errorPath.stat()) {
 		goto to_default_error_page;
 	}
-	if (!errorPath.hasPermission(R_OK)) {
+	if (0 != errorPath.access(R_OK)) {
 		goto to_default_error_page;
 	}
 	if (!errorPath.isFile()) {
