@@ -51,18 +51,23 @@ error_t RequestPUT::parse(void) {
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	Path directory = this->_path.dir();
-	if (0 != directory.access(F_OK)) {
+	Path parent = this->_path.dir();
+	if (0 != parent.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (0 != directory.stat()) {
+	if (0 != parent.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (0 != directory.access(W_OK)) {
+	if (!parent.isDir()) {
+		this->_context.response.setStatusCode(STATUS_CONFLICT);
+		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (0 != parent.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 		SET_REQ_PROCESS_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
