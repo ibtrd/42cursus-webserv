@@ -9,6 +9,7 @@
 
 #include "Client.hpp"
 #include "Configuration.hpp"
+#include "RandomGenerator.hpp"
 
 #define MAX_EVENTS 64
 #define EPOLL_WAIT_TIMEOUT 1000
@@ -33,6 +34,7 @@ class Server {
 	// const int32_t		*getTimeouts(void) const;
 
 	int32_t epollFd(void) const;
+	RandomGenerator					   randomGenerator;
 
    private:
 	int32_t                            _epollFd;

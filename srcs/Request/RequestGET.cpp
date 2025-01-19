@@ -157,10 +157,6 @@ error_t RequestGET::workIn(void) {
 
 error_t RequestGET::workOut(void) {
 	// std::cerr << "RequestGET workOut" << std::endl;
-	if (this->_context.response.statusCode() != STATUS_OK) {
-		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
 
 	if (this->_path.isFileFormat()) return (this->_readFile());
 

@@ -7,13 +7,17 @@
 
 class RequestPUT : public ARequest {
    private:
-	std::ofstream _file;
+	std::ofstream	_file;
+	Path			_tmpFilename;
 
 	bool	_chunked;
 	int32_t	_contentLength;
 
-	void	_openFile(const char *filepath);
+	error_t	_generateFilename(void);
+	void	_openFile(void);
 	error_t	_checkHeaders(void);
+	error_t	_readContent(void);
+	error_t	_readChunked(void);
 
    public:
 	RequestPUT(RequestContext_t &context);

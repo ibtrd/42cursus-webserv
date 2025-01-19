@@ -417,6 +417,7 @@ error_t Client::_handleSocketIn(void) {
 
 	// Handle request
 	if (this->_request && !IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
+		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
 		ret = this->_request->workIn();
 		if (ret != REQ_DONE) return (ret);
 	}
@@ -527,7 +528,6 @@ error_t Client::timeoutCheck(const time_t now) {
 		std::cerr << "Client(" << this->_socket << ") body timeout detected!" << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 

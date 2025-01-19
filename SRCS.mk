@@ -4,13 +4,14 @@ SRC = \
 	ft \
 	LocationBlock \
 	main \
+	Method \
+	Path \
+	RandomGenerator \
 	Response \
 	Server \
 	ServerBlock \
 	signal \
 	utils \
-	Path \
-	Method \
 
 SRC += $(addprefix $(CONFIGURATION_DIR), $(CONFIGURATION_SRC))
 CONFIGURATION_DIR=Configuration/
