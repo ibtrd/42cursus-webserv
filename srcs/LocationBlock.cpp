@@ -34,6 +34,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_allowed     = other._allowed;
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
+	this->_gcis        = other._gcis;
 	return (*this);
 }
 
@@ -124,6 +125,10 @@ void LocationBlock::addIndex(const std::string &str) { this->_indexes.push_back(
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+}
+
+void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
+	this->_gcis[ext] = bin;
 }
 
 /* GETTERS ****************************************************************** */
