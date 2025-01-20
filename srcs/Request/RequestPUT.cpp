@@ -139,8 +139,6 @@ error_t RequestPUT::_readChunked(void) {
 /* ************************************************************************** */
 
 void RequestPUT::processing(void) {
-	// std::cerr << "RequestPUT parse" << std::endl;
-
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) return;
 
@@ -149,33 +147,20 @@ void RequestPUT::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	else if (0 == this->_path.access(F_OK)) {
-		if (0 == this->_path.access(W_OK)) {
-			this->_openFile();
-		} else {
-			this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		}
-		return;
-	}
 	Path parent = this->_path.dir();
 	if (0 != parent.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-		return;
-	}
-	if (0 != parent.stat()) {
+	} else if (0 != parent.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return;
-	}
-	if (!parent.isDir()) {
+	} else if (!parent.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
-		return;
-	}
-	if (0 != parent.access(W_OK)) {
+	} else if (0 != parent.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		return;
+	} else if (0 == this->_path.access(F_OK) && 0 != this->_path.access(W_OK)) {
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	} else {
+		this->_openFile();
 	}
-
-	this->_openFile();
 }
 
 error_t RequestPUT::workIn(void) {
