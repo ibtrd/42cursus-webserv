@@ -26,6 +26,7 @@ ConfFile::directives ConfFile::_initializeDirectives(void) {
 	map["client_header_timeout"] = &ConfFile::_clientHeaderTimeoutDirective;
 	map["client_body_timeout"]   = &ConfFile::_clientBodyTimeoutDirective;
 	map["send_timeout"]          = &ConfFile::_sendTimeoutDirective;
+	map["types"]                 = &ConfFile::_typesDirective;
 	return map;
 }
 

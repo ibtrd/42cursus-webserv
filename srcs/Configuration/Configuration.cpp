@@ -2,7 +2,8 @@
 
 #include <iostream>
 
-Configuration::Configuration(int argc, char *argv[]) : _conf(&_blocks), _options(DEFAULT_OPTIONS) {
+Configuration::Configuration(int argc, char *argv[])
+    : _conf(&_blocks, &_mimetypes), _options(DEFAULT_OPTIONS) {
 	for (int i = 1; i < argc; ++i) {
 		if (_isOption(argv[i])) {
 			this->_parseOption(argv[i]);
@@ -26,7 +27,7 @@ void Configuration::_parseOption(const std::string arg) {
 	for (std::string::const_iterator c = arg.begin() + 1; c != arg.end(); ++c) {
 		std::string::size_type index = identifiers.find(*c);
 		if (index != std::string::npos) {
-			this->_options |= 1 << index;
+			this->_options |= (1 << index);
 		} else {
 			std::string message = "invalid option -- '";
 			message.push_back(*c);
@@ -48,6 +49,8 @@ bool Configuration::noRun(void) const {
 }
 
 int32_t Configuration::timeout(const uint32_t type) const { return this->_conf.timeouts[type]; }
+
+const mimetypes_t &Configuration::mimetypes(void) const { return this->_mimetypes; };
 
 const std::string &Configuration::file(void) const { return (this->_conf.path()); }
 

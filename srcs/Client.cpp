@@ -541,7 +541,8 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
-		std::cerr << "Client(" << this->_socket << ") body timeout detected!" << std::endl;  // DEBUG
+		std::cerr << "Client(" << this->_socket << ") body timeout detected!"
+		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -558,7 +559,8 @@ error_t Client::timeoutCheck(const time_t now) {
 	if (IS_REQ_CAN_WRITE(this->_context.requestState) &&
 	    this->_context.server.getTimeout(SEND_TIMEOUT) &&
 	    now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
-		std::cerr << "Client(" << this->_socket << ") send timeout detected!" << std::endl;  // DEBUG
+		std::cerr << "Client(" << this->_socket << ") send timeout detected!"
+		          << std::endl;  // DEBUG
 
 		return (REQ_DONE);
 	}
