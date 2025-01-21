@@ -97,10 +97,15 @@ std::string statusCodeToMsg(const status_code_t code) {
 	}
 }
 
-int32_t	sToContentLength(const std::string &str) {
+int32_t	sToContentLength(const std::string &str, bool chunked) {
 	char *endptr;
 	errno = 0;
-	long value = std::strtol(str.c_str(), &endptr, 10);
+	long value;
+	if (chunked) {
+		value = std::strtol(str.c_str(), &endptr, 16);
+	} else {
+		value = std::strtol(str.c_str(), &endptr, 10);
+	}
 
 	if (*endptr != '\0' || value < 0) {
 		return CONTENT_LENGTH_INVALID;
