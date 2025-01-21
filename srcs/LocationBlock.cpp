@@ -128,7 +128,7 @@ void LocationBlock::setDefaults(void) {
 }
 
 void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
-	this->_gcis[ext] = bin;
+	this->_gcis[ext] = Path(bin);
 }
 
 /* GETTERS ****************************************************************** */
@@ -147,6 +147,14 @@ const std::vector<std::string> &LocationBlock::indexes(void) const { return this
 
 bool LocationBlock::isAllowed(const Method &method) const {
 	return this->_allowed & (1 << method.index());
+}
+
+const Path *LocationBlock::findCGI(const std::string &extension) const {
+	cgis_t::const_iterator it = this->_gcis.find(extension);
+	if (it != this->_gcis.end()) {
+		return &it->second;
+	}
+	return NULL;
 }
 
 /* ************************************************************************** */
