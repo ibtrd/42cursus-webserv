@@ -61,3 +61,34 @@ void ConfFile::_sendTimeoutDirective(std::vector<ConfToken>::const_iterator &tok
 	}
 	++token;
 }
+
+void ConfFile::_typesDirective(std::vector<ConfToken>::const_iterator &token) {
+	const uint32_t                               args      = this->_countBlockArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
+
+	if (0 != args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	while (++token != this->_tokens.end() && *token != BLOCK_CLOSE) {
+		if (token + 1 == this->_tokens.end()) {
+			throw Configuration::ConfigurationException(
+			    this->_unexpectedEOF(*token, ';', BLOCK_CLOSE));
+		}
+		this->_loadType(token);
+	}
+	if (token == this->_tokens.end()) {
+		throw Configuration::ConfigurationException(
+		    this->_unexpectedEOF(*(token - 1), BLOCK_CLOSE));
+	}
+}
+
+void ConfFile::_loadType(std::vector<ConfToken>::const_iterator &token) {
+	const uint32_t    args = this->_countArgs(token);
+	const std::string type = token->str();
+
+	++token;
+	for (uint32_t i = 0; i < args; ++i) {
+		(*this->_mimetypes)[token->str()] = type;
+		++token;
+	}
+}

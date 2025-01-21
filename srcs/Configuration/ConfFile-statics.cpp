@@ -26,6 +26,7 @@ ConfFile::directives ConfFile::_initializeDirectives(void) {
 	map["client_header_timeout"] = &ConfFile::_clientHeaderTimeoutDirective;
 	map["client_body_timeout"]   = &ConfFile::_clientBodyTimeoutDirective;
 	map["send_timeout"]          = &ConfFile::_sendTimeoutDirective;
+	map["types"]                 = &ConfFile::_typesDirective;
 	return map;
 }
 
@@ -53,6 +54,6 @@ ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	map["autoindex"]            = &ConfFile::_autoindexDirective;
 	map["redirect"]             = &ConfFile::_redirectionDirective;
 	map["index"]                = &ConfFile::_indexDirective;
-	// map["cgi_exe"] = &ConfFile::_cgiExeDirective;
+	map["cgi"]                  = &ConfFile::_cgiDirective;
 	return map;
 }

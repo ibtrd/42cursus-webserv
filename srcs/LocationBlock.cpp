@@ -34,6 +34,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_allowed     = other._allowed;
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
+	this->_gcis        = other._gcis;
 	return (*this);
 }
 
@@ -126,6 +127,10 @@ void LocationBlock::setDefaults(void) {
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
 }
 
+void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
+	this->_gcis[ext] = Path(bin);
+}
+
 /* GETTERS ****************************************************************** */
 
 const Path &LocationBlock::path(void) const { return this->_path; }
@@ -142,6 +147,14 @@ const std::vector<std::string> &LocationBlock::indexes(void) const { return this
 
 bool LocationBlock::isAllowed(const Method &method) const {
 	return this->_allowed & (1 << method.index());
+}
+
+const Path *LocationBlock::findCGI(const std::string &extension) const {
+	cgis_t::const_iterator it = this->_gcis.find(extension);
+	if (it != this->_gcis.end()) {
+		return &it->second;
+	}
+	return NULL;
 }
 
 /* ************************************************************************** */

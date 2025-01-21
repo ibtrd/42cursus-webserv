@@ -3,10 +3,11 @@
 
 #include "ConfToken.hpp"
 #include "ServerBlock.hpp"
+#include "webdef.hpp"
 
 class ConfFile {
    public:
-	ConfFile(std::vector<ServerBlock> *blocks);
+	ConfFile(std::vector<ServerBlock> *blocks, mimetypes_t *mimetypes);
 	~ConfFile(void);
 
 	void parse(void);
@@ -27,6 +28,7 @@ class ConfFile {
 	std::string               _path;
 	std::vector<ConfToken>    _tokens;
 	std::vector<ServerBlock> *_blocks;
+	mimetypes_t              *_mimetypes;
 
 	void _tokenize(const std::string &line, const uint32_t index);
 
@@ -34,6 +36,8 @@ class ConfFile {
 	void _clientHeaderTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
 	void _clientBodyTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
 	void _sendTimeoutDirective(std::vector<ConfToken>::const_iterator &token);
+	void _typesDirective(std::vector<ConfToken>::const_iterator &token);
+	void _loadType(std::vector<ConfToken>::const_iterator &token);
 
 	void _listenDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
 	void _serverNameDirective(std::vector<ConfToken>::const_iterator &token, ServerBlock &server);
@@ -49,6 +53,7 @@ class ConfFile {
 	void _redirectionDirective(std::vector<ConfToken>::const_iterator &token,
 	                           LocationBlock                          &location);
 	void _indexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
+	void _cgiDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 
 	uint32_t _countArgs(const std::vector<ConfToken>::const_iterator &directive) const;
 	uint32_t _countBlockArgs(const std::vector<ConfToken>::const_iterator &directive) const;

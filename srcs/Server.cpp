@@ -44,12 +44,10 @@ void Server::configure(const Configuration &config) {
 			}
 		}
 	}
-	if (-1 == this->_loadMimeTypes()) {
-		throw std::runtime_error("Failed to load mime types");
-	}
 	for (uint32_t type = CLIENT_HEADER_TIMEOUT; type != TIMEOUT_COUNT; ++type) {
 		this->_timeouts[type] = config.timeout(type);
 	}
+	this->_mimetypes = config.mimetypes();
 }
 
 void Server::routine(void) {
@@ -129,9 +127,11 @@ void Server::routine(void) {
 }
 
 const std::string &Server::getMimeType(const std::string &ext) const {
-	std::map<std::string, std::string>::const_iterator it = this->_mimetypes.find(ext);
+	static const std::string defaultMime(DEFAULT_MIMETYPE);
+
+	mimetypes_t::const_iterator it = this->_mimetypes.find(ext);
 	if (it == this->_mimetypes.end()) {
-		return this->_mimetypes.at("default");
+		return defaultMime;
 	}
 	return it->second;
 }
@@ -253,36 +253,6 @@ void Server::_checkClientsTimeout(void) {
 				break;
 		}
 	}
-}
-
-error_t Server::_loadMimeTypes(void) {
-	std::ifstream file(MIME_TYPE_FILE);
-	if (!file.is_open()) {
-		return -1;
-	}
-	std::string line;
-	while (std::getline(file, line)) {
-		if (line[0] == '#' || line.empty()) {
-			continue;
-		}
-		std::istringstream iss(line);
-		std::string        type;
-		iss >> type;
-		while (iss) {
-			std::string ext;
-			iss >> ext;
-			if (ext.empty()) {
-				break;
-			}
-			this->_mimetypes[ext] = type;
-		}
-	}
-	this->_mimetypes["default"] = "application/octet-stream";
-	// DEBUG
-	// for (std::map<std::string, std::string>::const_iterator it = this->_mimetypes.begin(); it !=
-	// this->_mimetypes.end(); ++it) { 	std::cout << it->first << " -> " << it->second << std::endl;
-	// }
-	return 0;
 }
 
 int32_t Server::epollFd(void) const { return (this->_epollFd); }
