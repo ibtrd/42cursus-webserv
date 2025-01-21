@@ -35,5 +35,6 @@ REQUEST_SRC = \
 	RequestDELETE \
 	RequestPUT \
 	RequestGET-autoindex \
+	RequestHEAD \
 
 SRCS := $(addsuffix .cpp, $(SRC))
