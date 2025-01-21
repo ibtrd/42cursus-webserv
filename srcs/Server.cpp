@@ -229,6 +229,7 @@ void Server::_removeConnection(const fd_t fd) {
 	// 	close(fds[1]);
 	// 	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL);
 	// }
+	std::cout << *client << std::endl;
 	this->_clients.erase(client);
 }
 

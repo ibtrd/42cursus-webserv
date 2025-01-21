@@ -16,7 +16,7 @@ void ConfFile::_clientHeaderTimeoutDirective(std::vector<ConfToken>::const_itera
 			throw std::invalid_argument("Invalid value");
 		}
 		this->timeouts[CLIENT_HEADER_TIMEOUT] = duration;
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 	++token;
@@ -36,7 +36,7 @@ void ConfFile::_clientBodyTimeoutDirective(std::vector<ConfToken>::const_iterato
 			throw std::invalid_argument("Invalid value");
 		}
 		this->timeouts[CLIENT_BODY_TIMEOUT] = duration;
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 	++token;
@@ -56,7 +56,7 @@ void ConfFile::_sendTimeoutDirective(std::vector<ConfToken>::const_iterator &tok
 			throw std::invalid_argument("Invalid value");
 		}
 		this->timeouts[SEND_TIMEOUT] = duration;
-	} catch (std::invalid_argument &e) {
+	} catch (std::exception &e) {
 		throw Configuration::ConfigurationException(this->_invalidValue(*directive, *token));
 	}
 	++token;

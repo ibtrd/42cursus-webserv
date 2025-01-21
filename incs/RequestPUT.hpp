@@ -1,10 +1,24 @@
 #ifndef REQUESTPUT_HPP
 #define REQUESTPUT_HPP
 
+#include <fstream>
+
 #include "ARequest.hpp"
 
 class RequestPUT : public ARequest {
    private:
+	std::ofstream	_file;
+	Path			_tmpFilename;
+
+	bool	_chunked;
+	int32_t	_contentLength;
+
+	error_t	_generateFilename(void);
+	void	_openFile(void);
+	error_t	_checkHeaders(void);
+	error_t	_readContent(void);
+	error_t	_readChunked(void);
+
    public:
 	RequestPUT(RequestContext_t &context);
 	RequestPUT(const RequestPUT &other);
@@ -13,10 +27,10 @@ class RequestPUT : public ARequest {
 
 	RequestPUT &operator=(const RequestPUT &other);
 
-	error_t   parse(void);
-	error_t   processIn(void);
-	error_t   processOut(void);
-	ARequest *clone(void) const;
+	void		processing(void);
+	error_t		workIn(void);
+	error_t		workOut(void);
+	ARequest	*clone(void) const;
 };
 
 ARequest *createRequestPUT(RequestContext_t &context);

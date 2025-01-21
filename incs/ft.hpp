@@ -21,7 +21,7 @@ T stoi(const std::string &str) {
 		throw std::invalid_argument("Trailing characters found after value");
 	} else if (errno == ERANGE || value < std::numeric_limits<T>::min() ||
 	           value > std::numeric_limits<T>::max()) {
-		throw std::invalid_argument("Value out of range");
+		throw std::out_of_range("Value out of range");
 	}
 	return static_cast<T>(value);
 }
@@ -49,8 +49,9 @@ typename std::map<KEY, std::vector<VAL> >::const_iterator isBound(
 	return haystack.end();
 }
 
-bool        is_dir(char *path);
-std::string numToStr(int num);
+bool		is_dir(char *path);
+std::string	numToStr(int num);
+std::string	generateRandomString(size_t len);
 }  // namespace ft
 
 #endif

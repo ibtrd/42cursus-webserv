@@ -1,7 +1,13 @@
 // function a ranger quand on aura le temps (si nécessaire)
 
+#include <cerrno>
+#include <cstdlib>
+#include <limits>
+
+
 #include "webdef.hpp"
 #include "webservHTML.hpp"
+#include "RequestContext.hpp"
 
 std::string statusCodeToReason(const status_code_t code) {
 	switch (code) {
@@ -89,4 +95,17 @@ std::string statusCodeToMsg(const status_code_t code) {
 		default:
 			return ("Invalid Status Code");
 	}
+}
+
+int32_t	sToContentLength(const std::string &str) {
+	char *endptr;
+	errno = 0;
+	long value = std::strtol(str.c_str(), &endptr, 10);
+
+	if (*endptr != '\0' || value < 0) {
+		return CONTENT_LENGTH_INVALID;
+	} else if (value > std::numeric_limits<int32_t>::max()) {
+		return CONTENT_LENGTH_TOO_LARGE;
+	}
+	return static_cast<int32_t>(value);
 }

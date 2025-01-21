@@ -13,10 +13,10 @@ class RequestPOST : public ARequest {
 
 	RequestPOST &operator=(const RequestPOST &other);
 
-	error_t   parse(void);
-	error_t   processIn(void);
-	error_t   processOut(void);
-	ARequest *clone(void) const;
+	void		processing(void);
+	error_t		workIn(void);
+	error_t		workOut(void);
+	ARequest	*clone(void) const;
 };
 
 ARequest *createRequestPOST(RequestContext_t &context);
