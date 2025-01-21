@@ -64,5 +64,6 @@ std::vector<std::string> Method::_initMethods(void) {
 	methods.push_back("POST");
 	methods.push_back("DELETE");
 	methods.push_back("PUT");
+	methods.push_back("HEAD");
 	return methods;
 }

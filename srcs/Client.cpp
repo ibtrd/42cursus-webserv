@@ -9,6 +9,7 @@
 #include "RequestGET.hpp"
 #include "RequestPOST.hpp"
 #include "RequestPUT.hpp"
+#include "RequestHEAD.hpp"
 #include "Server.hpp"
 #include "fcntl.h"
 #include "ft.hpp"
@@ -23,6 +24,7 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
     createRequestPOST,
     createRequestDELETE,
     createRequestPUT,
+	createRequestHEAD,
 };
 
 /* CONSTRUCTORS ************************************************************* */
@@ -185,7 +187,9 @@ error_t Client::_parseRequestLine(void) {
 
 	// Check at least one line is present
 	size_t pos = this->_context.buffer.find("\r\n");
-	if (pos == std::string::npos) return (REQ_CONTINUE);
+	if (pos == std::string::npos) {
+		return (REQ_CONTINUE);
+	}
 	requestLine = this->_context.buffer.substr(0, pos);
 	this->_context.buffer.erase(0, pos + 2);
 
@@ -408,18 +412,22 @@ error_t Client::_handleSocketIn(void) {
 	error_t ret;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
-	    (ret = this->_readSocket()) != REQ_CONTINUE)
-		return (ret);
+	    (ret = this->_readSocket()) != REQ_CONTINUE) {
+			return (ret);
+		}
 
 	if (!IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState) &&
-	    (ret = this->_parseRequest()) != REQ_DONE)
-		return (ret);
+	    (ret = this->_parseRequest()) != REQ_DONE) {
+			return (ret);
+		}
 
 	// Handle request
 	if (this->_request && !IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
 		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
 		ret = this->_request->workIn();
-		if (ret != REQ_DONE) return (ret);
+		if (ret != REQ_DONE) {
+			return (ret);
+		}
 	}
 
 	if (this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
@@ -433,11 +441,12 @@ error_t Client::_handleSocketIn(void) {
 			SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		}
 	}
-
 	this->_context.responseBuffer = this->_context.response.response();
 	this->_context.response.clearBody();
 
-	if (this->_switchToWrite() == -1) return (REQ_ERROR);
+	if (this->_switchToWrite() == -1)  {
+		return (REQ_ERROR);
+	}
 	return (REQ_CONTINUE);
 }
 
@@ -453,12 +462,15 @@ error_t Client::_handleSocketOut(void) {
 		// 	return (ret);
 	}
 
-	if ((ret = this->_sendResponse()) != REQ_DONE) return (ret);
-
+	if ((ret = this->_sendResponse()) != REQ_DONE)  {
+		return (ret);
+	}
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 
 	close(this->_socket);
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL)) return (REQ_ERROR);
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL)) {
+		return (REQ_ERROR);
+	}
 	return (REQ_DONE);
 }
 
@@ -517,7 +529,9 @@ error_t Client::timeoutCheck(const time_t now) {
 		this->_context.responseBuffer = this->_context.response.response();
 		this->_context.response.clearBody();
 
-		if (this->_switchToWrite() == -1) return (REQ_ERROR);
+		if (this->_switchToWrite() == -1) {
+			return (REQ_ERROR);
+		}
 		return (REQ_CONTINUE);
 	}
 
@@ -535,7 +549,9 @@ error_t Client::timeoutCheck(const time_t now) {
 		this->_context.responseBuffer = this->_context.response.response();
 		this->_context.response.clearBody();
 
-		if (this->_switchToWrite() == -1) return (REQ_ERROR);
+		if (this->_switchToWrite() == -1) {
+			return (REQ_ERROR);
+		}
 		return (REQ_CONTINUE);
 	}
 
@@ -544,7 +560,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	    now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
 		std::cerr << "Client(" << this->_socket << ") send timeout detected!"
 		          << std::endl;  // DEBUG
-
 		return (REQ_DONE);
 	}
 
