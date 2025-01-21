@@ -42,7 +42,6 @@ class Client {
 	error_t              _resolveARequest(void);
 	error_t              _loadErrorPage(void);
 	void                 _readErrorPage(void);
-	const LocationBlock *_findRuleBlock(void);
 
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);
 

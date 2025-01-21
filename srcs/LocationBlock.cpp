@@ -49,7 +49,7 @@ void LocationBlock::fill(const LocationBlock &other) {
 	if (-1 == this->_maxBodySize) {
 		this->_maxBodySize = other._maxBodySize;
 	}
-	if (this->_root.string().empty()) {
+	if (this->_root.empty()) {
 		this->_root = other._root;
 	}
 	if (!this->_allowed) {

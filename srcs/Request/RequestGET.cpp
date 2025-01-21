@@ -147,7 +147,8 @@ void RequestGET::processing(void) {
 			return;
 		}
 	}
-	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
+	this->_context.response.setStatusCode(STATUS_NOT_FOUND); //TESTER
 }
 
 error_t RequestGET::workIn(void) {
