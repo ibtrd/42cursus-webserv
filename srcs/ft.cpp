@@ -20,7 +20,9 @@ bool is_dir(char *path) {
 	{
 		return (false);
 	}
-	if (S_ISDIR(buf.st_mode)) return (true);
+	if (S_ISDIR(buf.st_mode)) {
+		return (true);
+	}
 	return (false);
 }
 

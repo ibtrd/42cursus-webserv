@@ -33,7 +33,9 @@ Response::~Response(void) {
 
 Response &Response::operator=(const Response &other) {
 	// std::cerr << "Response assign" << std::endl;
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_statusCode   = other._statusCode;
 	this->_reasonPhrase = other._reasonPhrase;
 	this->_headers      = other._headers;

@@ -11,7 +11,9 @@ ServerBlock::~ServerBlock(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 ServerBlock &ServerBlock::operator=(const ServerBlock &other) {
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_hosts      = other._hosts;
 	this->_names      = other._names;
 	this->_locations  = other._locations;

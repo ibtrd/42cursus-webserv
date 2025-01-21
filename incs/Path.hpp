@@ -9,7 +9,7 @@
 #include "webdef.hpp"
 
 class Path {
-   public:
+public:
 	Path(void);
 	Path(const Path &other);
 	Path(const std::string &str);
@@ -22,7 +22,7 @@ class Path {
 	bool    isOriginForm(void) const;
 	bool    isFileFormat(void) const;
 	bool    isDirFormat(void) const;
-	int		access(int type) const;
+	int     access(int type) const;
 	error_t stat(void);
 
 	bool          isFile(void) const;
@@ -34,14 +34,14 @@ class Path {
 	const char        *c_str(void) const;
 
 	std::string extension(void) const;
-	Path		dir(void) const;
+	Path        dir(void) const;
 	uint32_t    length(void) const;
 	uint32_t    prefixLength(void) const;
 	bool        prefixMatch(const Path &other) const;
 	std::string concat(const Path &other) const;
 	Path        subPath(size_t pos, size_t count) const;
 
-   private:
+private:
 	std::string              _str;
 	std::vector<std::string> _chunks;
 	struct stat              _stat;

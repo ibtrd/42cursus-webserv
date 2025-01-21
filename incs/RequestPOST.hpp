@@ -4,8 +4,8 @@
 #include "ARequest.hpp"
 
 class RequestPOST : public ARequest {
-   private:
-   public:
+private:
+public:
 	RequestPOST(RequestContext_t &context);
 	RequestPOST(const RequestPOST &other);
 
@@ -13,10 +13,10 @@ class RequestPOST : public ARequest {
 
 	RequestPOST &operator=(const RequestPOST &other);
 
-	void		processing(void);
-	error_t		workIn(void);
-	error_t		workOut(void);
-	ARequest	*clone(void) const;
+	void      processing(void);
+	error_t   workIn(void);
+	error_t   workOut(void);
+	ARequest *clone(void) const;
 };
 
 ARequest *createRequestPOST(RequestContext_t &context);

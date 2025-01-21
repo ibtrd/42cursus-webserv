@@ -15,7 +15,7 @@ typedef enum {
 } method_t;
 
 class Method {
-   public:
+public:
 	Method(void);
 	Method(const Method &other);
 	Method(const std::string &str);
@@ -35,7 +35,7 @@ class Method {
 
 	static const std::vector<std::string> methods;
 
-   private:
+private:
 	method_t _index;
 
 	static std::vector<std::string> _initMethods(void);
