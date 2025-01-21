@@ -54,6 +54,6 @@ ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	map["autoindex"]            = &ConfFile::_autoindexDirective;
 	map["redirect"]             = &ConfFile::_redirectionDirective;
 	map["index"]                = &ConfFile::_indexDirective;
-	// map["cgi_exe"] = &ConfFile::_cgiExeDirective;
+	map["cgi"]                  = &ConfFile::_cgiDirective;
 	return map;
 }

@@ -133,3 +133,19 @@ void ConfFile::_indexDirective(std::vector<ConfToken>::const_iterator &token,
 		++token;
 	}
 }
+
+void ConfFile::_cgiDirective(std::vector<ConfToken>::const_iterator &token,
+                             LocationBlock                          &location) {
+	const uint32_t                               args      = this->_countArgs(token);
+	const std::vector<ConfToken>::const_iterator directive = token++;
+
+	if (2 > args) {
+		throw Configuration::ConfigurationException(this->_invalidArgumentNumber(*directive));
+	}
+	const std::string binary = (token + args - 1)->str();
+	for (uint32_t i = 0; i < args - 1; ++i) {
+		location.addCGI(token->str(), binary);
+		++token;
+	}
+	++token;
+}
