@@ -28,7 +28,9 @@ error_t RequestGET::_readDir(void) {
 
 	errno = 0;
 	while (entryCount < REQ_DIR_BUFFER_SIZE && (entry = readdir(this->_dir)) != NULL) {
-		if (!std::strcmp(entry->d_name, ".")) continue;
+		if (!std::strcmp(entry->d_name, ".")) {
+			continue;
+		}
 
 		char nameBuffer[32]  = {0};
 		char timeBuffer[128] = {0};
@@ -44,11 +46,12 @@ error_t RequestGET::_readDir(void) {
 		Path localPath(this->_path.string() + entry->d_name);
 
 		error_t err = localPath.stat();
-		if (err == -1)
+		if (err == -1) {
 			timeBuffer[0] = '\0';
-		else
+		} else {
 			std::strftime(timeBuffer, sizeof(timeBuffer), "%F %R",
 			              std::localtime(&localPath.mTime()));
+		}
 
 		if (-1 == err) {
 			buffer += HTMLWEIRD(

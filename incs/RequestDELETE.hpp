@@ -4,8 +4,8 @@
 #include "ARequest.hpp"
 
 class RequestDELETE : public ARequest {
-   private:
-   public:
+private:
+public:
 	RequestDELETE(RequestContext_t &context);
 	RequestDELETE(const RequestDELETE &other);
 
@@ -13,10 +13,10 @@ class RequestDELETE : public ARequest {
 
 	RequestDELETE &operator=(const RequestDELETE &other);
 
-	void		processing(void);
-	error_t		workIn(void);
-	error_t		workOut(void);
-	ARequest	*clone(void) const;
+	void      processing(void);
+	error_t   workIn(void);
+	error_t   workOut(void);
+	ARequest *clone(void) const;
 };
 
 ARequest *createRequestDELETE(RequestContext_t &context);

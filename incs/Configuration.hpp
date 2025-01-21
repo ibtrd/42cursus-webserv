@@ -10,7 +10,7 @@
 #define NORUN_OPTION (1 << 0)
 
 class Configuration {
-   public:
+public:
 	Configuration(int argc, char *argv[]);
 	~Configuration(void);
 
@@ -24,17 +24,17 @@ class Configuration {
 
 	// EXCEPTION
 	class ConfigurationException : public std::exception {
-	   public:
+	public:
 		ConfigurationException(const std::string &message) : _message(message) {}
 		virtual ~ConfigurationException() throw() {}
 
 		const char *what() const throw() { return _message.c_str(); }
 
-	   private:
+	private:
 		std::string _message;
 	};
 
-   private:
+private:
 	ConfFile                 _conf;
 	uint8_t                  _options;
 	std::vector<ServerBlock> _blocks;

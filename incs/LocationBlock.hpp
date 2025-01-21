@@ -18,11 +18,11 @@
 #define DIRLISTING_ON "on"
 #define DIRLISTING_OFF "off"
 
-typedef std::pair<uint16_t, std::string>   redirect_t;
-typedef std::map<std::string, Path> cgis_t;
+typedef std::pair<uint16_t, std::string> redirect_t;
+typedef std::map<std::string, Path>      cgis_t;
 
 class LocationBlock {
-   public:
+public:
 	LocationBlock(void);
 	LocationBlock(const LocationBlock &other);
 	LocationBlock(const Path &path);
@@ -54,9 +54,9 @@ class LocationBlock {
 	const Path                     &getRoot(void) const;
 	const redirect_t               &getRedirect(void) const;
 	const std::vector<std::string> &indexes(void) const;
-	const Path			           *findCGI(const std::string &extension) const;
+	const Path                     *findCGI(const std::string &extension) const;
 
-   private:
+private:
 	Path                     _path;
 	int8_t                   _dirListing;
 	int32_t                  _maxBodySize;

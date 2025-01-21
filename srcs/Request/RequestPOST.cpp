@@ -40,9 +40,7 @@ RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 
 /* ************************************************************************** */
 
-void RequestPOST::processing(void) {
-	std::cerr << "RequestPOST parse" << std::endl;
-}
+void RequestPOST::processing(void) { std::cerr << "RequestPOST parse" << std::endl; }
 
 error_t RequestPOST::workIn(void) {
 	std::cerr << "RequestPOST workIn" << std::endl;

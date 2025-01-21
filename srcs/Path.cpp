@@ -25,7 +25,9 @@ Path::Path(const std::string &str) {
 	std::stringstream ss(path);
 	std::string       token;
 	while (std::getline(ss, token, '/')) {
-		if (!token.empty()) this->_chunks.push_back(token);
+		if (!token.empty()) {
+			this->_chunks.push_back(token);
+		}
 	}
 }
 
@@ -34,7 +36,9 @@ Path::~Path(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Path &Path::operator=(const Path &other) {
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_str    = other._str;
 	this->_chunks = other._chunks;
 	return (*this);
@@ -54,7 +58,9 @@ int Path::access(int type) const { return ::access(this->_str.c_str(), type); }
 
 error_t Path::stat(void) {
 	error_t err = ::stat(this->_str.c_str(), &this->_stat);
-	if (!err) this->_statDone = true;
+	if (!err) {
+		this->_statDone = true;
+	}
 	return err;
 }
 
@@ -96,7 +102,7 @@ std::string Path::extension(void) const {
 }
 
 Path Path::dir(void) const {
-	const std::size_t  pos = this->_str.find_last_of('/');
+	const std::size_t pos = this->_str.find_last_of('/');
 	if (pos == std::string::npos) {
 		return *this;
 	}

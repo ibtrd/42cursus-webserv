@@ -49,6 +49,6 @@ enum timeout { CLIENT_HEADER_TIMEOUT, CLIENT_BODY_TIMEOUT, SEND_TIMEOUT, TIMEOUT
 
 std::string statusCodeToReason(const status_code_t code);
 std::string statusCodeToMsg(const status_code_t code);
-int32_t		sToContentLength(const std::string &str, bool chunked);
+int32_t     sToContentLength(const std::string &str, bool chunked);
 
 #endif

@@ -6,7 +6,7 @@
 #include "webdef.hpp"
 
 class ConfFile {
-   public:
+public:
 	ConfFile(std::vector<ServerBlock> *blocks, mimetypes_t *mimetypes);
 	~ConfFile(void);
 
@@ -23,7 +23,7 @@ class ConfFile {
 
 	int32_t timeouts[TIMEOUT_COUNT];
 
-   private:
+private:
 	Path                      _root;
 	std::string               _path;
 	std::vector<ConfToken>    _tokens;

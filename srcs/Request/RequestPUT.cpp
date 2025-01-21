@@ -1,20 +1,17 @@
 #include "RequestPUT.hpp"
-#include "ft.hpp"
 
-#include <cstring>
-#include <iostream>
 #include <fcntl.h>
 #include <unistd.h>
 
+#include <cstring>
+#include <iostream>
+
+#include "ft.hpp"
+
 /* STATIC VARIABLES ********************************************************* */
 
-const char *RequestPUT::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {
-	"0\r\n\r\n",
-	"0\r\n\r",
-	"0\r\n",
-	"0\r",
-	"0"
-};
+const char *RequestPUT::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0\r\n\r", "0\r\n",
+                                                                   "0\r", "0"};
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -23,21 +20,27 @@ const char *RequestPUT::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {
 // 	// std::cerr << "RequestPUT created" << std::endl;
 // }
 
-RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context), _chunked(false), _contentLength(0) {
+RequestPUT::RequestPUT(RequestContext_t &context)
+    : ARequest(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPUT created" << std::endl;
-	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);	// No workOut needed
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
 	this->_contentTotalLength = 0;
 }
 
-RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other), _chunked(false), _contentLength(0) {
+RequestPUT::RequestPUT(const RequestPUT &other)
+    : ARequest(other), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPUT copy" << std::endl;
 	*this = other;
 }
 
 RequestPUT::~RequestPUT(void) {
 	// std::cerr << "RequestPUT destroyed" << std::endl;
-	if (this->_file.is_open()) this->_file.close();
-	if (0 == this->_tmpFilename.access(F_OK)) std::remove(this->_tmpFilename.c_str());
+	if (this->_file.is_open()) {
+		this->_file.close();
+	}
+	if (0 == this->_tmpFilename.access(F_OK)) {
+		std::remove(this->_tmpFilename.c_str());
+	}
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
@@ -52,7 +55,7 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 
 error_t RequestPUT::_generateFilename(void) {
 	std::string tmp;
-	int32_t i = 0;
+	int32_t     i = 0;
 	do {
 		tmp = this->_path.string();
 		tmp += ".";
@@ -69,8 +72,11 @@ error_t RequestPUT::_generateFilename(void) {
 }
 
 void RequestPUT::_openFile(void) {
-	if (REQ_CONTINUE != this->_generateFilename()) return;
-	this->_file.open(this->_tmpFilename.c_str(), std::ios::out | std::ios::trunc | std::ios::binary);
+	if (REQ_CONTINUE != this->_generateFilename()) {
+		return;
+	}
+	this->_file.open(this->_tmpFilename.c_str(),
+	                 std::ios::out | std::ios::trunc | std::ios::binary);
 	if (!this->_file.is_open()) {
 		std::cerr << "open(): " << std::strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
@@ -97,7 +103,8 @@ error_t RequestPUT::_checkHeaders(void) {
 			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 			return (REQ_DONE);
 		}
-		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE || this->_contentLength > this->_context.ruleBlock->getMaxBodySize()) {
+		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
+		    this->_contentLength > this->_context.ruleBlock->getMaxBodySize()) {
 			this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 			return (REQ_DONE);
 		}
@@ -126,7 +133,7 @@ void RequestPUT::_saveFile(void) {
 	std::remove(this->_tmpFilename.c_str());
 }
 
-error_t	RequestPUT::_readContent(void) {
+error_t RequestPUT::_readContent(void) {
 	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
 		this->_file.write(this->_context.buffer.c_str(), this->_context.buffer.size());
 		this->_contentLength -= this->_context.buffer.size();
@@ -180,7 +187,7 @@ error_t RequestPUT::_readChunked(void) {
 				return (REQ_CONTINUE);
 			}
 			std::string line = this->_context.buffer.substr(0, pos);
-			if (line.empty()) {	// refuse empty chunk
+			if (line.empty()) {  // refuse empty chunk
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
@@ -211,7 +218,9 @@ error_t RequestPUT::_readChunked(void) {
 			}
 			this->_context.buffer.erase(0, pos + 2);
 			this->_contentTotalLength += this->_contentLength;
-			if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE || this->_contentLength > this->_context.ruleBlock->getMaxBodySize() || this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
+			if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
+			    this->_contentLength > this->_context.ruleBlock->getMaxBodySize() ||
+			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
 				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
@@ -238,7 +247,9 @@ error_t RequestPUT::_readChunked(void) {
 
 void RequestPUT::processing(void) {
 	// Check headers
-	if (REQ_CONTINUE != this->_checkHeaders()) return;
+	if (REQ_CONTINUE != this->_checkHeaders()) {
+		return;
+	}
 
 	// Check path
 	if (this->_path.isDirFormat()) {

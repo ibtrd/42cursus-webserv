@@ -53,8 +53,9 @@ void Server::configure(const Configuration &config) {
 void Server::routine(void) {
 	int32_t nfds = epoll_wait(this->_epollFd, this->_events, MAX_EVENTS, EPOLL_WAIT_TIMEOUT);
 	if (nfds == -1) {
-		if (g_signal != SIGQUIT)
+		if (g_signal != SIGQUIT) {
 			std::cerr << "error: epoll_wait(): " << strerror(errno) << std::endl;
+		}
 		return;
 	}
 

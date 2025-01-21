@@ -9,7 +9,7 @@
 #define BLOCK_CLOSE '}'
 
 class ConfToken {
-   public:
+public:
 	ConfToken(void);
 	ConfToken(const ConfToken &other);
 	ConfToken(const std::string &str, const uint32_t line);
@@ -28,7 +28,7 @@ class ConfToken {
 
 	bool isMetatoken(void) const;
 
-   private:
+private:
 	std::string _str;
 	uint32_t    _line;
 };

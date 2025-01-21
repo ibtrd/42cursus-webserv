@@ -24,7 +24,9 @@ Method::~Method(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Method &Method::operator=(const Method &other) {
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_index = other._index;
 	return (*this);
 }
@@ -48,7 +50,9 @@ bool Method::isValid(void) const {
 method_t Method::index(void) const { return this->_index; }
 
 const std::string &Method::string(void) const {
-	if (this->isValid()) return methods[this->_index];
+	if (this->isValid()) {
+		return methods[this->_index];
+	}
 	throw std::invalid_argument("Invalid method");
 }
 
