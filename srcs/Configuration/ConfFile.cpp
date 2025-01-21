@@ -11,7 +11,8 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-ConfFile::ConfFile(std::vector<ServerBlock> *blocks) : _blocks(blocks) {
+ConfFile::ConfFile(std::vector<ServerBlock> *blocks, mimetypes_t *mimetypes)
+    : _blocks(blocks), _mimetypes(mimetypes) {
 	this->timeouts[CLIENT_HEADER_TIMEOUT] = DEFAULT_CLIENT_HEADER_TIMEOUT;
 	this->timeouts[CLIENT_BODY_TIMEOUT]   = DEFAULT_CLIENT_BODY_TIMEOUT;
 	this->timeouts[SEND_TIMEOUT]          = DEFAULT_SEND_TIMEOUT;

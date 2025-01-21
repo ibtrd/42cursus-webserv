@@ -10,6 +10,7 @@ typedef int32_t error_t;
 typedef int     fd_t;
 
 typedef std::map<std::string, std::string> headers_t;
+typedef std::map<std::string, std::string> mimetypes_t;
 
 typedef enum {
 	STATUS_NONE                       = 0,

@@ -15,8 +15,9 @@ class Configuration {
 	~Configuration(void);
 
 	// GETTERS
-	bool    noRun(void) const;
-	int32_t timeout(const uint32_t type) const;
+	bool               noRun(void) const;
+	int32_t            timeout(const uint32_t type) const;
+	const mimetypes_t &mimetypes(void) const;
 
 	const std::string              &file(void) const;
 	const std::vector<ServerBlock> &blocks(void) const;
@@ -37,6 +38,7 @@ class Configuration {
 	ConfFile                 _conf;
 	uint8_t                  _options;
 	std::vector<ServerBlock> _blocks;
+	mimetypes_t              _mimetypes;
 
 	void _parseOption(const std::string arg);
 
