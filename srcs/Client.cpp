@@ -290,7 +290,7 @@ error_t Client::_resolveARequest(void) {
 	    this->_idSocket, this->_context.headers[HEADER_HOST]));
 	this->_context.ruleBlock =
 	    (this->_context.serverBlock->findLocationBlock(this->_context.target));
-	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().string().empty()) {
+	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().empty()) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return REQ_CONTINUE;
 	}

@@ -6,7 +6,7 @@
 #    By: ibertran <ibertran@student.42lyon.fr>      +#+  +:+       +#+         #
 #                                                 +#+#+#+#+#+   +#+            #
 #    Created: 2024/08/13 22:47:55 by ibertran          #+#    #+#              #
-#    Updated: 2025/01/16 23:54:19 by ibertran         ###   ########lyon.fr    #
+#    Updated: 2025/01/21 17:10:33 by ibertran         ###   ########lyon.fr    #
 #                                                                              #
 # **************************************************************************** #
 
@@ -108,8 +108,8 @@ run : $(NAME)
 
 CLANG_FORMAT_SOURCES := $(addprefix $(SRCS_DIR), $(SRCS)) $(shell find $(INCS_DIR) -type f -name '*.hpp')
 
-.PHONY : format-check
-format-check :
+.PHONY : check-format
+check-format :
 	clang-format --Werror --dry-run $(CLANG_FORMAT_SOURCES)
 
 .PHONY : clang-format
