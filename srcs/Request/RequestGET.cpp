@@ -93,7 +93,12 @@ error_t RequestGET::_validateLocalFile(void) {
 		return (REQ_DONE);
 	}
 	if (this->_path.isFile()) {
-		this->_openFile();
+		if (this->_cgiPath) {
+			std::cerr << "CGI not implemented" << std::endl;
+			this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
+		} else {
+			this->_openFile();
+		}
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
@@ -115,9 +120,6 @@ error_t RequestGET::_fetchIndexes(void) {
 
 void RequestGET::processing(void) {
 	// std::cerr << "RequestGET parse" << std::endl;
-	if (this->_cgiPath) {
-		std::cerr << "CGI not implemented" << std::endl;
-	}
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -129,6 +131,7 @@ void RequestGET::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
+	std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
