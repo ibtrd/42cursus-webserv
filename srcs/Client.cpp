@@ -15,7 +15,7 @@
 #include "ft.hpp"
 #include "webservHTML.hpp"
 
-char Client::_readBuffer[REQ_BUFFER_SIZE];
+uint8_t Client::_readBuffer[REQ_BUFFER_SIZE];
 
 int32_t Client::_epollFd = -1;
 
@@ -166,9 +166,7 @@ error_t Client::_readSocket(void) {
 		std::cerr << "Client error" << std::endl;
 		return (REQ_ERROR);
 	}
-	Client::_readBuffer[bytes] = '\0';
-	this->_context.buffer += Client::_readBuffer;
-	Client::_readBuffer[0] = '\0';
+	this->_context.buffer.append(Client::_readBuffer, bytes);
 	return (REQ_CONTINUE);
 }
 

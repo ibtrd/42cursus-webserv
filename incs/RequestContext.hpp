@@ -1,6 +1,7 @@
 #ifndef REQUESTCONTEXT
 #define REQUESTCONTEXT
 
+#include "BinaryBuffer.hpp"
 #include "Response.hpp"
 #include "ServerBlock.hpp"
 
@@ -86,8 +87,8 @@ typedef struct RequestContext_s {
 	const ServerBlock   *serverBlock;
 	const LocationBlock *ruleBlock;
 
-	uint32_t    requestState;
-	std::string buffer;
+	uint32_t     requestState;
+	BinaryBuffer buffer;
 
 	Method      method;
 	std::string target;

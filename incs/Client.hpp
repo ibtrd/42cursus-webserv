@@ -13,7 +13,7 @@
 
 class Client {
 private:
-	static char    _readBuffer[REQ_BUFFER_SIZE];
+	static uint8_t _readBuffer[REQ_BUFFER_SIZE];
 	static int32_t _epollFd;
 	static ARequest *(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 
