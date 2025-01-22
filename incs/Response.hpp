@@ -4,14 +4,14 @@
 #include "webdef.hpp"
 
 class Response {
-   private:
+private:
 	status_code_t _statusCode;
 	std::string   _reasonPhrase;
 	headers_t     _headers;
 	// DEPRECATED
 	std::string _body;
 
-   public:
+public:
 	Response(void);
 	Response(const Response &other);
 

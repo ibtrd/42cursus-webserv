@@ -12,7 +12,7 @@
 #define PROTOCOLE_VERSION "HTTP/1.1"
 
 class Client {
-   private:
+private:
 	static char    _readBuffer[REQ_BUFFER_SIZE];
 	static int32_t _epollFd;
 	static ARequest *(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
@@ -29,23 +29,23 @@ class Client {
 
 	const std::string _requestStateStr(void) const;
 
-	error_t              _readSocket(void);
-	error_t              _parseRequest(void);
-	error_t              _parseRequestLine(void);
-	error_t              _parseHeaders(void);
-	error_t              _switchToWrite(void);
-	error_t              _sendResponse(void);
-	error_t              _handleSocketIn(void);
-	error_t              _handleSocketOut(void);
-	error_t              _handleCGIIn(void);
-	error_t              _handleCGIOut(void);
-	error_t              _resolveARequest(void);
-	error_t              _loadErrorPage(void);
-	void                 _readErrorPage(void);
+	error_t _readSocket(void);
+	error_t _parseRequest(void);
+	error_t _parseRequestLine(void);
+	error_t _parseHeaders(void);
+	error_t _switchToWrite(void);
+	error_t _sendResponse(void);
+	error_t _handleSocketIn(void);
+	error_t _handleSocketOut(void);
+	error_t _handleCGIIn(void);
+	error_t _handleCGIOut(void);
+	error_t _resolveARequest(void);
+	error_t _loadErrorPage(void);
+	void    _readErrorPage(void);
 
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);
 
-   public:
+public:
 	Client(const fd_t idSocket, const fd_t requestSocket, Server const &server,
 	       const struct sockaddr_in &addr);
 	Client(const Client &other);

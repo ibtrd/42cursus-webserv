@@ -18,7 +18,7 @@
 
 RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL) {
 	// std::cerr << "RequestGET created" << std::endl;
-	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);	// No workIn needed
+	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 }
 
 RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
@@ -28,8 +28,12 @@ RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
 
 RequestGET::~RequestGET(void) {
 	// std::cerr << "RequestGET destroyed" << std::endl;
-	if (this->_file.is_open()) this->_file.close();
-	if (this->_dir != NULL) closedir(this->_dir);
+	if (this->_file.is_open()) {
+		this->_file.close();
+	}
+	if (this->_dir != NULL) {
+		closedir(this->_dir);
+	}
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
@@ -145,7 +149,7 @@ void RequestGET::processing(void) {
 		return;
 	}
 	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-	this->_context.response.setStatusCode(STATUS_NOT_FOUND); //TESTER
+	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
 }
 
 error_t RequestGET::workIn(void) {
@@ -156,9 +160,13 @@ error_t RequestGET::workIn(void) {
 error_t RequestGET::workOut(void) {
 	// std::cerr << "RequestGET workOut" << std::endl;
 
-	if (this->_path.isFileFormat()) return (this->_readFile());
+	if (this->_path.isFileFormat()) {
+		return (this->_readFile());
+	}
 
-	if (this->_path.isDirFormat()) return (this->_readDir());
+	if (this->_path.isDirFormat()) {
+		return (this->_readDir());
+	}
 
 	return (REQ_ERROR);
 }

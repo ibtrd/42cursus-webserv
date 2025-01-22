@@ -20,7 +20,7 @@ typedef std::map<fd_t, std::vector<struct sockaddr_in> > socketbindmap_t;
 typedef std::map<fd_t, std::list<Client>::iterator>      clientbindmap_t;
 
 class Server {
-   public:
+public:
 	Server();
 	~Server();
 
@@ -34,7 +34,7 @@ class Server {
 
 	int32_t epollFd(void) const;
 
-   private:
+private:
 	int32_t            _epollFd;
 	servermap_t        _serverBlocks;
 	struct epoll_event _events[MAX_EVENTS];

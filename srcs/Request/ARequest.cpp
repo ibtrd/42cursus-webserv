@@ -47,7 +47,9 @@ ARequest::~ARequest(void) {
 
 ARequest &ARequest::operator=(const ARequest &other) {
 	std::cerr << "ARequest assign" << std::endl;
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	// this->_context = other._context;
 	return (*this);
 }

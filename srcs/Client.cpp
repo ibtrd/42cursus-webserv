@@ -7,9 +7,9 @@
 
 #include "RequestDELETE.hpp"
 #include "RequestGET.hpp"
+#include "RequestHEAD.hpp"
 #include "RequestPOST.hpp"
 #include "RequestPUT.hpp"
-#include "RequestHEAD.hpp"
 #include "Server.hpp"
 #include "fcntl.h"
 #include "ft.hpp"
@@ -20,11 +20,7 @@ char Client::_readBuffer[REQ_BUFFER_SIZE];
 int32_t Client::_epollFd = -1;
 
 ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) = {
-    createRequestGET,
-    createRequestPOST,
-    createRequestDELETE,
-    createRequestPUT,
-	createRequestHEAD,
+    createRequestGET, createRequestPOST, createRequestDELETE, createRequestPUT, createRequestHEAD,
 };
 
 /* CONSTRUCTORS ************************************************************* */
@@ -38,8 +34,9 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
       _context(server),
       _bytesSent(0) {
 	// std::cerr << "Client created" << std::endl;
-	if (server.getTimeout(CLIENT_HEADER_TIMEOUT))
+	if (server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
 		this->_timestamp[CLIENT_HEADER_TIMEOUT] = time(NULL);
+	}
 	this->_timestamp[CLIENT_BODY_TIMEOUT] = std::numeric_limits<time_t>::max();
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
 	this->_context.requestState           = REQ_STATE_NONE;
@@ -60,22 +57,31 @@ Client::Client(const Client &other)
 
 Client::~Client(void) {
 	// std::cerr << "Client destroyed" << std::endl;
-	if (this->_request) delete this->_request;
+	if (this->_request) {
+		delete this->_request;
+	}
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Client &Client::operator=(const Client &other) {
 	// std::cerr << "Client assign" << std::endl;
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 
-	if (this->_request) delete this->_request;
-	if (other._request)
+	if (this->_request) {
+		delete this->_request;
+	}
+	if (other._request) {
 		this->_request = other._request->clone();
-	else
+	} else {
 		this->_request = NULL;
+	}
 
-	for (int i = 0; i < TIMEOUT_COUNT; ++i) this->_timestamp[i] = other._timestamp[i];
+	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
+		this->_timestamp[i] = other._timestamp[i];
+	}
 
 	this->_context.serverBlock     = other._context.serverBlock;
 	this->_context.ruleBlock       = other._context.ruleBlock;
@@ -98,45 +104,53 @@ const std::string Client::_requestStateStr(void) const {
 	std::string str("{");
 
 	str += "requestLine: ";
-	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState))
+	if (IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", headers: ";
-	if (IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState))
+	if (IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", clientRead: ";
-	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState))
+	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", read: ";
-	if (IS_REQ_READ_COMPLETE(this->_context.requestState))
+	if (IS_REQ_READ_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", workIn: ";
-	if (IS_REQ_WORK_IN_COMPLETE(this->_context.requestState))
+	if (IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", workOut: ";
-	if (IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState))
+	if (IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", writing: ";
-	if (IS_REQ_CAN_WRITE(this->_context.requestState))
+	if (IS_REQ_CAN_WRITE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += ", writeComplete: ";
-	if (IS_REQ_WRITE_COMPLETE(this->_context.requestState))
+	if (IS_REQ_WRITE_COMPLETE(this->_context.requestState)) {
 		str += "1";
-	else
+	} else {
 		str += "0";
+	}
 	str += "}";
 	return (str);
 }
@@ -164,18 +178,24 @@ error_t Client::_parseRequest(void) {
 	// Parse request line
 	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState)) {
 		ret = this->_parseRequestLine();
-		if (ret != REQ_DONE) return (ret);
+		if (ret != REQ_DONE) {
+			return (ret);
+		}
 	}
 
 	// Parse headers
 	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState)) {
 		ret = this->_parseHeaders();
-		if (ret != REQ_DONE) return (ret);
+		if (ret != REQ_DONE) {
+			return (ret);
+		}
 	}
 
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
-		if (ret != REQ_CONTINUE) return (ret);
+		if (ret != REQ_CONTINUE) {
+			return (ret);
+		}
 	}
 
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
@@ -267,8 +287,9 @@ error_t Client::_parseHeaders(void) {
 			if (this->_context.headers.find(HEADER_HOST) == this->_context.headers.end()) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_READ_COMPLETE(this->_context.requestState);
-			} else
+			} else {
 				SET_REQ_READ_HEADERS_COMPLETE(this->_context.requestState);
+			}
 			return (REQ_DONE);
 		}
 		pos = line.find(": ");
@@ -304,7 +325,8 @@ error_t Client::_resolveARequest(void) {
 	if (redirect.first != STATUS_NONE) {
 		this->_context.response.setStatusCode(redirect.first);
 		this->_context.response.setHeader(HEADER_LOCATION, redirect.second);
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);	// No work needed for redirect (response is ready)
+		SET_REQ_WORK_COMPLETE(
+		    this->_context.requestState);  // No work needed for redirect (response is ready)
 		return REQ_DONE;
 	}
 
@@ -374,19 +396,19 @@ error_t Client::_loadErrorPage(void) {
 		return REQ_ERROR;
 	}
 
-	const Path *errorPathPtr = this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
+	const Path *errorPathPtr =
+	    this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
 	if (!errorPathPtr) {
 		return REQ_ERROR;
 	}
 
 	Path errorPath = *errorPathPtr;
-	if (0 == errorPath.access(F_OK) &&
-		0 == errorPath.stat() &&
-		0 == errorPath.access(R_OK) &&
-		errorPath.isFile()) {
+	if (0 == errorPath.access(F_OK) && 0 == errorPath.stat() && 0 == errorPath.access(R_OK) &&
+	    errorPath.isFile()) {
 		this->_errorPage.open(errorPath.string().c_str(), std::ios::in | std::ios::binary);
 		if (this->_errorPage.is_open()) {
-			this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(errorPath.size()));
+			this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
+			                                  ft::numToStr(errorPath.size()));
 			return REQ_DONE;
 			UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		}
@@ -413,18 +435,18 @@ error_t Client::_handleSocketIn(void) {
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
-			return (ret);
-		}
+		return (ret);
+	}
 
 	if (!IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_parseRequest()) != REQ_DONE) {
-			return (ret);
-		}
+		return (ret);
+	}
 
 	// Handle request
 	if (this->_request && !IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
 		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
-		ret = this->_request->workIn();
+		ret                                   = this->_request->workIn();
 		if (ret != REQ_DONE) {
 			return (ret);
 		}
@@ -435,16 +457,17 @@ error_t Client::_handleSocketIn(void) {
 		if (this->_loadErrorPage() == REQ_ERROR) {
 			std::string errorBody;
 			errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-								statusCodeToMsg(this->_context.response.statusCode()));
+			                      statusCodeToMsg(this->_context.response.statusCode()));
 			this->_context.response.setBody(errorBody);
-			this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(errorBody.length()));
+			this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
+			                                  ft::numToStr(errorBody.length()));
 			SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		}
 	}
 	this->_context.responseBuffer = this->_context.response.response();
 	this->_context.response.clearBody();
 
-	if (this->_switchToWrite() == -1)  {
+	if (this->_switchToWrite() == -1) {
 		return (REQ_ERROR);
 	}
 	return (REQ_CONTINUE);
@@ -462,7 +485,7 @@ error_t Client::_handleSocketOut(void) {
 		// 	return (ret);
 	}
 
-	if ((ret = this->_sendResponse()) != REQ_DONE)  {
+	if ((ret = this->_sendResponse()) != REQ_DONE) {
 		return (ret);
 	}
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
@@ -500,17 +523,19 @@ error_t Client::init(void) {
 }
 
 error_t Client::handleIn(fd_t fd) {
-	if (fd == this->_socket)
+	if (fd == this->_socket) {
 		return (this->_handleSocketIn());
-	else
+	} else {
 		return (this->_handleCGIIn());
+	}
 }
 
 error_t Client::handleOut(fd_t fd) {
-	if (fd == this->_socket)
+	if (fd == this->_socket) {
 		return (this->_handleSocketOut());
-	else
+	} else {
 		return (this->_handleCGIOut());
+	}
 }
 
 error_t Client::timeoutCheck(const time_t now) {

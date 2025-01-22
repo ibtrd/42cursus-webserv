@@ -4,10 +4,9 @@
 #include <cstdlib>
 #include <limits>
 
-
+#include "RequestContext.hpp"
 #include "webdef.hpp"
 #include "webservHTML.hpp"
-#include "RequestContext.hpp"
 
 std::string statusCodeToReason(const status_code_t code) {
 	switch (code) {
@@ -97,7 +96,7 @@ std::string statusCodeToMsg(const status_code_t code) {
 	}
 }
 
-int32_t	sToContentLength(const std::string &str, bool chunked) {
+int32_t sToContentLength(const std::string &str, bool chunked) {
 	char *endptr;
 	errno = 0;
 	long value;

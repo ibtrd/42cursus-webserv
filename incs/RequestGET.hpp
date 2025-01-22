@@ -8,7 +8,7 @@
 #include "ARequest.hpp"
 
 class RequestGET : public ARequest {
-   private:
+private:
 	std::ifstream _file;
 	DIR          *_dir;
 
@@ -21,7 +21,7 @@ class RequestGET : public ARequest {
 	error_t _fetchIndexes(void);
 	error_t _validateLocalFile(void);
 
-   public:
+public:
 	RequestGET(RequestContext_t &context);
 	RequestGET(const RequestGET &other);
 
@@ -29,10 +29,10 @@ class RequestGET : public ARequest {
 
 	RequestGET &operator=(const RequestGET &other);
 
-	void		processing(void);
-	error_t		workIn(void);
-	error_t		workOut(void);
-	ARequest	*clone(void) const;
+	void      processing(void);
+	error_t   workIn(void);
+	error_t   workOut(void);
+	ARequest *clone(void) const;
 };
 
 ARequest *createRequestGET(RequestContext_t &context);

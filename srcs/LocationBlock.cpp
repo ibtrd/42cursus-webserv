@@ -26,7 +26,9 @@ LocationBlock::~LocationBlock(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_path        = other._path;
 	this->_dirListing  = other._dirListing;
 	this->_maxBodySize = other._maxBodySize;

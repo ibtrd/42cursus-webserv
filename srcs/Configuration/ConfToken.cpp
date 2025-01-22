@@ -13,7 +13,9 @@ ConfToken::~ConfToken(void) {}
 /* OPERATOR OVERLOADS ******************************************************* */
 
 ConfToken &ConfToken::operator=(const ConfToken &other) {
-	if (this == &other) return (*this);
+	if (this == &other) {
+		return (*this);
+	}
 	this->_str  = other._str;
 	this->_line = other._line;
 	return (*this);

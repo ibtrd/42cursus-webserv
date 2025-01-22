@@ -8,7 +8,7 @@
 typedef std::map<status_code_t, Path> error_pages_t;
 
 class ServerBlock {
-   public:
+public:
 	ServerBlock(void);
 	ServerBlock(const ServerBlock &other);
 
@@ -33,7 +33,7 @@ class ServerBlock {
 
 	void fillLocations(const LocationBlock &location);
 
-   private:
+private:
 	std::vector<struct sockaddr_in> _hosts;
 	std::vector<std::string>        _names;
 	std::vector<LocationBlock>      _locations;
