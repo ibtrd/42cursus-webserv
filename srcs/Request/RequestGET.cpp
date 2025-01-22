@@ -53,9 +53,7 @@ void RequestGET::_openFile(void) {
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE,
 	                                  this->_context.server.getMimeType(this->_path.extension()));
-	// this->_file.seekg(0, std::ios::end);
 	this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(this->_path.size()));
-	// this->_file.seekg(0, std::ios::beg);
 }
 
 void RequestGET::_openDir(void) {
@@ -88,17 +86,14 @@ error_t RequestGET::_readFile(void) {
 error_t RequestGET::_validateLocalFile(void) {
 	if (0 != this->_path.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (0 != this->_path.access(R_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (this->_path.isFile()) {
 		this->_openFile();
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
@@ -108,7 +103,6 @@ error_t RequestGET::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
 	     it != this->_context.ruleBlock->indexes().end(); ++it) {
 		std::string test = this->_path.concat(*it);
-		// std::cerr << "testing indexfile: " << test << std::endl;
 		if (0 == access(test.c_str(), F_OK)) {
 			this->_path = test;
 			return 0;
@@ -121,6 +115,9 @@ error_t RequestGET::_fetchIndexes(void) {
 
 void RequestGET::processing(void) {
 	// std::cerr << "RequestGET parse" << std::endl;
+	if (this->_cgiPath) {
+		std::cerr << "CGI not implemented" << std::endl;
+	}
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -137,15 +134,12 @@ void RequestGET::processing(void) {
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
 		return;
 	}
-	if (0 == this->_fetchIndexes()) {
-		if (REQ_CONTINUE != this->_validateLocalFile()) {
-			return;
-		}
-	} else {
-		if (this->_context.ruleBlock->isDirListing()) {
-			this->_openDir();
-			return;
-		}
+	if (0 == this->_fetchIndexes() &&
+		REQ_CONTINUE != this->_validateLocalFile()) {
+		return;
+	} else if (this->_context.ruleBlock->isDirListing()){
+		this->_openDir();
+		return;
 	}
 	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
 	this->_context.response.setStatusCode(STATUS_NOT_FOUND); //TESTER

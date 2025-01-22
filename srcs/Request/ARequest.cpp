@@ -14,6 +14,7 @@ ARequest::ARequest(RequestContext_t &context) : _context(context) {
 	Path target(this->_context.target);
 	target      = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
 	this->_path = this->_context.ruleBlock->getRoot().concat(target);
+	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
 ARequest::ARequest(const ARequest &other) : _context(other._context) {
@@ -21,6 +22,7 @@ ARequest::ARequest(const ARequest &other) : _context(other._context) {
 	Path target(this->_context.target);
 	target      = target.subPath(this->_context.ruleBlock->path().prefixLength(), SIZE_MAX);
 	this->_path = this->_context.ruleBlock->getRoot().concat(target);
+	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
 ARequest::~ARequest(void) {

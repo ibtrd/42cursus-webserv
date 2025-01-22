@@ -9,6 +9,7 @@ class ARequest {
    protected:
 	RequestContext_t &_context;
 	Path              _path;
+	const Path		  *_cgiPath;
 
    public:
 	ARequest(RequestContext_t &context);

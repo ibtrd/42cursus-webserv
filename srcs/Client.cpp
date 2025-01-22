@@ -365,9 +365,9 @@ error_t Client::_loadErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
 	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
-		std::cerr << "Error page requested before workIn" << std::endl;	// DEBUG
+		std::cerr << "Error page requested before workIn was marked completed" << std::endl;	// DEBUG
 	} else {
-		std::cerr << "Error page requested after workIn" << std::endl;	// DEBUG
+		std::cerr << "Error page requested after workIn was marked completed" << std::endl;	// DEBUG
 	}
 
 	if (!this->_context.serverBlock) {
