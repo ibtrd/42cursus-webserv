@@ -73,6 +73,11 @@ void RequestGET::_openDir(void) {
 	this->_context.response.setBody(INDEXOF(this->_context.target));
 }
 
+void RequestGET::_openCGI(void) {
+	std::cerr << "CGI not implemented" << std::endl;
+	this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
+}
+
 error_t RequestGET::_readFile(void) {
 	char buffer[REQ_BUFFER_SIZE];
 
@@ -98,8 +103,7 @@ error_t RequestGET::_validateLocalFile(void) {
 	}
 	if (this->_path.isFile()) {
 		if (this->_cgiPath) {
-			std::cerr << "CGI not implemented" << std::endl;
-			this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
+			this->_openCGI();
 		} else {
 			this->_openFile();
 		}

@@ -9,11 +9,14 @@
 
 class RequestGET : public ARequest {
 private:
+	static const char *_chunkTerminator[CHUNK_TERMINATOR_SIZE];
+
 	std::ifstream _file;
 	DIR          *_dir;
 
 	void _openFile(void);
 	void _openDir(void);
+	void _openCGI(void);
 
 	error_t _readFile(void);
 	error_t _readDir(void);

@@ -2,6 +2,11 @@
 
 #include "Client.hpp"
 
+/* STATIC VARIABLES ********************************************************* */
+
+const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0\r\n\r", "0\r\n",
+                                                                   "0\r", "0"};
+
 /* CONSTRUCTORS ************************************************************* */
 
 // ARequest::ARequest(void)
