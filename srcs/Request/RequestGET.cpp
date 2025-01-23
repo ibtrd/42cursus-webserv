@@ -1,18 +1,12 @@
 #include "RequestGET.hpp"
 
-#include <fcntl.h>
-#include <sys/epoll.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
-#include <cerrno>
-#include <cstring>
-#include <iostream>
 
-#include "Client.hpp"
 #include "Server.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
+#include "Env.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -74,6 +68,12 @@ void RequestGET::_openDir(void) {
 }
 
 void RequestGET::_openCGI(void) {
+	Env env(this->_context);
+
+	std::cerr << env;
+	char **envp = env.envp();
+	Env::destroy(envp);
+
 	std::cerr << "CGI not implemented" << std::endl;
 	this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
 }

@@ -20,7 +20,6 @@ private:
 	time_t                   _timestamp[TIMEOUT_COUNT];
 	const fd_t               _idSocket;
 	const fd_t               _socket;
-	const struct sockaddr_in _addr;
 
 	ARequest        *_request;
 	RequestContext_t _context;

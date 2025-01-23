@@ -29,9 +29,8 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
                const struct sockaddr_in &addr)
     : _idSocket(idSocket),
       _socket(requestSocket),
-      _addr(addr),
       _request(NULL),
-      _context(server),
+      _context(server, addr),
       _bytesSent(0) {
 	// std::cerr << "Client created" << std::endl;
 	if (server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
@@ -46,7 +45,6 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
 Client::Client(const Client &other)
     : _idSocket(other._idSocket),
       _socket(other._socket),
-      _addr(other._addr),
       _request(other._request),
       _context(other._context),
       // _errorPage(other._errorPage),
@@ -619,7 +617,7 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	std::strftime(buffer, sizeof(buffer), "%c",
 	              std::localtime(&client._timestamp[CLIENT_HEADER_TIMEOUT]));
 	char clientIP[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
+	inet_ntop(AF_INET, &client._context.addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";
 	if (client._context.method.isValid()) {
 		os << '"' << client._context.method.string() << " " << client._context.target << " "

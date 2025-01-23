@@ -10,6 +10,7 @@
 
 #include "RequestContext.hpp"
 #include "ft.hpp"
+#include "webdef.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -17,7 +18,7 @@ Response::Response(void) {
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode             = STATUS_NONE;
 	this->_reasonPhrase           = "";
-	this->_headers[HEADER_SERVER] = "webserv/0.5";
+	this->_headers[HEADER_SERVER] = WEBSERV_VERSION; 
 };
 
 Response::Response(const Response &other) {
