@@ -1,15 +1,20 @@
 #include "Env.hpp"
 
-#include <stdint.h>
+#include <arpa/inet.h>
 
+#include <algorithm>
 #include <cstring>
-#include <ostream>
 
 /* CONSTRUCTORS ************************************************************* */
 
 Env::Env(void) {}
 
 Env::Env(const Env &other) { *this = other; }
+
+Env::Env(const RequestContext_t &context) {
+	this->_addContext(context);
+	this->add("SERVER_SOFTWARE", WEBSERV_VERSION);
+}
 
 Env::~Env(void) {}
 
@@ -44,6 +49,35 @@ char **Env::envp(void) const {
 		std::strcpy(env[i], this->_envars.at(i).c_str());
 	}
 	return env;
+}
+
+void Env::destroy(char **envp) {
+	for (uint32_t i = 0; NULL != envp[i]; ++i) {
+		delete[] envp[i];
+	}
+	delete[] envp;
+}
+
+/* ************************************************************************** */
+
+void Env::_addContext(const RequestContext_t &context) {
+	this->add("REQUEST_METHOD", context.method.string());
+	this->_addHeaders(context.headers);
+	char clientIP[INET_ADDRSTRLEN];
+	inet_ntop(AF_INET, &context.addr.sin_addr, clientIP, INET_ADDRSTRLEN);
+	this->add("REMOTE_ADDR", clientIP);
+	this->add("REMOTE_HOST", clientIP);
+}
+
+void Env::_addHeaders(const headers_t &headers) {
+	for (headers_t::const_iterator it = headers.begin(); it != headers.end(); ++it) {
+		std::string var = it->first;
+		std::replace(var.begin(), var.end(), '-', '_');
+		for (std::string::iterator it = var.begin(); it != var.end(); ++it) {
+			*it = toupper(*it);
+		}
+		this->add("HTTP_" + var, it->second);
+	}
 }
 
 /* ************************************************************************** */

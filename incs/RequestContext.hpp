@@ -1,5 +1,5 @@
-#ifndef REQUESTCONTEXT
-#define REQUESTCONTEXT
+#ifndef REQUESTCONTEXT_HPP
+#define REQUESTCONTEXT_HPP
 
 #include "BinaryBuffer.hpp"
 #include "Response.hpp"
@@ -83,9 +83,10 @@
 class Server;
 
 typedef struct RequestContext_s {
-	const Server        &server;
-	const ServerBlock   *serverBlock;
-	const LocationBlock *ruleBlock;
+	const Server            &server;
+	const ServerBlock       *serverBlock;
+	const LocationBlock     *ruleBlock;
+	const struct sockaddr_in addr;
 
 	uint32_t     requestState;
 	BinaryBuffer buffer;
@@ -99,7 +100,8 @@ typedef struct RequestContext_s {
 	Response    response;
 	std::string responseBuffer;
 
-	RequestContext_s(const Server &server) : server(server), serverBlock(NULL), ruleBlock(NULL) {}
+	RequestContext_s(const Server &server, const struct sockaddr_in &addr)
+	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
 
 } RequestContext_t;
 
