@@ -4,6 +4,8 @@
 # include <map>
 # include <string>
 
+# define QUERY_DELIM '&'
+
 typedef std::map<std::string, std::string> queries_t;
 
 class Queries {

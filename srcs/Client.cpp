@@ -254,11 +254,6 @@ error_t Client::_parseRequestLine(void) {
 		if (pos != std::string::npos) {
 			this->_context.queries = Queries(this->_context.target.substr(pos + 1));
 			this->_context.target.erase(pos);
-			if (!this->_context.queries.isValid()) {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_READ_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			}
 		}
 
 	// Protocol version

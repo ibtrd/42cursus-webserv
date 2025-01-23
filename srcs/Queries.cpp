@@ -1,5 +1,7 @@
 #include "Queries.hpp"
 
+static bool isValideString(const std::string &str);
+
 /* CONSTRUCTORS ************************************************************* */
 
 Queries::Queries(void) : _queryLine(), _queries() {}
@@ -39,7 +41,7 @@ void Queries::parse(void) {
 	size_t end = 0;
 
 	while (pos < this->_queryLine.size()) {
-		end = this->_queryLine.find('&', pos);
+		end = this->_queryLine.find(QUERY_DELIM, pos);
 		if (end == std::string::npos) {
 			end = this->_queryLine.size();
 		}
@@ -64,7 +66,18 @@ bool Queries::isValid(void) const {
 		return (false);
 	}
 	for (queries_t::const_iterator it = this->_queries.begin(); it != this->_queries.end(); ++it) {
-		if (it->first.empty()) {
+		if (it->first.empty() || !isValideString(it->first) || !isValideString(it->second)) {
+			return (false);
+		}
+	}
+	return (true);
+}
+
+/* ************************************************************************** */
+
+static bool isValideString(const std::string &str) {
+	for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
+		if (!isalnum(*it) && *it != '.' && *it != '-' && *it != '_' && *it != '~') {
 			return (false);
 		}
 	}
