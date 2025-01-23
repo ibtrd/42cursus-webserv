@@ -249,6 +249,18 @@ error_t Client::_parseRequestLine(void) {
 	}
 	requestLine.erase(0, pos + 1);
 
+	//  Query string
+		pos = this->_context.target.find('?');
+		if (pos != std::string::npos) {
+			this->_context.queries = Queries(this->_context.target.substr(pos + 1));
+			this->_context.target.erase(pos);
+			if (!this->_context.queries.isValid()) {
+				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+				SET_REQ_READ_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			}
+		}
+
 	// Protocol version
 	this->_context.protocolVersion = requestLine;
 	if (this->_context.protocolVersion.empty()) {
@@ -262,9 +274,10 @@ error_t Client::_parseRequestLine(void) {
 		return (REQ_DONE);
 	}
 
-	// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
-	// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-	// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
+	std::cerr << "Method: |" << this->_context.method.string() << "|" << std::endl;
+	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+	std::cerr << "Queries: |" << this->_context.queries.queryLine() << "|" << std::endl;
+	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
@@ -299,7 +312,7 @@ error_t Client::_parseHeaders(void) {
 		key                         = line.substr(0, pos);
 		value                       = line.substr(pos + 2);
 		this->_context.headers[key] = value;
-		// std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
+		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
 }

@@ -7,6 +7,7 @@ SRC = \
 	main \
 	Method \
 	Path \
+	Queries \
 	Response \
 	Server \
 	ServerBlock \

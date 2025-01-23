@@ -2,6 +2,7 @@
 #define REQUESTCONTEXT
 
 #include "BinaryBuffer.hpp"
+#include "Queries.hpp"
 #include "Response.hpp"
 #include "ServerBlock.hpp"
 
@@ -93,6 +94,8 @@ typedef struct RequestContext_s {
 	Method      method;
 	std::string target;
 	std::string protocolVersion;
+
+	Queries queries;
 
 	headers_t headers;
 

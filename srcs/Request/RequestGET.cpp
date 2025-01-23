@@ -142,7 +142,7 @@ void RequestGET::processing(void) {
 	std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
-		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
+		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/' + this->_context.queries.originalQueryLine());
 		return;
 	}
 	if (0 == this->_fetchIndexes() &&
