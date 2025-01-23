@@ -67,6 +67,7 @@ void Env::_addContext(const RequestContext_t &context) {
 	inet_ntop(AF_INET, &context.addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	this->add("REMOTE_ADDR", clientIP);
 	this->add("REMOTE_HOST", clientIP);
+	this->add("QUERY_STRING", context.queries.queryLine());
 }
 
 void Env::_addHeaders(const headers_t &headers) {
