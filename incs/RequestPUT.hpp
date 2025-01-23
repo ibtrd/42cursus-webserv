@@ -7,7 +7,6 @@
 
 class RequestPUT : public ARequest {
 private:
-
 	std::ofstream _file;
 	Path          _tmpFilename;
 
