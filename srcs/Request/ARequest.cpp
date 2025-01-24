@@ -65,6 +65,17 @@ ARequest &ARequest::operator=(const ARequest &other) {
 
 /* GETTERS ****************************************************************** */
 
+const RequestContext_t &ARequest::context(void) const {
+	return this->_context;
+}
+
+const Path &ARequest::path(void) const {
+	return this->_path;
+}
+const Path &ARequest::cgiPath(void) const {
+	return *this->_cgiPath;
+}
+
 /* SETTERS ****************************************************************** */
 
 /* EXCEPTIONS *************************************************************** */

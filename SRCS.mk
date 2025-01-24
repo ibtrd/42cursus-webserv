@@ -2,7 +2,7 @@ SRCS_DIR = srcs/
 SRC = \
 	BinaryBuffer \
 	Client \
-	Env \
+	CgiBuilder \
 	ft \
 	LocationBlock \
 	main \

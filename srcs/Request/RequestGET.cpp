@@ -6,7 +6,7 @@
 #include "Server.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
-#include "Env.hpp"
+#include "CgiBuilder.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -68,17 +68,12 @@ void RequestGET::_openDir(void) {
 }
 
 void RequestGET::_openCGI(void) {
-	Env env(this->_context);
-	const char *argv[3];
+	CgiBuilder exe(this);
 
-	argv[0] = this->_cgiPath->notdir().c_str();
-	argv[1] = this->_path.c_str();
-	argv[2] = NULL;
-	(void)argv;
-
-	// std::cerr << env;
-	char **envp = env.envp();
-	Env::destroy(envp);
+	char **envp = exe.envp();
+	CgiBuilder::destroy(envp);
+	char **argv = exe.argv();
+	CgiBuilder::destroy(argv);
       
 	std::cerr << "CGI not implemented" << std::endl;
 	this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);

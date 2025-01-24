@@ -28,7 +28,9 @@ public:
 	virtual error_t workIn(void)     = 0;
 	virtual error_t workOut(void)    = 0;
 
-	// bool	pathExists(void) const;
+	const RequestContext_t &context(void) const;
+	const Path &path(void) const;
+	const Path &cgiPath(void) const;
 
 	virtual ARequest *clone(void) const = 0;
 };
