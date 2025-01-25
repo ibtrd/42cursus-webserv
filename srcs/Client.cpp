@@ -387,7 +387,7 @@ error_t Client::_sendResponse(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t Client::_loadErrorPage(void) {
+error_t Client::_openErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
 	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
@@ -418,6 +418,18 @@ error_t Client::_loadErrorPage(void) {
 		}
 	}
 	return REQ_ERROR;
+}
+
+void Client::_loadErrorPage(void) {
+	if (this->_openErrorPage() == REQ_ERROR) {
+		std::string errorBody;
+		errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
+								statusCodeToMsg(this->_context.response.statusCode()));
+		this->_context.response.setBody(errorBody);
+		this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
+											ft::numToStr(errorBody.length()));
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+	}
 }
 
 void Client::_readErrorPage(void) {
@@ -458,15 +470,7 @@ error_t Client::_handleSocketIn(void) {
 
 	if (this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
 		this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
-		if (this->_loadErrorPage() == REQ_ERROR) {
-			std::string errorBody;
-			errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-			                      statusCodeToMsg(this->_context.response.statusCode()));
-			this->_context.response.setBody(errorBody);
-			this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
-			                                  ft::numToStr(errorBody.length()));
-			SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		}
+		this->_loadErrorPage();
 	}
 	this->_context.responseBuffer = this->_context.response.response();
 	this->_context.response.clearBody();
@@ -552,7 +556,8 @@ error_t Client::timeoutCheck(const time_t now) {
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();
@@ -572,7 +577,8 @@ error_t Client::timeoutCheck(const time_t now) {
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();

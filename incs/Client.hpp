@@ -39,7 +39,8 @@ private:
 	error_t _handleCGIIn(void);
 	error_t _handleCGIOut(void);
 	error_t _resolveARequest(void);
-	error_t _loadErrorPage(void);
+	error_t _openErrorPage(void);
+	void    _loadErrorPage(void);
 	void    _readErrorPage(void);
 
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);
