@@ -25,8 +25,10 @@ public:
 	ARequest &operator=(const ARequest &other);
 
 	virtual void    processing(void) = 0;
-	virtual error_t workIn(void)     = 0;
-	virtual error_t workOut(void)    = 0;
+	virtual error_t workIn(void);
+	virtual error_t workOut(void);
+	virtual error_t CGIIn(void);
+	virtual error_t CGIOut(void);
 
 	// bool	pathExists(void) const;
 

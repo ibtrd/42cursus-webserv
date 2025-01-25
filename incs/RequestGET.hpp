@@ -24,6 +24,8 @@ private:
 	error_t _fetchIndexes(void);
 	error_t _validateLocalFile(void);
 
+	error_t _executeCGI(void);
+
 public:
 	RequestGET(RequestContext_t &context);
 	RequestGET(const RequestGET &other);
@@ -33,8 +35,10 @@ public:
 	RequestGET &operator=(const RequestGET &other);
 
 	void      processing(void);
-	error_t   workIn(void);
+
 	error_t   workOut(void);
+	error_t   CGIIn(void);
+
 	ARequest *clone(void) const;
 };
 

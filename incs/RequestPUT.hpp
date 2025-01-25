@@ -31,8 +31,9 @@ public:
 	RequestPUT &operator=(const RequestPUT &other);
 
 	void      processing(void);
+	
 	error_t   workIn(void);
-	error_t   workOut(void);
+
 	ARequest *clone(void) const;
 };
 

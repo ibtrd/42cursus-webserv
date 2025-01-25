@@ -32,8 +32,9 @@ public:
 	RequestPOST &operator=(const RequestPOST &other);
 
 	void      processing(void);
+	
 	error_t   workIn(void);
-	error_t   workOut(void);
+
 	ARequest *clone(void) const;
 };
 

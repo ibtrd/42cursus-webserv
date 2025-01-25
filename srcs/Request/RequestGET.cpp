@@ -156,11 +156,6 @@ void RequestGET::processing(void) {
 	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
 }
 
-error_t RequestGET::workIn(void) {
-	throw std::logic_error("RequestGET::workIn should not be called");
-	return (REQ_DONE);
-}
-
 error_t RequestGET::workOut(void) {
 	// std::cerr << "RequestGET workOut" << std::endl;
 
@@ -172,6 +167,11 @@ error_t RequestGET::workOut(void) {
 		return (this->_readDir());
 	}
 
+	return (REQ_ERROR);
+}
+
+error_t RequestGET::CGIIn(void) {
+	throw std::logic_error("RequestGET::CGIIn should not be called");
 	return (REQ_ERROR);
 }
 

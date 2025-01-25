@@ -29,16 +29,21 @@ private:
 	const std::string _requestStateStr(void) const;
 
 	error_t _readSocket(void);
+
 	error_t _parseRequest(void);
+
 	error_t _parseRequestLine(void);
 	error_t _parseHeaders(void);
+	error_t _resolveARequest(void);
+
 	error_t _switchToWrite(void);
 	error_t _sendResponse(void);
+
 	error_t _handleSocketIn(void);
 	error_t _handleSocketOut(void);
 	error_t _handleCGIIn(void);
 	error_t _handleCGIOut(void);
-	error_t _resolveARequest(void);
+
 	error_t _openErrorPage(void);
 	void    _loadErrorPage(void);
 	void    _readErrorPage(void);

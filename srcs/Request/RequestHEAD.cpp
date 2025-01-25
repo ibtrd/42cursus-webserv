@@ -124,16 +124,6 @@ void RequestHEAD::processing(void) {
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }
 
-error_t RequestHEAD::workIn(void) {
-	throw std::logic_error("RequestHEAD::workIn should not be called");
-	return (REQ_DONE);
-}
-
-error_t RequestHEAD::workOut(void) {
-	throw std::logic_error("RequestHEAD::workOut should not be called");
-	return (REQ_ERROR);
-}
-
 ARequest *RequestHEAD::clone(void) const {
 	std::cerr << "RequestHEAD clone" << std::endl;
 	return (new RequestHEAD(*this));

@@ -76,16 +76,6 @@ void RequestDELETE::processing(void) {
 	return;
 }
 
-error_t RequestDELETE::workIn(void) {
-	throw std::logic_error("RequestDELETE::workIn should not be called");
-	return (REQ_DONE);
-}
-
-error_t RequestDELETE::workOut(void) {
-	throw std::logic_error("RequestDELETE::workOut should not be called");
-	return (REQ_DONE);
-}
-
 ARequest *RequestDELETE::clone(void) const { return (new RequestDELETE(*this)); }
 
 /* OTHERS *********************************************************************/

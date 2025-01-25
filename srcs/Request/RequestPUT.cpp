@@ -277,11 +277,6 @@ error_t RequestPUT::workIn(void) {
 	return (REQ_DONE);
 }
 
-error_t RequestPUT::workOut(void) {
-	throw std::logic_error("RequestPUT::workOut should not be called");
-	return (REQ_DONE);
-}
-
 ARequest *RequestPUT::clone(void) const {
 	// std::cerr << "RequestPUT clone" << std::endl;
 	return (new RequestPUT(*this));

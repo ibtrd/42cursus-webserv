@@ -288,11 +288,6 @@ error_t RequestPOST::workIn(void) {
 	return (REQ_DONE);
 }
 
-error_t RequestPOST::workOut(void) {
-	throw std::logic_error("RequestPOST::workOut should not be called");
-	return (REQ_DONE);
-}
-
 ARequest *RequestPOST::clone(void) const {
 	// std::cerr << "RequestPOST clone" << std::endl;
 	return (new RequestPOST(*this));

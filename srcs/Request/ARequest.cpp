@@ -63,6 +63,26 @@ ARequest &ARequest::operator=(const ARequest &other) {
 
 /* ************************************************************************** */
 
+error_t ARequest::workIn(void) {
+	throw std::logic_error("ARequest::workIn should not be called");
+	return (REQ_DONE);
+}
+
+error_t ARequest::workOut(void) {
+	throw std::logic_error("ARequest::workOut should not be called");
+	return (REQ_ERROR);
+}
+
+error_t ARequest::CGIIn(void) {
+	throw std::logic_error("ARequest::CGIIn should not be called");
+	return (REQ_ERROR);
+}
+
+error_t ARequest::CGIOut(void) {
+	throw std::logic_error("ARequest::CGIOut should not be called");
+	return (REQ_ERROR);
+}
+
 /* GETTERS ****************************************************************** */
 
 /* SETTERS ****************************************************************** */
