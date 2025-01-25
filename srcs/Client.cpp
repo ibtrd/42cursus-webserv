@@ -387,7 +387,6 @@ error_t Client::_sendResponse(void) {
 	std::cerr << ".";
 	ssize_t bytes;
 
-	this->_timestamp[SEND_TIMEOUT] = time(NULL);
 	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
 	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
@@ -397,6 +396,9 @@ error_t Client::_sendResponse(void) {
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
 			return (REQ_ERROR);
+		}
+		if (bytes > 0) {
+			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
 		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
