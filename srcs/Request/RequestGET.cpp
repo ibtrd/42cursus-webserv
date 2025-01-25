@@ -85,7 +85,7 @@ void RequestGET::_openCGI(void) {
 	if (this->_pid == 0) {
 		this->_executeCGI();
 	} else {
-		// close(this->_cgiSockets[CHILD_SOCKET]);
+		close(this->_context._cgiSockets[CHILD_SOCKET]);
 		// this->_registerFd(this->_cgiSockets[PARENT_SOCKET], EPOLLIN);
 		// SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		// UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);

@@ -87,10 +87,10 @@
 class Server;
 
 typedef struct RequestContext_s {
-	const Server            &server;
-	const ServerBlock       *serverBlock;
-	const LocationBlock     *ruleBlock;
-	struct sockaddr_in      addr;
+	Server              &server;
+	const ServerBlock   *serverBlock;
+	const LocationBlock *ruleBlock;
+	struct sockaddr_in  addr;
 
 	fd_t _cgiSockets[2];
 
@@ -108,7 +108,7 @@ typedef struct RequestContext_s {
 	Response    response;
 	std::string responseBuffer;
 
-	RequestContext_s(const Server &server, const struct sockaddr_in &addr)
+	RequestContext_s(Server &server, const struct sockaddr_in &addr)
 	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
 
 	RequestContext_s &operator=(const RequestContext_s &other) {
@@ -127,8 +127,8 @@ typedef struct RequestContext_s {
 		// this->addr.sin_port   = other.addr.sin_port;
 		// this->addr.sin_zero   = other.addr.sin_zero;
 
-		this->_cgiSockets[0] = other._cgiSockets[0];
-		this->_cgiSockets[1] = other._cgiSockets[1];
+		this->_cgiSockets[PARENT_SOCKET] = other._cgiSockets[PARENT_SOCKET];
+		this->_cgiSockets[CHILD_SOCKET] = other._cgiSockets[CHILD_SOCKET];
 
 		this->requestState  = other.requestState;
 		this->buffer        = other.buffer;

@@ -54,7 +54,7 @@ private:
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);
 
 public:
-	Client(const fd_t idSocket, const fd_t requestSocket, Server const &server,
+	Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	       const struct sockaddr_in &addr);
 	Client(const Client &other);
 
@@ -76,6 +76,8 @@ public:
 
 	// SETTERS
 	static void setEpollFd(const int32_t fd);
+
+	bool operator==(const Client &other) const;
 };
 
 #endif /* ******************************************************************* */

@@ -6,6 +6,7 @@
 #include <csignal>
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 #include "ft.hpp"
 
@@ -256,6 +257,18 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 	return fd;
 }
 
+error_t Server::addCGIToClientMap(const fd_t socket, const Client &client) {
+	std::cerr << "Adding cgi socket: " << socket << std::endl;
+	std::list<Client>::iterator itClient = std::find(this->_clients.begin(), this->_clients.end(), client);
+	if (itClient == this->_clients.end()) {
+		return -1;
+	}
+	this->_fdClientMap[socket] = itClient;
+	return 0;
+}
+
+/* ************************************************************************** */
+
 error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 	struct sockaddr_in clientAddr;
 	socklen_t          clientAddrLen = sizeof(clientAddr);
@@ -282,16 +295,23 @@ void Server::_removeConnection(const fd_t fd) {
 
 	std::cerr << "Removing client: " << fd << std::endl;
 
-	// const fd_t clientSocket = client->socket();
-	struct epoll_event clientEvent = client->clientEvent();
-	errno = 0;
-	if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, clientEvent.data.fd, NULL)) {
-		std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+	fd_t fds[2];
+	client->sockets(fds);
+	for (int i = 0; i < 2; ++i) {
+		if (fds[i] != -1) {
+			struct epoll_event event;
+			errno = 0;
+			if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[i], &event)) {
+				std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+				std::cerr << i << ". fd: " << fds[i] << std::endl;
+				throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+			}
+			this->_fdClientMap.erase(fds[i]);
+			close(fds[i]);
+		}
 	}
-	this->_fdClientMap.erase(clientEvent.data.fd);
-	close(clientEvent.data.fd);
 
-	std::cout << *client << std::endl;
+	std::cout << *client << std::endl;	// LOG
 	this->_clients.erase(client);
 }
 

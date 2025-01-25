@@ -25,7 +25,7 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 
 /* CONSTRUCTORS ************************************************************* */
 
-Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server,
+Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
     : _idSocket(idSocket),
     //   _socket(requestSocket),
@@ -69,12 +69,12 @@ Client::~Client(void) {
 	if (this->_request) {
 		delete this->_request;
 	}
-	if (this->_context._cgiSockets[PARENT_SOCKET] != -1) {
-		close(this->_context._cgiSockets[PARENT_SOCKET]);
-	}
-	if (this->_context._cgiSockets[CHILD_SOCKET] != -1) {
-		close(this->_context._cgiSockets[CHILD_SOCKET]);
-	}
+	// if (this->_context._cgiSockets[PARENT_SOCKET] != -1) {
+	// 	close(this->_context._cgiSockets[PARENT_SOCKET]);
+	// }
+	// if (this->_context._cgiSockets[CHILD_SOCKET] != -1) {
+	// 	close(this->_context._cgiSockets[CHILD_SOCKET]);
+	// }
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
@@ -348,6 +348,21 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
+	if (-1 == this->_context._cgiSockets[PARENT_SOCKET]) {
+		// add to epoll
+		struct epoll_event event;
+		event.events  = EPOLLIN;
+		event.data.fd = this->_context._cgiSockets[PARENT_SOCKET];
+		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_context._cgiSockets[PARENT_SOCKET], &event)) {
+			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
+			return REQ_ERROR;
+		}
+		// add to server clientbindmap
+		if (this->_context.server.addCGIToClientMap(this->_context._cgiSockets[PARENT_SOCKET], *this)) {
+			std::cerr << "Error: addCGIToClientMap" << std::endl;
+			return REQ_ERROR;
+		}
+	}
 	if (this->_context.response.statusCode() != STATUS_NONE) {
 		return REQ_CONTINUE;
 	}
@@ -399,9 +414,9 @@ error_t Client::_openErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
 	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
-		std::cerr << "Error page requested before workIn was marked completed" << std::endl;	// DEBUG
+		std::cerr << "[Info] page requested before workIn was marked completed" << std::endl;	// DEBUG
 	} else {
-		std::cerr << "Error page requested after workIn was marked completed" << std::endl;	// DEBUG
+		std::cerr << "[Info] page requested after workIn was marked completed" << std::endl;	// DEBUG
 	}
 
 	if (!this->_context.serverBlock) {
@@ -611,7 +626,7 @@ fd_t Client::socket(void) const { return this->_clientEvent.data.fd; }
 
 void Client::sockets(fd_t fds[2]) const {
 	fds[0] = this->_clientEvent.data.fd;
-	fds[1] = -1;
+	fds[1] = this->_context._cgiSockets[PARENT_SOCKET];
 }
 
 /* SETTERS ****************************************************************** */
@@ -641,3 +656,5 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	os << std::endl;
 	return os;
 }
+
+bool Client::operator==(const Client &other) const { return (this->_idSocket == other._idSocket); }
