@@ -65,10 +65,10 @@ std::string Response::response(void) const {
 	for (headers_t::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++) {
 		response += it->first + ": " + it->second + "\r\n";
 	}
-	response += "\r\n";
 	if (this->_isCgi == true) {
 		return (response);
 	}
+	response += "\r\n";
 	response += this->_body;
 	return (response);
 }

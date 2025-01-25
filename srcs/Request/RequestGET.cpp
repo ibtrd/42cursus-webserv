@@ -6,6 +6,7 @@
 #include "Server.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
+#include "CgiBuilder.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -130,10 +131,10 @@ error_t RequestGET::_readCGI(void) {
 }
 
 error_t RequestGET::_executeCGI(void) {
-	// CgiBuilder builder(this);
+	CgiBuilder builder(this);
 
-	// char **envp = builder.envp();
-	// char **argv = builder.argv();
+	char **envp = builder.envp();
+	char **argv = builder.argv();
 
 	// std::cerr << "ARGV: " << std::endl;
 	// std::cerr << argv[0] << std::endl;
@@ -142,13 +143,17 @@ error_t RequestGET::_executeCGI(void) {
 	// std::cerr << "----------------" << std::endl;
 	// std::cerr << "ENV: " << builder << std::endl;
 
-	// dup2(this->_cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
-	// close(this->_cgiSockets[PARENT_SOCKET]);
+	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
+	close(this->_context._cgiSockets[PARENT_SOCKET]);
 
-	// execve(this->_cgiPath->string().c_str(), argv, envp);
-	execlp("/bin/ls", "ls", NULL, NULL);
+	execve(this->_cgiPath->string().c_str(), argv, envp);
+	// execlp("/bin/ls", "ls", NULL, NULL);
 
 	std::cerr << "execlp: " << strerror(errno) << std::endl;
+
+	CgiBuilder::destroy(envp);
+	CgiBuilder::destroy(argv);
+
 	exit(1);
 }
 

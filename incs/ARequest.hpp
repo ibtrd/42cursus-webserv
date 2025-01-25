@@ -30,7 +30,9 @@ public:
 	virtual error_t CGIIn(void);
 	virtual error_t CGIOut(void);
 
-	// bool	pathExists(void) const;
+	const RequestContext_t &context(void) const;
+	const Path &path(void) const;
+	const Path &cgiPath(void) const;
 
 	virtual ARequest *clone(void) const = 0;
 };
