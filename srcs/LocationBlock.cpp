@@ -67,6 +67,9 @@ void LocationBlock::fill(const LocationBlock &other) {
 			this->_indexes.push_back(DEFAULT_INDEX);
 		}
 	}
+	if (0 == this->_gcis.size()) {
+		this->_gcis = other._gcis;
+	}
 }
 
 /* SETTERS ****************************************************************** */
