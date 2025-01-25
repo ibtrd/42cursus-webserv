@@ -505,11 +505,6 @@ error_t Client::_handleSocketOut(void) {
 		return (ret);
 	}
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
-
-	close(this->_clientEvent.data.fd);
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_clientEvent.data.fd, NULL)) {
-		return (REQ_ERROR);
-	}
 	return (REQ_DONE);
 }
 
