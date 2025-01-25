@@ -19,6 +19,8 @@ RequestPOST::RequestPOST(RequestContext_t &context)
     : ARequest(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPOST created" << std::endl;
 	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);	// TMP
+	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);	// TMP
 	this->_contentTotalLength = 0;
 }
 

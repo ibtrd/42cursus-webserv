@@ -525,12 +525,12 @@ error_t Client::_handleSocketOut(void) {
 
 error_t Client::_handleCGIIn(void) {
 	std::cerr << "CGI in" << std::endl;
-	return (REQ_ERROR);
+	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
 	std::cerr << "CGI out" << std::endl;
-	return (REQ_ERROR);
+	return (this->_request->CGIOut());
 }
 
 /* ************************************************************************** */
@@ -572,6 +572,7 @@ error_t Client::timeoutCheck(const time_t now) {
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
+		this->_context.response.disableIsCgi();
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
@@ -594,6 +595,7 @@ error_t Client::timeoutCheck(const time_t now) {
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
+		this->_context.response.disableIsCgi();
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();

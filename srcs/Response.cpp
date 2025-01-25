@@ -94,6 +94,6 @@ void Response::clearBody(void) { this->_body.clear(); }
 
 void Response::enableIsCgi(void) { this->_isCgi = true; }
 
-void Response::diableIsCgi(void) { this->_isCgi = false; }
+void Response::disableIsCgi(void) { this->_isCgi = false; }
 
 /* EXCEPTIONS *************************************************************** */

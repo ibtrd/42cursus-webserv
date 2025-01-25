@@ -12,6 +12,8 @@
 RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL) {
 	// std::cerr << "RequestGET created" << std::endl;
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
+	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
+		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 }
 
 RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
@@ -86,12 +88,10 @@ void RequestGET::_openCGI(void) {
 		this->_executeCGI();
 	} else {
 		close(this->_context._cgiSockets[CHILD_SOCKET]);
-		// this->_registerFd(this->_cgiSockets[PARENT_SOCKET], EPOLLIN);
-		// SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
-		// UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		// this->_context.response.enableIsCgi();
-		// std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
-		this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);	// DEBUG
+		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
+		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+		this->_context.response.enableIsCgi();
+		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
 	}
 }
 
@@ -103,6 +103,26 @@ error_t RequestGET::_readFile(void) {
 	if (bytes == 0) {
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		return (REQ_CONTINUE);
+	}
+
+	this->_context.responseBuffer.append(buffer, bytes);
+	return (REQ_CONTINUE);
+}
+
+error_t RequestGET::_readCGI(void) {
+	uint8_t buffer[REQ_BUFFER_SIZE];
+
+	ssize_t bytes = read(this->_context._cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
+	if (bytes == 0) {
+		std::cerr << "read: EOF" << std::endl;
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		return (REQ_CONTINUE);
+	}
+	if (bytes == -1) {
+		std::cerr << "read: " << strerror(errno) << std::endl;
+		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		return (REQ_ERROR);
 	}
 
 	this->_context.responseBuffer.append(buffer, bytes);
@@ -211,8 +231,7 @@ error_t RequestGET::workOut(void) {
 }
 
 error_t RequestGET::CGIIn(void) {
-	throw std::logic_error("RequestGET::CGIIn should not be called");
-	return (REQ_ERROR);
+	return (this->_readCGI());
 }
 
 ARequest *RequestGET::clone(void) const {

@@ -37,7 +37,7 @@ public:
 	void clearBody(void);
 
 	void enableIsCgi(void);
-	void diableIsCgi(void);
+	void disableIsCgi(void);
 };
 
 #endif /* ******************************************************************* */
