@@ -348,7 +348,7 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
-	if (-1 == this->_context._cgiSockets[PARENT_SOCKET]) {
+	if (-1 != this->_context._cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
 		event.events  = EPOLLIN;

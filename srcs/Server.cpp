@@ -295,6 +295,19 @@ void Server::_removeConnection(const fd_t fd) {
 
 	std::cerr << "Removing client: " << fd << std::endl;
 
+
+	// // DEBUG
+	// std::cerr << "\nclientmap on remove check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list on remove check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
+
 	fd_t fds[2];
 	client->sockets(fds);
 	for (int i = 0; i < 2; ++i) {
