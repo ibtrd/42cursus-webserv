@@ -5,13 +5,8 @@
 
 #include "ARequest.hpp"
 
-// # define CHUMK_TERMINATOR "0\r\n\r\n"
-#define CHUNK_TERMINATOR_SIZE 5
-
 class RequestPUT : public ARequest {
 private:
-	static const char *_chunkTerminator[CHUNK_TERMINATOR_SIZE];
-
 	std::ofstream _file;
 	Path          _tmpFilename;
 
@@ -36,8 +31,9 @@ public:
 	RequestPUT &operator=(const RequestPUT &other);
 
 	void      processing(void);
+	
 	error_t   workIn(void);
-	error_t   workOut(void);
+
 	ARequest *clone(void) const;
 };
 

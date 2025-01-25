@@ -1,11 +1,14 @@
 SRCS_DIR = srcs/
 SRC = \
+	BinaryBuffer \
 	Client \
+	CgiBuilder \
 	ft \
 	LocationBlock \
 	main \
 	Method \
 	Path \
+	Queries \
 	Response \
 	Server \
 	ServerBlock \

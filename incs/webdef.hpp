@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+#define WEBSERV_VERSION "webserv/0.5"
+
 typedef int32_t error_t;
 typedef int     fd_t;
 

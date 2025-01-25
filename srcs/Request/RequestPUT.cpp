@@ -8,11 +8,6 @@
 
 #include "ft.hpp"
 
-/* STATIC VARIABLES ********************************************************* */
-
-const char *RequestPUT::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0\r\n\r", "0\r\n",
-                                                                   "0\r", "0"};
-
 /* CONSTRUCTORS ************************************************************* */
 
 // RequestPUT::RequestPUT(void)
@@ -24,6 +19,8 @@ RequestPUT::RequestPUT(RequestContext_t &context)
     : ARequest(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPUT created" << std::endl;
 	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);	// TMP
+	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);	// TMP
 	this->_contentTotalLength = 0;
 }
 
@@ -201,11 +198,11 @@ error_t RequestPUT::_readChunked(void) {
 			}
 			// Read end of transfer
 			if (this->_contentLength == 0) {
-				if (0 == this->_context.buffer.compare(RequestPUT::_chunkTerminator[0])) {
+				if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[0])) {
 					this->_saveFile();
 				} else {
 					for (size_t i = 1; i < CHUNK_TERMINATOR_SIZE; ++i) {
-						if (0 == this->_context.buffer.compare(RequestPUT::_chunkTerminator[i])) {
+						if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[i])) {
 							this->_contentLength = -1;
 							return (REQ_CONTINUE);
 						}
@@ -279,11 +276,6 @@ error_t RequestPUT::workIn(void) {
 	} else {
 		return (this->_readContent());
 	}
-	return (REQ_DONE);
-}
-
-error_t RequestPUT::workOut(void) {
-	throw std::logic_error("RequestPUT::workOut should not be called");
 	return (REQ_DONE);
 }
 

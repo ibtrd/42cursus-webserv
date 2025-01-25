@@ -1,6 +1,8 @@
-#ifndef REQUESTCONTEXT
-#define REQUESTCONTEXT
+#ifndef REQUESTCONTEXT_HPP
+#define REQUESTCONTEXT_HPP
 
+#include "BinaryBuffer.hpp"
+#include "Queries.hpp"
 #include "Response.hpp"
 #include "ServerBlock.hpp"
 
@@ -10,6 +12,9 @@
 #define REQ_CONTINUE 0  // Incomplete task, skip to next call
 #define REQ_DONE 1      // Done with current task
 #define REQ_ERROR 2     // Program error
+
+#define PARENT_SOCKET 0
+#define CHILD_SOCKET 1
 
 // Request state flags
 
@@ -27,12 +32,16 @@
 #define REQ_STATE_WORK_IN_COMPLETE 0x00000010
 // The proccessing on socket out is complete
 #define REQ_STATE_WORK_OUT_COMPLETE 0x00000020
+// The proccessing on CGI socket in is complete
+#define REQ_STATE_CGI_IN_COMPLETE 0x00000040
+// The proccessing on CGI socket out is complete
+#define REQ_STATE_CGI_OUT_COMPLETE 0x00000080
 // The proccessing is complete
-#define REQ_STATE_WORK_COMPLETE 0x00000030
+#define REQ_STATE_WORK_COMPLETE 0x000000F0
 // The response can be written
-#define REQ_STATE_CAN_WRITE 0x00000040
+#define REQ_STATE_CAN_WRITE 0x00000100
 // The response has been written
-#define REQ_STATE_WRITE_COMPLETE 0x00000080
+#define REQ_STATE_WRITE_COMPLETE 0x00000200
 
 #define IS_REQ_READ_REQUEST_LINE_COMPLETE(x) \
 	((x & REQ_STATE_READ_REQUEST_LINE_COMPLETE) == REQ_STATE_READ_REQUEST_LINE_COMPLETE)
@@ -44,6 +53,9 @@
 #define IS_REQ_WORK_IN_COMPLETE(x) ((x & REQ_STATE_WORK_IN_COMPLETE) == REQ_STATE_WORK_IN_COMPLETE)
 #define IS_REQ_WORK_OUT_COMPLETE(x) \
 	((x & REQ_STATE_WORK_OUT_COMPLETE) == REQ_STATE_WORK_OUT_COMPLETE)
+#define IS_REQ_CGI_IN_COMPLETE(x) ((x & REQ_STATE_CGI_IN_COMPLETE) == REQ_STATE_CGI_IN_COMPLETE)
+#define IS_REQ_CGI_OUT_COMPLETE(x) \
+	((x & REQ_STATE_CGI_OUT_COMPLETE) == REQ_STATE_CGI_OUT_COMPLETE)
 #define IS_REQ_WORK_COMPLETE(x) ((x & REQ_STATE_WORK_COMPLETE) == REQ_STATE_WORK_COMPLETE)
 #define IS_REQ_CAN_WRITE(x) ((x & REQ_STATE_CAN_WRITE) == REQ_STATE_CAN_WRITE)
 #define IS_REQ_WRITE_COMPLETE(x) ((x & REQ_STATE_WRITE_COMPLETE) == REQ_STATE_WRITE_COMPLETE)
@@ -54,11 +66,14 @@
 #define SET_REQ_READ_COMPLETE(x) (x |= REQ_STATE_READ_COMPLETE)
 #define SET_REQ_WORK_IN_COMPLETE(x) (x |= REQ_STATE_WORK_IN_COMPLETE)
 #define SET_REQ_WORK_OUT_COMPLETE(x) (x |= REQ_STATE_WORK_OUT_COMPLETE)
+#define SET_REQ_CGI_IN_COMPLETE(x) (x |= REQ_STATE_CGI_IN_COMPLETE)
+#define SET_REQ_CGI_OUT_COMPLETE(x) (x |= REQ_STATE_CGI_OUT_COMPLETE)
 #define SET_REQ_WORK_COMPLETE(x) (x |= REQ_STATE_WORK_COMPLETE)
 #define SET_REQ_CAN_WRITE(x) (x |= REQ_STATE_CAN_WRITE)
 #define SET_REQ_WRITE_COMPLETE(x) (x |= REQ_STATE_WRITE_COMPLETE)
 
 #define UNSET_REQ_WORK_OUT_COMPLETE(x) (x &= ~REQ_STATE_WORK_OUT_COMPLETE)
+#define UNSET_REQ_CGI_IN_COMPLETE(x) (x &= ~REQ_STATE_CGI_IN_COMPLETE)
 
 #define RETURN_UNLESS(ret, code) \
 	if (ret != code) {           \
@@ -82,24 +97,60 @@
 class Server;
 
 typedef struct RequestContext_s {
-	const Server        &server;
+	Server              &server;
 	const ServerBlock   *serverBlock;
 	const LocationBlock *ruleBlock;
+	struct sockaddr_in  addr;
 
-	uint32_t    requestState;
-	std::string buffer;
+	fd_t _cgiSockets[2];
+	pid_t _pid;
+
+	uint32_t     requestState;
+	BinaryBuffer buffer;
 
 	Method      method;
 	std::string target;
 	std::string protocolVersion;
 
+	Queries queries;
+
 	headers_t headers;
 
-	Response    response;
-	std::string responseBuffer;
+	Response     response;
+	BinaryBuffer responseBuffer;
 
-	RequestContext_s(const Server &server) : server(server), serverBlock(NULL), ruleBlock(NULL) {}
+	RequestContext_s(Server &server, const struct sockaddr_in &addr)
+	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
+
+	RequestContext_s &operator=(const RequestContext_s &other) {
+		if (this == &other) {
+			return (*this);
+		}
+		this->serverBlock   = other.serverBlock;
+		this->ruleBlock     = other.ruleBlock;
+
+		this->addr = other.addr;
+
+		this->_cgiSockets[PARENT_SOCKET] = other._cgiSockets[PARENT_SOCKET];
+		this->_cgiSockets[CHILD_SOCKET] = other._cgiSockets[CHILD_SOCKET];
+		this->_pid = other._pid;
+
+		this->requestState  = other.requestState;
+		this->buffer        = other.buffer;
+
+		this->method        = other.method;
+		this->target        = other.target;
+		this->protocolVersion = other.protocolVersion;
+
+		this->queries       = other.queries;
+		this->headers       = other.headers;
+
+		this->response      = other.response;
+		this->responseBuffer = other.responseBuffer;
+		return (*this);
+	}
 
 } RequestContext_t;
+
 
 #endif

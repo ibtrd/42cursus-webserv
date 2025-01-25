@@ -15,7 +15,7 @@
 #include "ft.hpp"
 #include "webservHTML.hpp"
 
-char Client::_readBuffer[REQ_BUFFER_SIZE];
+uint8_t Client::_readBuffer[REQ_BUFFER_SIZE];
 
 int32_t Client::_epollFd = -1;
 
@@ -25,13 +25,12 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 
 /* CONSTRUCTORS ************************************************************* */
 
-Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &server,
+Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
     : _idSocket(idSocket),
-      _socket(requestSocket),
-      _addr(addr),
+    //   _socket(requestSocket),
       _request(NULL),
-      _context(server),
+      _context(server, addr),
       _bytesSent(0) {
 	// std::cerr << "Client created" << std::endl;
 	if (server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
@@ -39,20 +38,31 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, const Server &serv
 	}
 	this->_timestamp[CLIENT_BODY_TIMEOUT] = std::numeric_limits<time_t>::max();
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
+	this->_clientEvent.events             = EPOLLIN;
+	this->_clientEvent.data.fd            = requestSocket;
+	this->_context._cgiSockets[PARENT_SOCKET] = -1;
+	this->_context._cgiSockets[CHILD_SOCKET]  = -1;
+	this->_context._pid                       = -1;
 	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
 }
 
 Client::Client(const Client &other)
     : _idSocket(other._idSocket),
-      _socket(other._socket),
-      _addr(other._addr),
       _request(other._request),
       _context(other._context),
-      // _errorPage(other._errorPage),
       _bytesSent(other._bytesSent) {
-	// std::cerr << "Client copy" << std::endl;
-	*this = other;
+	std::cerr << "[WARNING] Client copy" << std::endl;	// Not updated
+
+	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
+		this->_timestamp[i] = other._timestamp[i];
+	}
+
+	this->_clientEvent.events = other._clientEvent.events;
+	this->_clientEvent.data   = other._clientEvent.data;
+
+	// context
+	this-> _context = other._context;
 }
 
 Client::~Client(void) {
@@ -60,12 +70,18 @@ Client::~Client(void) {
 	if (this->_request) {
 		delete this->_request;
 	}
+	// if (this->_context._cgiSockets[PARENT_SOCKET] != -1) {
+	// 	close(this->_context._cgiSockets[PARENT_SOCKET]);
+	// }
+	// if (this->_context._cgiSockets[CHILD_SOCKET] != -1) {
+	// 	close(this->_context._cgiSockets[CHILD_SOCKET]);
+	// }
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Client &Client::operator=(const Client &other) {
-	// std::cerr << "Client assign" << std::endl;
+	std::cerr << "[WARNING] Client assign" << std::endl;	// Not updated
 	if (this == &other) {
 		return (*this);
 	}
@@ -83,17 +99,8 @@ Client &Client::operator=(const Client &other) {
 		this->_timestamp[i] = other._timestamp[i];
 	}
 
-	this->_context.serverBlock     = other._context.serverBlock;
-	this->_context.ruleBlock       = other._context.ruleBlock;
-	this->_context.requestState    = other._context.requestState;
-	this->_context.buffer          = other._context.buffer;
-	this->_context.method          = other._context.method;
-	this->_context.target          = other._context.target;
-	this->_context.protocolVersion = other._context.protocolVersion;
-	this->_context.headers         = other._context.headers;
-	this->_context.response        = other._context.response;
-	this->_context.responseBuffer  = other._context.responseBuffer;
-	// this->_errorPage = other._errorPage;
+	this->_context = other._context;
+
 	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
@@ -157,7 +164,7 @@ const std::string Client::_requestStateStr(void) const {
 
 error_t Client::_readSocket(void) {
 	ssize_t bytes;
-	bytes = recv(this->_socket, Client::_readBuffer, REQ_BUFFER_SIZE, 0);
+	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, 0);
 	if (bytes == 0) {
 		std::cerr << "Client disconnected" << std::endl;
 		return (REQ_DONE);
@@ -166,9 +173,7 @@ error_t Client::_readSocket(void) {
 		std::cerr << "Client error" << std::endl;
 		return (REQ_ERROR);
 	}
-	Client::_readBuffer[bytes] = '\0';
-	this->_context.buffer += Client::_readBuffer;
-	Client::_readBuffer[0] = '\0';
+	this->_context.buffer.append(Client::_readBuffer, bytes);
 	return (REQ_CONTINUE);
 }
 
@@ -251,6 +256,13 @@ error_t Client::_parseRequestLine(void) {
 	}
 	requestLine.erase(0, pos + 1);
 
+	//  Query string
+		pos = this->_context.target.find('?');
+		if (pos != std::string::npos) {
+			this->_context.queries = Queries(this->_context.target.substr(pos + 1));
+			this->_context.target.erase(pos);
+		}
+
 	// Protocol version
 	this->_context.protocolVersion = requestLine;
 	if (this->_context.protocolVersion.empty()) {
@@ -264,9 +276,10 @@ error_t Client::_parseRequestLine(void) {
 		return (REQ_DONE);
 	}
 
-	// std::cerr << "method_t: |" << this->_context.method.string() << "|" << std::endl;
-	// std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-	// std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
+	std::cerr << "Method: |" << this->_context.method.string() << "|" << std::endl;
+	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
+	std::cerr << "Queries: |" << this->_context.queries.queryLine() << "|" << std::endl;
+	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
 
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
@@ -336,6 +349,21 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
+	if (-1 != this->_context._cgiSockets[PARENT_SOCKET]) {
+		// add to epoll
+		struct epoll_event event;
+		event.events  = EPOLLIN;
+		event.data.fd = this->_context._cgiSockets[PARENT_SOCKET];
+		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_context._cgiSockets[PARENT_SOCKET], &event)) {
+			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
+			return REQ_ERROR;
+		}
+		// add to server clientbindmap
+		if (this->_context.server.addCGIToClientMap(this->_context._cgiSockets[PARENT_SOCKET], *this)) {
+			std::cerr << "Error: addCGIToClientMap" << std::endl;
+			return REQ_ERROR;
+		}
+	}
 	if (this->_context.response.statusCode() != STATUS_NONE) {
 		return REQ_CONTINUE;
 	}
@@ -345,9 +373,9 @@ error_t Client::_resolveARequest(void) {
 error_t Client::_switchToWrite(void) {
 	struct epoll_event event;
 	event.events  = EPOLLOUT;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_socket, &event)) {
-		close(this->_socket);
+	event.data.fd = this->_clientEvent.data.fd;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
+		close(this->_clientEvent.data.fd);
 		return (-1);
 	}
 	SET_REQ_CAN_WRITE(this->_context.requestState);
@@ -359,23 +387,25 @@ error_t Client::_sendResponse(void) {
 	std::cerr << ".";
 	ssize_t bytes;
 
-	this->_timestamp[SEND_TIMEOUT] = time(NULL);
-	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.length()
-	                                     ? this->_context.responseBuffer.length()
+	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
+	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
 		// std::cerr << this->_context.responseBuffer.substr(0, bytes) << std::endl;
-		bytes = send(this->_socket, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
+		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
 			return (REQ_ERROR);
+		}
+		if (bytes > 0) {
+			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
 		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
-	if (0 == this->_context.responseBuffer.length() &&
+	if (0 == this->_context.responseBuffer.size() &&
 	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
@@ -383,13 +413,13 @@ error_t Client::_sendResponse(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t Client::_loadErrorPage(void) {
+error_t Client::_openErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
 	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
-		std::cerr << "Error page requested before workIn" << std::endl;  // DEBUG
+		std::cerr << "[Info] page requested before workIn was marked completed" << std::endl;	// DEBUG
 	} else {
-		std::cerr << "Error page requested after workIn" << std::endl;  // DEBUG
+		std::cerr << "[Info] page requested after workIn was marked completed" << std::endl;	// DEBUG
 	}
 
 	if (!this->_context.serverBlock) {
@@ -416,10 +446,22 @@ error_t Client::_loadErrorPage(void) {
 	return REQ_ERROR;
 }
 
-void Client::_readErrorPage(void) {
-	char buffer[REQ_BUFFER_SIZE];
+void Client::_loadErrorPage(void) {
+	if (this->_openErrorPage() == REQ_ERROR) {
+		std::string errorBody;
+		errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
+								statusCodeToMsg(this->_context.response.statusCode()));
+		this->_context.response.setBody(errorBody);
+		this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
+											ft::numToStr(errorBody.length()));
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+	}
+}
 
-	this->_errorPage.read(buffer, REQ_BUFFER_SIZE);
+void Client::_readErrorPage(void) {
+	uint8_t buffer[REQ_BUFFER_SIZE];
+
+	this->_errorPage.read((char *)buffer, REQ_BUFFER_SIZE);
 	ssize_t bytes = this->_errorPage.gcount();
 	if (bytes == 0) {
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
@@ -454,15 +496,7 @@ error_t Client::_handleSocketIn(void) {
 
 	if (this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
 		this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
-		if (this->_loadErrorPage() == REQ_ERROR) {
-			std::string errorBody;
-			errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-			                      statusCodeToMsg(this->_context.response.statusCode()));
-			this->_context.response.setBody(errorBody);
-			this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
-			                                  ft::numToStr(errorBody.length()));
-			SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		}
+		this->_loadErrorPage();
 	}
 	this->_context.responseBuffer = this->_context.response.response();
 	this->_context.response.clearBody();
@@ -489,41 +523,35 @@ error_t Client::_handleSocketOut(void) {
 		return (ret);
 	}
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
-
-	close(this->_socket);
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_DEL, this->_socket, NULL)) {
-		return (REQ_ERROR);
-	}
 	return (REQ_DONE);
 }
 
 error_t Client::_handleCGIIn(void) {
 	std::cerr << "CGI in" << std::endl;
-	return (REQ_ERROR);
+	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
 	std::cerr << "CGI out" << std::endl;
-	return (REQ_ERROR);
+	return (this->_request->CGIOut());
 }
 
 /* ************************************************************************** */
 
 error_t Client::init(void) {
 	this->_context.requestState = REQ_STATE_NONE;
-	struct epoll_event event;
-	event.events  = EPOLLIN;
-	event.data.fd = this->_socket;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_socket, &event)) {
-		close(this->_socket);
+
+	this->_clientEvent.events  = EPOLLIN;
+	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_clientEvent.data.fd, &this->_clientEvent)) {
+		close(this->_clientEvent.data.fd);
 		return (-1);
 	}
-	std::cerr << "Client(" << this->_socket << ") accepted!" << std::endl;
+	std::cerr << "Client(" << this->_clientEvent.data.fd << ") accepted!" << std::endl;
 	return (0);
 }
 
 error_t Client::handleIn(fd_t fd) {
-	if (fd == this->_socket) {
+	if (fd == this->_clientEvent.data.fd) {
 		return (this->_handleSocketIn());
 	} else {
 		return (this->_handleCGIIn());
@@ -531,7 +559,7 @@ error_t Client::handleIn(fd_t fd) {
 }
 
 error_t Client::handleOut(fd_t fd) {
-	if (fd == this->_socket) {
+	if (fd == this->_clientEvent.data.fd) {
 		return (this->_handleSocketOut());
 	} else {
 		return (this->_handleCGIOut());
@@ -543,12 +571,14 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_HEADER_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
-		std::cerr << "Client(" << this->_socket << ") header timeout detected!"
+		std::cerr << "Client(" << this->_clientEvent.data.fd << ") header timeout detected!"
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
+		this->_context.response.disableIsCgi();
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();
@@ -564,11 +594,13 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
-		std::cerr << "Client(" << this->_socket << ") body timeout detected!"
+		std::cerr << "Client(" << this->_clientEvent.data.fd << ") body timeout detected!"
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		this->_context.response.disableIsCgi();
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();
 
 		this->_context.responseBuffer = this->_context.response.response();
@@ -583,7 +615,7 @@ error_t Client::timeoutCheck(const time_t now) {
 	if (IS_REQ_CAN_WRITE(this->_context.requestState) &&
 	    this->_context.server.getTimeout(SEND_TIMEOUT) &&
 	    now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
-		std::cerr << "Client(" << this->_socket << ") send timeout detected!"
+		std::cerr << "Client(" << this->_clientEvent.data.fd << ") send timeout detected!"
 		          << std::endl;  // DEBUG
 		return (REQ_DONE);
 	}
@@ -593,12 +625,16 @@ error_t Client::timeoutCheck(const time_t now) {
 
 /* GETTERS ****************************************************************** */
 
-fd_t Client::socket(void) const { return this->_socket; }
+struct epoll_event Client::clientEvent(void) const { return this->_clientEvent; }
+
+fd_t Client::socket(void) const { return this->_clientEvent.data.fd; }
 
 void Client::sockets(fd_t fds[2]) const {
-	fds[0] = this->_socket;
-	fds[1] = -1;
+	fds[0] = this->_clientEvent.data.fd;
+	fds[1] = this->_context._cgiSockets[PARENT_SOCKET];
 }
+
+pid_t Client::cgiPid(void) const { return this->_context._pid; }
 
 /* SETTERS ****************************************************************** */
 
@@ -613,7 +649,7 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	std::strftime(buffer, sizeof(buffer), "%c",
 	              std::localtime(&client._timestamp[CLIENT_HEADER_TIMEOUT]));
 	char clientIP[INET_ADDRSTRLEN];
-	inet_ntop(AF_INET, &client._addr.sin_addr, clientIP, INET_ADDRSTRLEN);
+	inet_ntop(AF_INET, &client._context.addr.sin_addr, clientIP, INET_ADDRSTRLEN);
 	os << clientIP << " [" << buffer << "] ";
 	if (client._context.method.isValid()) {
 		os << '"' << client._context.method.string() << " " << client._context.target << " "
@@ -627,3 +663,5 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	os << std::endl;
 	return os;
 }
+
+bool Client::operator==(const Client &other) const { return (this->_idSocket == other._idSocket); }

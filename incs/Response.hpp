@@ -11,6 +11,8 @@ private:
 	// DEPRECATED
 	std::string _body;
 
+	bool _isCgi;
+
 public:
 	Response(void);
 	Response(const Response &other);
@@ -33,6 +35,9 @@ public:
 	void setBody(const std::string &body);
 	void addBody(const std::string &body);
 	void clearBody(void);
+
+	void enableIsCgi(void);
+	void disableIsCgi(void);
 };
 
 #endif /* ******************************************************************* */
