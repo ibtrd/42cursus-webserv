@@ -96,9 +96,9 @@ void RequestGET::_openCGI(void) {
 }
 
 error_t RequestGET::_readFile(void) {
-	char buffer[REQ_BUFFER_SIZE];
+	uint8_t buffer[REQ_BUFFER_SIZE];
 
-	this->_file.read(buffer, REQ_BUFFER_SIZE);
+	this->_file.read((char *)buffer, REQ_BUFFER_SIZE);
 	ssize_t bytes = this->_file.gcount();
 	if (bytes == 0) {
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);

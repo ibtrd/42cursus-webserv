@@ -19,6 +19,9 @@ public:
 	~BinaryBuffer(void);
 
 	BinaryBuffer &operator=(const BinaryBuffer &other);
+	BinaryBuffer &operator=(const std::vector<uint8_t> &buffer);
+	BinaryBuffer &operator=(const char *c_string);
+	BinaryBuffer &operator=(const std::string &str);
 
 	void append(const BinaryBuffer &other);
 	void append(const std::vector<uint8_t> &buffer);

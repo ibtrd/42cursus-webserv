@@ -387,8 +387,8 @@ error_t Client::_sendResponse(void) {
 	ssize_t bytes;
 
 	this->_timestamp[SEND_TIMEOUT] = time(NULL);
-	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.length()
-	                                     ? this->_context.responseBuffer.length()
+	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
+	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
 		// std::cerr << this->_context.responseBuffer.substr(0, bytes) << std::endl;
@@ -402,7 +402,7 @@ error_t Client::_sendResponse(void) {
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
-	if (0 == this->_context.responseBuffer.length() &&
+	if (0 == this->_context.responseBuffer.size() &&
 	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
@@ -456,9 +456,9 @@ void Client::_loadErrorPage(void) {
 }
 
 void Client::_readErrorPage(void) {
-	char buffer[REQ_BUFFER_SIZE];
+	uint8_t buffer[REQ_BUFFER_SIZE];
 
-	this->_errorPage.read(buffer, REQ_BUFFER_SIZE);
+	this->_errorPage.read((char *)buffer, REQ_BUFFER_SIZE);
 	ssize_t bytes = this->_errorPage.gcount();
 	if (bytes == 0) {
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);

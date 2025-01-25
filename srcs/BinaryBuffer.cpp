@@ -22,6 +22,21 @@ BinaryBuffer &BinaryBuffer::operator=(const BinaryBuffer &other) {
 	return (*this);
 }
 
+BinaryBuffer &BinaryBuffer::operator=(const std::vector<uint8_t> &buffer) {
+	this->_buffer = buffer;
+	return (*this);
+}
+
+BinaryBuffer &BinaryBuffer::operator=(const char *c_string) {
+	this->_buffer.assign(c_string, c_string + strlen(c_string));
+	return (*this);
+}
+
+BinaryBuffer &BinaryBuffer::operator=(const std::string &str) {
+	this->_buffer.assign(str.begin(), str.end());
+	return (*this);
+}
+
 void BinaryBuffer::append(const BinaryBuffer &other) {
 	this->_buffer.insert(this->_buffer.end(), other._buffer.begin(), other._buffer.end());
 }

@@ -105,8 +105,8 @@ typedef struct RequestContext_s {
 
 	headers_t headers;
 
-	Response    response;
-	std::string responseBuffer;
+	Response     response;
+	BinaryBuffer responseBuffer;
 
 	RequestContext_s(Server &server, const struct sockaddr_in &addr)
 	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
