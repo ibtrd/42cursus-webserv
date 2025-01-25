@@ -74,6 +74,7 @@
 
 #define UNSET_REQ_WORK_OUT_COMPLETE(x) (x &= ~REQ_STATE_WORK_OUT_COMPLETE)
 #define UNSET_REQ_CGI_IN_COMPLETE(x) (x &= ~REQ_STATE_CGI_IN_COMPLETE)
+#define UNSET_REQ_CGI_OUT_COMPLETE(x) (x &= ~REQ_STATE_CGI_OUT_COMPLETE)
 
 #define RETURN_UNLESS(ret, code) \
 	if (ret != code) {           \

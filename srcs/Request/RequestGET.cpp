@@ -181,7 +181,9 @@ error_t RequestGET::_validateLocalFile(void) {
 	if (this->_path.isFile()) {
 		if (this->_cgiPath) {
 			this->_openCGI();
+			std::cerr << "RequestGET CGIIIIIIIIIIII" << std::endl;
 		} else {
+			std::cerr << "RequestGET _validateLocalFile" << std::endl;
 			this->_openFile();
 		}
 		return (REQ_DONE);
@@ -192,7 +194,7 @@ error_t RequestGET::_validateLocalFile(void) {
 /* ************************************************************************** */
 
 void RequestGET::processing(void) {
-	// std::cerr << "RequestGET parse" << std::endl;
+	std::cerr << "RequestGET parse" << std::endl;
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;

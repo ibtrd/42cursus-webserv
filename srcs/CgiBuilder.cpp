@@ -91,7 +91,7 @@ void CgiBuilder::_addContext(const RequestContext_t &context) {
 	this->addEnvar("QUERY_STRING", context.queries.queryLine());
 	this->addEnvar("REDIRECT_STATUS", ft::numToStr(context.response.statusCode()));
 	this->addEnvar("PATH_INFO", context.target);
-	this->addEnvar("REQUEST_URI", context.target);
+	this->addEnvar("REQUEST_URI", context.target + context.queries.originalQueryLine());
 }
 
 void CgiBuilder::_addHeaders(const headers_t &headers) {
