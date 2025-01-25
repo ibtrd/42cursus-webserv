@@ -40,8 +40,8 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
 	this->_clientEvent.events             = EPOLLIN;
 	this->_clientEvent.data.fd            = requestSocket;
-	this->_context._cgiSockets[PARENT_SOCKET] = -1;
-	this->_context._cgiSockets[CHILD_SOCKET]  = -1;
+	this->_context._cgiSockets[0] = -1;
+	this->_context._cgiSockets[1]  = -1;
 	this->_context._pid                       = -1;
 	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
@@ -70,6 +70,7 @@ Client::~Client(void) {
 	if (this->_request) {
 		delete this->_request;
 	}
+	// std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
 	// if (this->_context._cgiSockets[PARENT_SOCKET] != -1) {
 	// 	close(this->_context._cgiSockets[PARENT_SOCKET]);
 	// }
@@ -142,6 +143,18 @@ const std::string Client::_requestStateStr(void) const {
 	}
 	str += ", workOut: ";
 	if (IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState)) {
+		str += "1";
+	} else {
+		str += "0";
+	}
+	str += ", cgiIn: ";
+	if (IS_REQ_CGI_IN_COMPLETE(this->_context.requestState)) {
+		str += "1";
+	} else {
+		str += "0";
+	}
+	str += ", cgiOut: ";
+	if (IS_REQ_CGI_OUT_COMPLETE(this->_context.requestState)) {
 		str += "1";
 	} else {
 		str += "0";
@@ -314,7 +327,7 @@ error_t Client::_parseHeaders(void) {
 		key                         = line.substr(0, pos);
 		value                       = line.substr(pos + 2);
 		this->_context.headers[key] = value;
-		// std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
+		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
 }
@@ -349,6 +362,7 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
+	std::cerr << "After processing status: " << this->_requestStateStr() << std::endl;
 	if (-1 != this->_context._cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
@@ -384,7 +398,7 @@ error_t Client::_switchToWrite(void) {
 
 error_t Client::_sendResponse(void) {
 	// std::cerr << "Sending response..." << std::endl;
-	std::cerr << ".";
+	// std::cerr << ".";
 	ssize_t bytes;
 
 	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()

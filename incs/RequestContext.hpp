@@ -132,8 +132,8 @@ typedef struct RequestContext_s {
 
 		this->addr = other.addr;
 
-		this->_cgiSockets[PARENT_SOCKET] = other._cgiSockets[PARENT_SOCKET];
-		this->_cgiSockets[CHILD_SOCKET] = other._cgiSockets[CHILD_SOCKET];
+		this->_cgiSockets[0] = other._cgiSockets[0];
+		this->_cgiSockets[1] = other._cgiSockets[1];
 		this->_pid = other._pid;
 
 		this->requestState  = other.requestState;

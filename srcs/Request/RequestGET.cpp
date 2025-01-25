@@ -181,7 +181,7 @@ error_t RequestGET::_validateLocalFile(void) {
 	if (this->_path.isFile()) {
 		if (this->_cgiPath) {
 			this->_openCGI();
-			std::cerr << "RequestGET CGIIIIIIIIIIII" << std::endl;
+			std::cerr << "RequestGET CGIIIIIIIIIIII GET" << std::endl;
 		} else {
 			std::cerr << "RequestGET _validateLocalFile" << std::endl;
 			this->_openFile();
@@ -194,7 +194,7 @@ error_t RequestGET::_validateLocalFile(void) {
 /* ************************************************************************** */
 
 void RequestGET::processing(void) {
-	std::cerr << "RequestGET parse" << std::endl;
+	// std::cerr << "RequestGET parse" << std::endl;
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -206,7 +206,7 @@ void RequestGET::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
+	// std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/' + this->_context.queries.originalQueryLine());

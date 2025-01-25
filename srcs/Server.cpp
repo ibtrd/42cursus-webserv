@@ -61,26 +61,26 @@ void Server::routine(void) {
 		return;
 	}
 
-	std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
-	std::cerr << "nfds: " << nfds << std::endl;
+	// std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
+	// std::cerr << "nfds: " << nfds << std::endl;
 
-	for (int32_t i = 0; i < nfds; i++) {
-		std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
-	}
+	// for (int32_t i = 0; i < nfds; i++) {
+	// 	std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
+	// }
 
-	std::cerr << std::endl;
+	// std::cerr << std::endl;
 
-	// DEBUG
-	std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
-	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	     ++it) {
-		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	}
-	std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
-	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
-	}
-	// -----
+	// // DEBUG
+	// std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
 
 	// New connections and read events
 	for (int32_t i = 0; i < nfds; i++) {
@@ -119,17 +119,17 @@ void Server::routine(void) {
 		}
 	}
 
-	// DEBUG
-	std::cerr << "\nclientmap in|.|out check: " << this->_fdClientMap.size() << std::endl;
-	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	     ++it) {
-		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	}
-	std::cerr << "client list in|.|out check: " << this->_clients.size() << std::endl;
-	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
-	}
-	// -----
+	// // DEBUG
+	// std::cerr << "\nclientmap in|.|out check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list in|.|out check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
 
 	// Write events
 	for (int32_t i = 0; i < nfds; i++) {
@@ -161,31 +161,31 @@ void Server::routine(void) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
 	}
-	// DEBUG
-	std::cerr << "\nclientmap pre timeout check: " << this->_fdClientMap.size() << std::endl;
-	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	     ++it) {
-		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	}
-	std::cerr << "client list pre timeout check: " << this->_clients.size() << std::endl;
-	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
-	}
-	// -----
+	// // DEBUG
+	// std::cerr << "\nclientmap pre timeout check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list pre timeout check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
 
 	this->_checkClientsTimeout();
 
-	// DEBUG
-	std::cerr << "\nclientmap post timeout check: " << this->_fdClientMap.size() << std::endl;
-	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	     ++it) {
-		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	}
-	std::cerr << "client list post timeout check: " << this->_clients.size() << std::endl;
-	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
-	}
-	// -----
+	// // DEBUG
+	// std::cerr << "\nclientmap post timeout check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list post timeout check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
 }
 
 const std::string &Server::getMimeType(const std::string &ext) const {
@@ -341,14 +341,14 @@ void Server::_removeConnection(const fd_t fd) {
 		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], &event)) {
 			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
 			std::cerr << "fd: " << fds[1] << std::endl;
-			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+			// throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
 		this->_fdClientMap.erase(fds[1]);
 		close(fds[1]);
 		pid_t pid = client->cgiPid();
 		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
 			std::cerr << "Killing CGI process: " << pid << std::endl;
-			kill(pid, SIGKILL);
+			kill(pid, SIGINT);
 		}
 	}
 

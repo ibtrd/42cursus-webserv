@@ -40,7 +40,7 @@ public:
 
 	void      processing(void);
 	
-	// error_t   workIn(void);
+	error_t   workIn(void);
 
 	error_t   CGIIn(void);
 	// error_t   CGIOut(void);

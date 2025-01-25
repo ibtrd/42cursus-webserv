@@ -10,14 +10,17 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context) {
+RequestPOST::RequestPOST(RequestContext_t &context)
+	: ARequest(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPOST created" << std::endl;
-	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
+	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+	this->_contentTotalLength = 0;
 }
 
-RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other) {
+RequestPOST::RequestPOST(const RequestPOST &other)
+    : ARequest(other), _chunked(false), _contentLength(0) {
 	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
 }
@@ -43,7 +46,7 @@ void RequestPOST::_openCGI(void) {
 		return;
 	}
 
-	this->_context.response.setStatusCode(STATUS_OK);
+	// this->_context.response.setStatusCode(STATUS_OK);
 
 	this->_context._pid = fork();
 	if (-1 == this->_context._pid) {
@@ -63,6 +66,143 @@ void RequestPOST::_openCGI(void) {
 	}
 }
 
+void RequestPOST::_saveFile(void) {
+	std::cerr << "RequestPOST _saveFile AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA" << std::endl;
+	// usleep(500000);
+	// close(this->_context._cgiSockets[PARENT_SOCKET]);
+	shutdown(this->_context._cgiSockets[PARENT_SOCKET], SHUT_WR);
+	this->_context.response.setStatusCode(STATUS_OK);
+}
+
+error_t RequestPOST::_readContent(void) {
+	std::cerr << "RequestPOST _readContent" << std::endl;
+	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
+		ssize_t bytes = send(this->_context._cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
+		if (bytes == -1) {
+			std::cerr << "Error: send: " << strerror(errno) << std::endl;
+			throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+			return (REQ_ERROR);
+		}
+		this->_contentLength -= this->_context.buffer.size();
+		this->_context.buffer.clear();
+		// std::cerr << ".";	// DEBUG
+		std::cerr << "Remaining contentLength: " << this->_contentLength << std::endl;
+	} else {
+		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	if (this->_contentLength == 0) {
+		this->_saveFile();
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		return (REQ_DONE);
+	}
+	return (REQ_CONTINUE);
+}
+/*
+AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLMMMMMMMMMNNNNNNNNNOOOOOOOOOPPPPPPPPP
+*/
+error_t RequestPOST::_readChunked(void) {
+	std::cerr << "RequestPOST _readChunked" << std::endl;
+	ssize_t bytes = 0;
+
+	while (!this->_context.buffer.empty()) {
+		// std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
+
+		// Read end of chunk
+		if (this->_contentLength == 0) {
+			if (this->_context.buffer.size() >= 2) {
+				size_t pos = this->_context.buffer.rfind("\r\n", 0);
+				if (pos == std::string::npos) {
+					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+					SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+					return (REQ_DONE);
+				}
+				this->_context.buffer.erase(0, pos + 2);
+				this->_contentLength = -1;
+			} else if (this->_context.buffer.size() == 1 && this->_context.buffer[0] != '\r') {
+				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			} else {
+				return (REQ_CONTINUE);
+			}
+		}
+
+		// Read chunk size
+		if (-1 == this->_contentLength) {
+			// std::cerr << "RequestPOST contentLength -1" << std::endl;
+			size_t pos = this->_context.buffer.find("\r\n");
+			if (pos == std::string::npos) {
+				return (REQ_CONTINUE);
+			}
+			std::string line = this->_context.buffer.substr(0, pos);
+			if (line.empty()) {  // refuse empty chunk
+				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			}
+			// this->_context.buffer.erase(0, pos + 2);
+			this->_contentLength = sToContentLength(line, true);
+			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
+				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			}
+			// Read end of transfer
+			if (this->_contentLength == 0) {
+				if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[0])) {
+					this->_saveFile();
+				} else {
+					for (size_t i = 1; i < CHUNK_TERMINATOR_SIZE; ++i) {
+						if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[i])) {
+							this->_contentLength = -1;
+							return (REQ_CONTINUE);
+						}
+					}
+					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+				}
+
+				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			}
+			this->_context.buffer.erase(0, pos + 2);
+			this->_contentTotalLength += this->_contentLength;
+			if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
+			    this->_contentLength > this->_context.ruleBlock->getMaxBodySize() ||
+			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
+				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
+				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				return (REQ_DONE);
+			}
+		}
+		// std::cerr << "RequestPOST contentLength: " << this->_contentLength << std::endl;
+		// std::cerr << "RequestPOST content buffer: |" << this->_context.buffer << "|" << std::endl;
+
+		// Read chunk
+		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {
+			bytes = send(this->_context._cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_contentLength, MSG_NOSIGNAL);
+			if (bytes == -1) {
+				std::cerr << "Error: send: " << strerror(errno) << std::endl;
+				throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+				return (REQ_ERROR);
+			}
+			this->_context.buffer.erase(0, this->_contentLength);
+			this->_contentLength = 0;
+		} else if (static_cast<int32_t>(this->_context.buffer.size()) <= this->_contentLength) {
+			bytes = send(this->_context._cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
+			if (bytes == -1) {
+				std::cerr << "Error: send: " << strerror(errno) << std::endl;
+				throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+				return (REQ_ERROR);
+			}
+			this->_contentLength -= this->_context.buffer.size();
+			this->_context.buffer.clear();
+		}
+	}
+	return (REQ_CONTINUE);
+}
+
 error_t RequestPOST::_readCGI(void) {
 	uint8_t buffer[REQ_BUFFER_SIZE];
 
@@ -79,6 +219,12 @@ error_t RequestPOST::_readCGI(void) {
 		return (REQ_ERROR);
 	}
 
+	std::cerr << "RequestPOST _readCGI: " << bytes << std::endl;
+	std::cerr << "RequestPOST _readCGI: |";
+	for (ssize_t i = 0; i < bytes; ++i) {
+		std::cerr << buffer[i];
+	}
+	std::cerr << "|" << std::endl;
 	this->_context.responseBuffer.append(buffer, bytes);
 	return (REQ_CONTINUE);
 }
@@ -97,6 +243,8 @@ error_t RequestPOST::_executeCGI(void) {
 	// std::cerr << "ENV: " << builder << std::endl;
 
 	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
+	// dup2(this->_context._cgiSockets[CHILD_SOCKET], STDERR_FILENO);
+	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDIN_FILENO);
 	close(this->_context._cgiSockets[PARENT_SOCKET]);
 
 	execve(this->_cgiPath->string().c_str(), argv, envp);
@@ -110,6 +258,43 @@ error_t RequestPOST::_executeCGI(void) {
 	exit(1);
 }
 
+error_t RequestPOST::_checkHeaders(void) {
+	std::cerr << "CHECK HEADER" << std::endl;
+	headers_t::const_iterator it = this->_context.headers.find(HEADER_CONTENT_LENGTH);
+	if (it == this->_context.headers.end()) {
+		it = this->_context.headers.find(HEADER_TRANSFER_ENCODING);
+		if (it == this->_context.headers.end()) {
+			this->_context.response.setStatusCode(STATUS_LENGTH_REQUIRED);
+			return (REQ_DONE);
+		}
+		if (it->second != HEADER_TRANSFER_CHUNKE) {
+			this->_context.response.setStatusCode(STATUS_UNSUPPORTED_MEDIA_TYPE);
+			return (REQ_DONE);
+		}
+		this->_chunked = true;
+	}
+	if (!this->_chunked) {
+		this->_contentLength = sToContentLength(it->second, false);
+		if (this->_contentLength == CONTENT_LENGTH_INVALID) {
+			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
+			return (REQ_DONE);
+		}
+		if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
+		    this->_contentLength > this->_context.ruleBlock->getMaxBodySize()) {
+			this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
+			return (REQ_DONE);
+		}
+		if (this->_contentLength == 0) {
+			this->_context.response.setStatusCode(STATUS_NO_CONTENT);
+			return (REQ_DONE);
+		}
+		std::cerr << "QQQQQQQQQQQQQQQQQ RequestPOST contentLength: " << this->_contentLength << std::endl;
+	} else {
+		this->_contentLength = -1;
+	}
+	return (REQ_CONTINUE);
+}
+
 error_t RequestPOST::_validateLocalFile(void) {
 	if (0 != this->_path.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
@@ -121,7 +306,6 @@ error_t RequestPOST::_validateLocalFile(void) {
 	}
 	if (this->_path.isFile()) {
 		this->_openCGI();
-		std::cerr << "RequestPOST CGIIIIIIIIIIII" << std::endl;
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
@@ -130,7 +314,12 @@ error_t RequestPOST::_validateLocalFile(void) {
 /* ************************************************************************** */
 
 void RequestPOST::processing(void) {
-	std::cerr << "RequestPOST parse" << std::endl;
+	// std::cerr << "RequestPOST parse" << std::endl;
+	// Check headers
+	if (REQ_CONTINUE != this->_checkHeaders()) {
+		return;
+	}
+
 	if (!this->_cgiPath) {
 		this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);
 		return;
@@ -144,6 +333,16 @@ void RequestPOST::processing(void) {
 	}
 	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
 	this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);  // TESTER
+}
+
+error_t RequestPOST::workIn(void) {
+	std::cerr << "RequestPOST workIn" << std::endl;
+	if (this->_chunked) {
+		return (this->_readChunked());
+	} else {
+		return (this->_readContent());
+	}
+	return (REQ_DONE);
 }
 
 error_t RequestPOST::CGIIn(void) {
