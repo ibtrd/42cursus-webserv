@@ -85,7 +85,9 @@ void Server::routine(void) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
-			this->_addConnection(fd);
+			if (this->_addConnection(fd)) {
+				std::cerr << "Error adding connection" << std::endl;
+			}
 			continue;
 		}
 		if (this->_events[i].events & EPOLLIN) {
@@ -258,8 +260,10 @@ error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 	struct sockaddr_in clientAddr;
 	socklen_t          clientAddrLen = sizeof(clientAddr);
 
+	errno = 0;
 	int32_t requestSocket = accept(socket, (struct sockaddr *)&clientAddr, &clientAddrLen);
 	if (-1 == requestSocket) {
+		std::cerr << "Error: accept(): " << strerror(errno) << std::endl;
 		return -1;
 	}
 	this->_clients.push_front(Client(socket, requestSocket, *this, clientAddr));
@@ -278,10 +282,15 @@ void Server::_removeConnection(const fd_t fd) {
 
 	std::cerr << "Removing client: " << fd << std::endl;
 
-	const fd_t clientSocket = client->socket();
-	this->_fdClientMap.erase(clientSocket);
-	close(clientSocket);
-	epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, clientSocket, NULL);
+	// const fd_t clientSocket = client->socket();
+	struct epoll_event clientEvent = client->clientEvent();
+	errno = 0;
+	if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, clientEvent.data.fd, &clientEvent)) {
+		std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+		throw std::runtime_error("epoll_ctl()");
+	}
+	this->_fdClientMap.erase(clientEvent.data.fd);
+	close(clientEvent.data.fd);
 	// if (fds[1] != -1) {
 	// 	this->_fdClientMap.erase(fds[1]);
 	// 	close(fds[1]);

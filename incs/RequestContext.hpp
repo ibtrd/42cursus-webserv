@@ -13,6 +13,9 @@
 #define REQ_DONE 1      // Done with current task
 #define REQ_ERROR 2     // Program error
 
+#define PARENT_SOCKET 0
+#define CHILD_SOCKET 1
+
 // Request state flags
 
 // No state
@@ -87,7 +90,9 @@ typedef struct RequestContext_s {
 	const Server            &server;
 	const ServerBlock       *serverBlock;
 	const LocationBlock     *ruleBlock;
-	const struct sockaddr_in addr;
+	struct sockaddr_in      addr;
+
+	fd_t _cgiSockets[2];
 
 	uint32_t     requestState;
 	BinaryBuffer buffer;
@@ -106,6 +111,41 @@ typedef struct RequestContext_s {
 	RequestContext_s(const Server &server, const struct sockaddr_in &addr)
 	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
 
+	RequestContext_s &operator=(const RequestContext_s &other) {
+		if (this == &other) {
+			return (*this);
+		}
+		this->serverBlock   = other.serverBlock;
+		this->ruleBlock     = other.ruleBlock;
+
+		this->addr = other.addr;
+		// this->addr.sin_addr   = other.addr.sin_addr;
+		// this->addr.sin_addr.s_addr = other.addr.sin_addr.s_addr;
+
+		// this->addr.sin_family = other.addr.sin_family;
+		// this->addr.sin_family.
+		// this->addr.sin_port   = other.addr.sin_port;
+		// this->addr.sin_zero   = other.addr.sin_zero;
+
+		this->_cgiSockets[0] = other._cgiSockets[0];
+		this->_cgiSockets[1] = other._cgiSockets[1];
+
+		this->requestState  = other.requestState;
+		this->buffer        = other.buffer;
+
+		this->method        = other.method;
+		this->target        = other.target;
+		this->protocolVersion = other.protocolVersion;
+
+		this->queries       = other.queries;
+		this->headers       = other.headers;
+
+		this->response      = other.response;
+		this->responseBuffer = other.responseBuffer;
+		return (*this);
+	}
+
 } RequestContext_t;
+
 
 #endif

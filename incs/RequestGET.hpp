@@ -13,6 +13,7 @@ private:
 
 	std::ifstream _file;
 	DIR          *_dir;
+	pid_t         _pid;
 
 	void _openFile(void);
 	void _openDir(void);
@@ -21,10 +22,10 @@ private:
 	error_t _readFile(void);
 	error_t _readDir(void);
 
+	error_t _executeCGI(void);
+
 	error_t _fetchIndexes(void);
 	error_t _validateLocalFile(void);
-
-	error_t _executeCGI(void);
 
 public:
 	RequestGET(RequestContext_t &context);

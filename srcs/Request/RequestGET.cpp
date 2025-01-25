@@ -67,8 +67,32 @@ void RequestGET::_openDir(void) {
 }
 
 void RequestGET::_openCGI(void) {
-	std::cerr << "CGI not implemented" << std::endl;
-	this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
+	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context._cgiSockets)) {
+		std::cerr << "Error: socketpair: " << strerror(errno) << std::endl;
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return;
+	}
+
+	this->_context.response.setStatusCode(STATUS_OK);
+
+	this->_pid = fork();
+	if (-1 == this->_pid) {
+		std::cerr << "Error: fork: " << strerror(errno) << std::endl;
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return;
+	}
+
+	if (this->_pid == 0) {
+		this->_executeCGI();
+	} else {
+		// close(this->_cgiSockets[CHILD_SOCKET]);
+		// this->_registerFd(this->_cgiSockets[PARENT_SOCKET], EPOLLIN);
+		// SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
+		// UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+		// this->_context.response.enableIsCgi();
+		// std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
+		this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);	// DEBUG
+	}
 }
 
 error_t RequestGET::_readFile(void) {
@@ -83,6 +107,41 @@ error_t RequestGET::_readFile(void) {
 
 	this->_context.responseBuffer.append(buffer, bytes);
 	return (REQ_CONTINUE);
+}
+
+error_t RequestGET::_executeCGI(void) {
+	// CgiBuilder builder(this);
+
+	// char **envp = builder.envp();
+	// char **argv = builder.argv();
+
+	// std::cerr << "ARGV: " << std::endl;
+	// std::cerr << argv[0] << std::endl;
+	// std::cerr << argv[1] << std::endl;
+	// // std::cerr << argv[2] << std::endl;
+	// std::cerr << "----------------" << std::endl;
+	// std::cerr << "ENV: " << builder << std::endl;
+
+	// dup2(this->_cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
+	// close(this->_cgiSockets[PARENT_SOCKET]);
+
+	// execve(this->_cgiPath->string().c_str(), argv, envp);
+	execlp("/bin/ls", "ls", NULL, NULL);
+
+	std::cerr << "execlp: " << strerror(errno) << std::endl;
+	exit(1);
+}
+
+error_t RequestGET::_fetchIndexes(void) {
+	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
+	     it != this->_context.ruleBlock->indexes().end(); ++it) {
+		std::string test = this->_path.concat(*it);
+		if (0 == access(test.c_str(), F_OK)) {
+			this->_path = test;
+			return 0;
+		}
+	}
+	return -1;
 }
 
 error_t RequestGET::_validateLocalFile(void) {
@@ -103,18 +162,6 @@ error_t RequestGET::_validateLocalFile(void) {
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
-}
-
-error_t RequestGET::_fetchIndexes(void) {
-	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
-	     it != this->_context.ruleBlock->indexes().end(); ++it) {
-		std::string test = this->_path.concat(*it);
-		if (0 == access(test.c_str(), F_OK)) {
-			this->_path = test;
-			return 0;
-		}
-	}
-	return -1;
 }
 
 /* ************************************************************************** */

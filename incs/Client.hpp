@@ -1,6 +1,8 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
+#include <sys/epoll.h>
+
 #include <ctime>
 #include <fstream>
 #include <map>
@@ -19,7 +21,8 @@ private:
 
 	time_t                   _timestamp[TIMEOUT_COUNT];
 	const fd_t               _idSocket;
-	const fd_t               _socket;
+	struct epoll_event       _clientEvent;
+	// const fd_t               _socket;
 
 	ARequest        *_request;
 	RequestContext_t _context;
@@ -67,8 +70,9 @@ public:
 	error_t timeoutCheck(const time_t now);
 
 	// GETTERS
-	fd_t socket(void) const;
-	void sockets(fd_t fds[2]) const;
+	struct epoll_event clientEvent(void) const;
+	fd_t               socket(void) const;
+	void               sockets(fd_t fds[2]) const;
 
 	// SETTERS
 	static void setEpollFd(const int32_t fd);
