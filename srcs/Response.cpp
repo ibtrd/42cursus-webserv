@@ -14,14 +14,14 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-Response::Response(void) {
+Response::Response(void) : _isCgi(false) {
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode             = STATUS_NONE;
 	this->_reasonPhrase           = "";
 	this->_headers[HEADER_SERVER] = WEBSERV_VERSION; 
 };
 
-Response::Response(const Response &other) {
+Response::Response(const Response &other) : _isCgi(other._isCgi) {
 	// std::cerr << "Response copy" << std::endl;
 	*this = other;
 }
@@ -40,6 +40,7 @@ Response &Response::operator=(const Response &other) {
 	this->_statusCode   = other._statusCode;
 	this->_reasonPhrase = other._reasonPhrase;
 	this->_headers      = other._headers;
+	this->_isCgi        = other._isCgi;
 	return (*this);
 }
 
@@ -65,6 +66,9 @@ std::string Response::response(void) const {
 		response += it->first + ": " + it->second + "\r\n";
 	}
 	response += "\r\n";
+	if (this->_isCgi == true) {
+		return (response);
+	}
 	response += this->_body;
 	return (response);
 }
@@ -87,5 +91,9 @@ void Response::setBody(const std::string &body) { this->_body = body; }
 void Response::addBody(const std::string &body) { this->_body += body; }
 
 void Response::clearBody(void) { this->_body.clear(); }
+
+void Response::enableIsCgi(void) { this->_isCgi = true; }
+
+void Response::diableIsCgi(void) { this->_isCgi = false; }
 
 /* EXCEPTIONS *************************************************************** */
