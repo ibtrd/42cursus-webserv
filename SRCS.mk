@@ -2,7 +2,6 @@ SRCS_DIR = srcs/
 SRC = \
 	BinaryBuffer \
 	Client \
-	Env \
 	ft \
 	LocationBlock \
 	main \
