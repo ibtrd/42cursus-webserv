@@ -1,5 +1,5 @@
-#ifndef ENV_HPP
-#define ENV_HPP
+#ifndef CGIBUILDER_HPP
+#define CGIBUILDER_HPP
 
 #include <string>
 #include <vector>
