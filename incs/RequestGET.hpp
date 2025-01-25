@@ -13,7 +13,6 @@ private:
 
 	std::ifstream _file;
 	DIR          *_dir;
-	pid_t         _pid;
 
 	void _openFile(void);
 	void _openDir(void);

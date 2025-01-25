@@ -78,14 +78,14 @@ void RequestGET::_openCGI(void) {
 
 	this->_context.response.setStatusCode(STATUS_OK);
 
-	this->_pid = fork();
-	if (-1 == this->_pid) {
+	this->_context._pid = fork();
+	if (-1 == this->_context._pid) {
 		std::cerr << "Error: fork: " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
 
-	if (this->_pid == 0) {
+	if (this->_context._pid == 0) {
 		this->_executeCGI();
 	} else {
 		close(this->_context._cgiSockets[CHILD_SOCKET]);

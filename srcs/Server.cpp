@@ -2,6 +2,7 @@
 #include "Server.hpp"
 
 #include <arpa/inet.h>
+#include <sys/wait.h>
 
 #include <csignal>
 #include <fstream>
@@ -310,17 +311,44 @@ void Server::_removeConnection(const fd_t fd) {
 
 	fd_t fds[2];
 	client->sockets(fds);
-	for (int i = 0; i < 2; ++i) {
-		if (fds[i] != -1) {
-			struct epoll_event event;
-			errno = 0;
-			if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[i], &event)) {
-				std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
-				std::cerr << i << ". fd: " << fds[i] << std::endl;
-				throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
-			}
-			this->_fdClientMap.erase(fds[i]);
-			close(fds[i]);
+	// for (int i = 0; i < 2; ++i) {
+	// 	if (fds[i] != -1) {
+	// 		struct epoll_event event;
+	// 		errno = 0;
+	// 		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[i], &event)) {
+	// 			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+	// 			std::cerr << i << ". fd: " << fds[i] << std::endl;
+	// 			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+	// 		}
+	// 		this->_fdClientMap.erase(fds[i]);
+	// 		close(fds[i]);
+	// 	}
+	// }
+	if (fds[0] != -1) {
+		struct epoll_event event;
+		errno = 0;
+		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], &event)) {
+			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+			std::cerr << "fd: " << fds[0] << std::endl;
+			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+		}
+		this->_fdClientMap.erase(fds[0]);
+		close(fds[0]);
+	}
+	if (fds[1] != -1) {
+		struct epoll_event event;
+		errno = 0;
+		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], &event)) {
+			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+			std::cerr << "fd: " << fds[1] << std::endl;
+			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+		}
+		this->_fdClientMap.erase(fds[1]);
+		close(fds[1]);
+		pid_t pid = client->cgiPid();
+		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
+			std::cerr << "Killing CGI process: " << pid << std::endl;
+			kill(pid, SIGKILL);
 		}
 	}
 

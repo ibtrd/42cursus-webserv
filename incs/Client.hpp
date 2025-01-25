@@ -73,6 +73,7 @@ public:
 	struct epoll_event clientEvent(void) const;
 	fd_t               socket(void) const;
 	void               sockets(fd_t fds[2]) const;
+	pid_t              cgiPid(void) const;
 
 	// SETTERS
 	static void setEpollFd(const int32_t fd);

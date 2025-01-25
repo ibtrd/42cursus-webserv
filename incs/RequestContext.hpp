@@ -103,6 +103,7 @@ typedef struct RequestContext_s {
 	struct sockaddr_in  addr;
 
 	fd_t _cgiSockets[2];
+	pid_t _pid;
 
 	uint32_t     requestState;
 	BinaryBuffer buffer;
@@ -129,16 +130,10 @@ typedef struct RequestContext_s {
 		this->ruleBlock     = other.ruleBlock;
 
 		this->addr = other.addr;
-		// this->addr.sin_addr   = other.addr.sin_addr;
-		// this->addr.sin_addr.s_addr = other.addr.sin_addr.s_addr;
-
-		// this->addr.sin_family = other.addr.sin_family;
-		// this->addr.sin_family.
-		// this->addr.sin_port   = other.addr.sin_port;
-		// this->addr.sin_zero   = other.addr.sin_zero;
 
 		this->_cgiSockets[PARENT_SOCKET] = other._cgiSockets[PARENT_SOCKET];
 		this->_cgiSockets[CHILD_SOCKET] = other._cgiSockets[CHILD_SOCKET];
+		this->_pid = other._pid;
 
 		this->requestState  = other.requestState;
 		this->buffer        = other.buffer;

@@ -42,6 +42,7 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	this->_clientEvent.data.fd            = requestSocket;
 	this->_context._cgiSockets[PARENT_SOCKET] = -1;
 	this->_context._cgiSockets[CHILD_SOCKET]  = -1;
+	this->_context._pid                       = -1;
 	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
 }
@@ -630,6 +631,8 @@ void Client::sockets(fd_t fds[2]) const {
 	fds[0] = this->_clientEvent.data.fd;
 	fds[1] = this->_context._cgiSockets[PARENT_SOCKET];
 }
+
+pid_t Client::cgiPid(void) const { return this->_context._pid; }
 
 /* SETTERS ****************************************************************** */
 
