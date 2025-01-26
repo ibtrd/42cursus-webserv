@@ -83,7 +83,7 @@ void Server::routine(void) {
 	// // -----
 
 	// New connections and read events
-	for (int32_t i = 0; i < nfds; i++) {
+	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
@@ -94,25 +94,22 @@ void Server::routine(void) {
 		}
 		if (this->_events[i].events & EPOLLIN) {
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
-
 			if (it == this->_fdClientMap.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-
-			switch (it->second->handleIn(fd)) {
-				case REQ_ERROR:
+			try {
+				error_t err = it->second->handleIn(fd);
+				if (REQ_ERROR == err) {
 					std::cerr << "Close connection (Error)" << std::endl;
 					this->_removeConnection(fd);
-					break;
-
-				case REQ_DONE:
+				} else if (REQ_DONE == err) {
 					std::cerr << "Close connection (Done)" << std::endl;
 					this->_removeConnection(fd);
-					break;
-
-				default:
-					break;
+				}
+			} catch (std::exception &e) {
+				std::cerr << "Fatal: " << e.what();
+				this->_removeConnection(fd);
 			}
 		} else if (!(this->_events[i].events & EPOLLOUT)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
@@ -132,7 +129,7 @@ void Server::routine(void) {
 	// // -----
 
 	// Write events
-	for (int32_t i = 0; i < nfds; i++) {
+	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
@@ -142,20 +139,18 @@ void Server::routine(void) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-
-			switch (it->second->handleOut(fd)) {
-				case REQ_ERROR:
+			try {
+				error_t err = it->second->handleOut(fd);
+				if (REQ_ERROR == err) {
 					std::cerr << "Close connection (Error)" << std::endl;
 					this->_removeConnection(fd);
-					break;
-
-				case REQ_DONE:
+				} else if (REQ_DONE == err) {
 					std::cerr << "Close connection (Done)" << std::endl;
 					this->_removeConnection(fd);
-					break;
-
-				default:
-					break;
+				}
+			} catch (std::exception &e) {
+				std::cerr << "Fatal: " << e.what();
+				this->_removeConnection(fd);
 			}
 		} else if (!(this->_events[i].events & EPOLLIN)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
@@ -172,7 +167,12 @@ void Server::routine(void) {
 	// 	std::cerr << it->socket() << std::endl;
 	// }
 	// // -----
-
+	if (0 != g_signal) {
+		while (this->_clients.size()) {
+			this->_removeConnection(this->_clients.front().socket());
+		}
+		return;
+	}
 	this->_checkClientsTimeout();
 
 	// // DEBUG

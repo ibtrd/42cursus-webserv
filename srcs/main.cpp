@@ -31,7 +31,11 @@ int main(int argc, char *argv[]) {
 		return (1);
 	}
 	while (g_signal == 0) {
-		server.routine();
+		try {
+			server.routine();
+		} catch (std::exception &error) {
+			std::cerr << "Fatal: " << error.what() << std::endl;
+		}
 	}
 	return 0;
 }
