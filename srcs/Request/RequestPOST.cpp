@@ -250,11 +250,10 @@ error_t RequestPOST::_executeCGI(void) {
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 	// execlp("/bin/ls", "ls", NULL, NULL);
 
-	std::cerr << "execlp: " << strerror(errno) << std::endl;
+	std::cerr << "execve(): " << strerror(errno) << std::endl;
 
 	CgiBuilder::destroy(envp);
 	CgiBuilder::destroy(argv);
-
 	exit(1);
 }
 

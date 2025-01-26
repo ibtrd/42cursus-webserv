@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+#define HTTP_PROTOCOL_VERSION "HTTP/1.1"
+#define CGI_PROTOCOL_VERSION "CGI/1.1"
 #define WEBSERV_VERSION "webserv/0.5"
 
 typedef int32_t error_t;

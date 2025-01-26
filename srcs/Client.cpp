@@ -283,7 +283,7 @@ error_t Client::_parseRequestLine(void) {
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
-	if (this->_context.protocolVersion != PROTOCOLE_VERSION) {
+	if (this->_context.protocolVersion != HTTP_PROTOCOL_VERSION) {
 		this->_context.response.setStatusCode(STATUS_HTTP_VERSION_NOT_SUPPORTED);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
