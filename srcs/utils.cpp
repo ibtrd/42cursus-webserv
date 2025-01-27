@@ -7,6 +7,7 @@
 #include "RequestContext.hpp"
 #include "webdef.hpp"
 #include "webservHTML.hpp"
+#include "ft.hpp"
 
 std::string statusCodeToReason(const status_code_t code) {
 	switch (code) {

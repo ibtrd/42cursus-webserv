@@ -15,7 +15,7 @@ RequestPOST::RequestPOST(RequestContext_t &context)
 	// std::cerr << "RequestPOST created" << std::endl;
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 	// SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+	// SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 	this->_contentTotalLength = 0;
 }
 
@@ -65,7 +65,6 @@ void RequestPOST::_openCGI(void) {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		this->_context.response.enableIsCgi();
 		std::cerr << "RequestPOST CGI: " << this->_cgiPath->string() << std::endl;
 	}
 }
@@ -82,7 +81,7 @@ error_t RequestPOST::_readContent(void) {
 		ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
-			throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+			// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
 			return (REQ_ERROR);
 		}
 		this->_contentLength -= this->_context.buffer.size();
@@ -92,12 +91,12 @@ error_t RequestPOST::_readContent(void) {
 	} else {
 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return (REQ_CONTINUE);
 	}
 	if (this->_contentLength == 0) {
 		this->_saveFile();
 		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return (REQ_CONTINUE);
 	}
 	return (REQ_CONTINUE);
 }
@@ -118,14 +117,14 @@ error_t RequestPOST::_readChunked(void) {
 				if (pos == std::string::npos) {
 					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 					SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-					return (REQ_DONE);
+					return (REQ_CONTINUE);
 				}
 				this->_context.buffer.erase(0, pos + 2);
 				this->_contentLength = -1;
 			} else if (this->_context.buffer.size() == 1 && this->_context.buffer[0] != '\r') {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (REQ_CONTINUE);
 			} else {
 				return (REQ_CONTINUE);
 			}
@@ -142,14 +141,14 @@ error_t RequestPOST::_readChunked(void) {
 			if (line.empty()) {  // refuse empty chunk
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (REQ_CONTINUE);
 			}
 			// this->_context.buffer.erase(0, pos + 2);
 			this->_contentLength = sToContentLength(line, true);
 			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (REQ_CONTINUE);
 			}
 			// Read end of transfer
 			if (this->_contentLength == 0) {
@@ -166,7 +165,7 @@ error_t RequestPOST::_readChunked(void) {
 				}
 
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (REQ_CONTINUE);
 			}
 			this->_context.buffer.erase(0, pos + 2);
 			this->_contentTotalLength += this->_contentLength;
@@ -175,7 +174,7 @@ error_t RequestPOST::_readChunked(void) {
 			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
 				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (REQ_CONTINUE);
 			}
 		}
 		// std::cerr << "RequestPOST contentLength: " << this->_contentLength << std::endl;
@@ -186,7 +185,7 @@ error_t RequestPOST::_readChunked(void) {
 			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_contentLength, MSG_NOSIGNAL);
 			if (bytes == -1) {
 				std::cerr << "Error: send: " << strerror(errno) << std::endl;
-				throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+				// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
 				return (REQ_ERROR);
 			}
 			this->_context.buffer.erase(0, this->_contentLength);
@@ -195,39 +194,13 @@ error_t RequestPOST::_readChunked(void) {
 			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
 			if (bytes == -1) {
 				std::cerr << "Error: send: " << strerror(errno) << std::endl;
-				throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+				// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
 				return (REQ_ERROR);
 			}
 			this->_contentLength -= this->_context.buffer.size();
 			this->_context.buffer.clear();
 		}
 	}
-	return (REQ_CONTINUE);
-}
-
-error_t RequestPOST::_readCGI(void) {
-	uint8_t buffer[REQ_BUFFER_SIZE];
-
-	ssize_t bytes = read(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
-	if (bytes == 0) {
-		std::cerr << "read: EOF" << std::endl;
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
-	if (bytes == -1) {
-		std::cerr << "read: " << strerror(errno) << std::endl;
-		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_ERROR);
-	}
-
-	std::cerr << "RequestPOST _readCGI: " << bytes << std::endl;
-	std::cerr << "RequestPOST _readCGI: |";
-	for (ssize_t i = 0; i < bytes; ++i) {
-		std::cerr << buffer[i];
-	}
-	std::cerr << "|" << std::endl;
-	this->_context.responseBuffer.append(buffer, bytes);
 	return (REQ_CONTINUE);
 }
 
@@ -239,20 +212,20 @@ error_t RequestPOST::_executeCGI(void) {
 	char **envp = builder.envp();
 	char **argv = builder.argv();
 
-	std::cerr << "CGI-argv:\n";
-	for (uint32_t i = 0; argv[i]; ++i) {
-		std::cerr << argv[i] << "\n";
-	}
-	std::cerr << "CGI-envp:\n";
-	for (uint32_t i = 0; envp[i]; ++i) {
-		std::cerr << envp[i] << "\n";
-	}
-	std::cerr.flush();
+	// std::cerr << "CGI-argv:\n";
+	// for (uint32_t i = 0; argv[i]; ++i) {
+	// 	std::cerr << argv[i] << "\n";
+	// }
+	// std::cerr << "CGI-envp:\n";
+	// for (uint32_t i = 0; envp[i]; ++i) {
+	// 	std::cerr << envp[i] << "\n";
+	// }
+	// std::cerr.flush();
 
 	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
 	// dup2(this->_context.cgiSockets[CHILD_SOCKET], STDERR_FILENO);
 	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO);
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
+	// close(this->_context.cgiSockets[PARENT_SOCKET]);
 
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 

@@ -23,8 +23,6 @@ private:
 	error_t _readContent(void);
 	error_t _readChunked(void);
 
-	error_t _readCGI(void);
-
 	error_t _executeCGI(void);
 	
 	error_t _checkHeaders(void);

@@ -171,6 +171,12 @@ const std::string Client::_requestStateStr(void) const {
 	} else {
 		str += "0";
 	}
+	str += ", cgiHeaders: ";
+	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
+		str += "1";
+	} else {
+		str += "0";
+	}
 	str += "}";
 	return (str);
 }
@@ -187,6 +193,13 @@ error_t Client::_readSocket(void) {
 		return (REQ_ERROR);
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
+
+	std::cerr << "Client read size: " << bytes << std::endl;
+	std::cerr << "Client read data: |";
+	for (ssize_t i = 0; i < bytes; ++i) {
+		std::cerr << Client::_readBuffer[i];
+	}
+	std::cerr << "|" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -423,7 +436,7 @@ error_t Client::_sendResponse(void) {
 	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	std::cerr << "Response not fully sent" << std::endl;
+	// std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -486,8 +499,12 @@ void Client::_readErrorPage(void) {
 	return;
 }
 
+# include <iomanip>
+
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
+
+std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -512,17 +529,27 @@ error_t Client::_handleSocketIn(void) {
 		this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
 		this->_loadErrorPage();
 	}
-	this->_context.responseBuffer = this->_context.response.response();
-	this->_context.response.clearBody();
+
+	if (IS_REQ_CGI_IN_COMPLETE(this->_context.requestState)) {
+		this->_context.responseBuffer = this->_context.response.response();
+		this->_context.response.clearBody();
+		// return (REQ_CONTINUE);
+	}
+
 
 	if (this->_switchToWrite() == -1) {
 		return (REQ_ERROR);
 	}
+	
+	std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr() << std::endl;
+
 	return (REQ_CONTINUE);
 }
 
 error_t Client::_handleSocketOut(void) {
 	error_t ret;
+
+std::cerr << std::setw(45) << "_handleSocketOut req status start : " << this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) &&
 	    this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
@@ -534,6 +561,8 @@ error_t Client::_handleSocketOut(void) {
 	}
 
 	if ((ret = this->_sendResponse()) != REQ_DONE) {
+		std::cerr << std::setw(45) << "_handleSocketOut req status continue : " << this->_requestStateStr() << std::endl;
+
 		return (ret);
 	}
 	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
@@ -541,13 +570,18 @@ error_t Client::_handleSocketOut(void) {
 }
 
 error_t Client::_handleCGIIn(void) {
-	std::cerr << "CGI in" << std::endl;
+		std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr() << std::endl;
+	// std::cerr << "CGI in" << std::endl;
 	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
-	std::cerr << "CGI out" << std::endl;
-	return (this->_request->CGIOut());
+		std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr() << std::endl;
+	// std::cerr << "CGI out" << std::endl;
+	error_t ret = this->_request->CGIOut();
+
+		std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr() << std::endl;
+	return (ret);
 }
 
 /* ************************************************************************** */
@@ -589,7 +623,6 @@ error_t Client::timeoutCheck(const time_t now) {
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-		this->_context.response.disableIsCgi();
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
@@ -612,7 +645,6 @@ error_t Client::timeoutCheck(const time_t now) {
 		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
-		this->_context.response.disableIsCgi();
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		this->_loadErrorPage();

@@ -14,14 +14,14 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-Response::Response(void) : _isCgi(false) {
+Response::Response(void) {
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode             = STATUS_NONE;
 	this->_reasonPhrase           = "";
 	this->_headers[HEADER_SERVER] = WEBSERV_VERSION; 
 };
 
-Response::Response(const Response &other) : _isCgi(other._isCgi) {
+Response::Response(const Response &other) {
 	// std::cerr << "Response copy" << std::endl;
 	*this = other;
 }
@@ -40,7 +40,6 @@ Response &Response::operator=(const Response &other) {
 	this->_statusCode   = other._statusCode;
 	this->_reasonPhrase = other._reasonPhrase;
 	this->_headers      = other._headers;
-	this->_isCgi        = other._isCgi;
 	return (*this);
 }
 
@@ -56,7 +55,7 @@ std::string Response::statusLine(void) const {
 	return ("HTTP/1.1 " + ft::numToStr(this->_statusCode) + " " + this->_reasonPhrase + "\r\n");
 }
 
-std::string Response::header(const std::string &key) const { return (this->_headers.at(key)); }
+headers_t::iterator Response::header(const std::string &key) { return (this->_headers.find(key)); }
 
 std::string Response::body(void) const { return (this->_body); }
 
@@ -65,15 +64,16 @@ std::string Response::response(void) const {
 	for (headers_t::const_iterator it = this->_headers.begin(); it != this->_headers.end(); it++) {
 		response += it->first + ": " + it->second + "\r\n";
 	}
-	if (this->_isCgi == true) {
-		return (response);
-	}
 	response += "\r\n";
 	response += this->_body;
 	return (response);
 }
 
 size_t Response::bodySize(void) const { return (this->_body.size()); }
+
+headers_t::const_iterator Response::headersBegin(void) const { return (this->_headers.begin()); }
+
+headers_t::const_iterator Response::headersEnd(void) const { return (this->_headers.end()); }
 
 /* SETTERS ****************************************************************** */
 
@@ -86,14 +86,23 @@ void Response::setHeader(const std::string &key, const std::string &value) {
 	this->_headers[key] = value;
 }
 
+void Response::setReasonPhrase(const std::string &reasonPhrase) { this->_reasonPhrase = reasonPhrase; }
+
 void Response::setBody(const std::string &body) { this->_body = body; }
 
 void Response::addBody(const std::string &body) { this->_body += body; }
 
+void Response::deleteHeader(const std::string &key) { this->_headers.erase(key); }
+
 void Response::clearBody(void) { this->_body.clear(); }
 
-void Response::enableIsCgi(void) { this->_isCgi = true; }
+void Response::clearHeaders(void) { this->_headers.clear(); }
 
-void Response::disableIsCgi(void) { this->_isCgi = false; }
+void Response::clear(void) {
+	this->_statusCode   = STATUS_NONE;
+	this->_reasonPhrase = "";
+	this->_headers.clear();
+	this->_body.clear();
+}
 
 /* EXCEPTIONS *************************************************************** */

@@ -97,7 +97,6 @@ void RequestGET::_openCGI(void) {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		this->_context.response.enableIsCgi();
 		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
 	}
 }
@@ -113,32 +112,6 @@ error_t RequestGET::_readFile(void) {
 	}
 
 	this->_context.responseBuffer.append(buffer, bytes);
-	return (REQ_CONTINUE);
-}
-
-error_t RequestGET::_readCGI(void) {
-	uint8_t buffer[REQ_BUFFER_SIZE];
-
-	ssize_t bytes = read(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
-	if (bytes == 0) {
-		std::cerr << "read: EOF" << std::endl;
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
-	if (bytes == -1) {
-		std::cerr << "read: " << strerror(errno) << std::endl;
-		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_ERROR);
-	}
-	this->_context.responseBuffer.append(buffer, bytes);
-	// std::cerr << this->_context.responseBuffer  << std::endl;
-	// std::cerr << this->_context.response.statusCode() << std::endl;
-	// if (this->_context.response.statusCode() == STATUS_OK) {
-	// 	size_t pos = this->_context.responseBuffer.find("Status: ");
-	// 	if (pos != std::string::npos) {
-	// 	}
-	// }
 	return (REQ_CONTINUE);
 }
 

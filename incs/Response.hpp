@@ -11,8 +11,6 @@ private:
 	// DEPRECATED
 	std::string _body;
 
-	bool _isCgi;
-
 public:
 	Response(void);
 	Response(const Response &other);
@@ -21,23 +19,28 @@ public:
 
 	Response &operator=(const Response &other);
 
-	status_code_t statusCode(void) const;
-	std::string   reasonPhrase(void) const;
-	std::string   statusLine(void) const;
-	std::string   header(const std::string &key) const;
-	std::string   body(void) const;
-	std::string   response(void) const;
-	size_t        bodySize(void) const;
+	status_code_t             statusCode(void) const;
+	std::string               reasonPhrase(void) const;
+	std::string               statusLine(void) const;
+	headers_t::iterator       header(const std::string &key);
+	std::string               body(void) const;
+	std::string               response(void) const;
+	size_t                    bodySize(void) const;
+	headers_t::const_iterator headersBegin(void) const;
+	headers_t::const_iterator headersEnd(void) const;
 
 	void setStatusCode(const status_code_t &code);
 	void setHeader(const std::string &key, const std::string &value);
+	void setReasonPhrase(const std::string &reasonPhrase);
 	// DEPRECATED
 	void setBody(const std::string &body);
 	void addBody(const std::string &body);
-	void clearBody(void);
 
-	void enableIsCgi(void);
-	void disableIsCgi(void);
+	void deleteHeader(const std::string &key);
+
+	void clearBody(void);
+	void clearHeaders(void);
+	void clear(void);
 };
 
 #endif /* ******************************************************************* */

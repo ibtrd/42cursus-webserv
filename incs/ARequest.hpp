@@ -16,6 +16,9 @@ protected:
 	Path              _path;
 	const Path		  *_cgiPath;
 
+	error_t _readCGI(void);
+	void    _parseCGIHeaders(BinaryBuffer &buffer);
+
 public:
 	ARequest(RequestContext_t &context);
 	ARequest(const ARequest &other);
