@@ -40,9 +40,9 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
 	this->_clientEvent.events             = EPOLLIN;
 	this->_clientEvent.data.fd            = requestSocket;
-	this->_context._cgiSockets[0] = -1;
-	this->_context._cgiSockets[1]  = -1;
-	this->_context._pid                       = -1;
+	this->_context.cgiSockets[0] = -1;
+	this->_context.cgiSockets[1]  = -1;
+	this->_context.pid                       = -1;
 	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
 }
@@ -71,11 +71,11 @@ Client::~Client(void) {
 		delete this->_request;
 	}
 	// std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
-	// if (this->_context._cgiSockets[PARENT_SOCKET] != -1) {
-	// 	close(this->_context._cgiSockets[PARENT_SOCKET]);
+	// if (this->_context.cgiSockets[PARENT_SOCKET] != -1) {
+	// 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	// }
-	// if (this->_context._cgiSockets[CHILD_SOCKET] != -1) {
-	// 	close(this->_context._cgiSockets[CHILD_SOCKET]);
+	// if (this->_context.cgiSockets[CHILD_SOCKET] != -1) {
+	// 	close(this->_context.cgiSockets[CHILD_SOCKET]);
 	// }
 }
 
@@ -363,17 +363,17 @@ error_t Client::_resolveARequest(void) {
 	}
 	this->_request->processing();
 	std::cerr << "After processing status: " << this->_requestStateStr() << std::endl;
-	if (-1 != this->_context._cgiSockets[PARENT_SOCKET]) {
+	if (-1 != this->_context.cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
-		event.events  = EPOLLIN;
-		event.data.fd = this->_context._cgiSockets[PARENT_SOCKET];
-		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_context._cgiSockets[PARENT_SOCKET], &event)) {
+		event.events  = this->_context.option;
+		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
+		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
 			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
 			return REQ_ERROR;
 		}
 		// add to server clientbindmap
-		if (this->_context.server.addCGIToClientMap(this->_context._cgiSockets[PARENT_SOCKET], *this)) {
+		if (this->_context.server.addCGIToClientMap(this->_context.cgiSockets[PARENT_SOCKET], *this)) {
 			std::cerr << "Error: addCGIToClientMap" << std::endl;
 			return REQ_ERROR;
 		}
@@ -397,7 +397,7 @@ error_t Client::_switchToWrite(void) {
 }
 
 error_t Client::_sendResponse(void) {
-	// std::cerr << "Sending response..." << std::endl;
+	std::cerr << "Sending response..." << std::endl;
 	// std::cerr << ".";
 	ssize_t bytes;
 
@@ -405,7 +405,7 @@ error_t Client::_sendResponse(void) {
 	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		// std::cerr << this->_context.responseBuffer.substr(0, bytes) << std::endl;
+		std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
 		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -415,7 +415,7 @@ error_t Client::_sendResponse(void) {
 			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
-		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
@@ -423,7 +423,7 @@ error_t Client::_sendResponse(void) {
 	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	// std::cerr << "Response not fully sent" << std::endl;
+	std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -645,10 +645,10 @@ fd_t Client::socket(void) const { return this->_clientEvent.data.fd; }
 
 void Client::sockets(fd_t fds[2]) const {
 	fds[0] = this->_clientEvent.data.fd;
-	fds[1] = this->_context._cgiSockets[PARENT_SOCKET];
+	fds[1] = this->_context.cgiSockets[PARENT_SOCKET];
 }
 
-pid_t Client::cgiPid(void) const { return this->_context._pid; }
+pid_t Client::cgiPid(void) const { return this->_context.pid; }
 
 /* SETTERS ****************************************************************** */
 

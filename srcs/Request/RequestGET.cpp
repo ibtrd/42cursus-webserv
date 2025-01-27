@@ -74,25 +74,27 @@ void RequestGET::_openCGI(void) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
-	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context._cgiSockets)) {
+	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context.cgiSockets)) {
 		std::cerr << "Error: socketpair(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
 
+	this->_context.option = EPOLLIN;
+
 	this->_context.response.setStatusCode(STATUS_OK);
 
-	this->_context._pid = fork();
-	if (-1 == this->_context._pid) {
+	this->_context.pid = fork();
+	if (-1 == this->_context.pid) {
 		std::cerr << "Error: fork(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
 
-	if (this->_context._pid == 0) {
+	if (this->_context.pid == 0) {
 		this->_executeCGI();
 	} else {
-		close(this->_context._cgiSockets[CHILD_SOCKET]);
+		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 		this->_context.response.enableIsCgi();
@@ -117,7 +119,7 @@ error_t RequestGET::_readFile(void) {
 error_t RequestGET::_readCGI(void) {
 	uint8_t buffer[REQ_BUFFER_SIZE];
 
-	ssize_t bytes = read(this->_context._cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
+	ssize_t bytes = read(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
 	if (bytes == 0) {
 		std::cerr << "read: EOF" << std::endl;
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
@@ -158,8 +160,8 @@ error_t RequestGET::_executeCGI(void) {
 	}
 	std::cerr.flush();
 
-	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
-	close(this->_context._cgiSockets[PARENT_SOCKET]);
+	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
+	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	close(STDIN_FILENO);
 
 	std::cerr << "EXECVE!" << std::endl;

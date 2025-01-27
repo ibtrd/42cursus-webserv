@@ -40,10 +40,10 @@ public:
 
 	void      processing(void);
 	
-	error_t   workIn(void);
+	error_t   workOut(void);
 
 	error_t   CGIIn(void);
-	// error_t   CGIOut(void);
+	error_t   CGIOut(void);
 
 	ARequest *clone(void) const;
 };

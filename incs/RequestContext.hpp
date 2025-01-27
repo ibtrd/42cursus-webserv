@@ -103,8 +103,9 @@ typedef struct RequestContext_s {
 	const LocationBlock *ruleBlock;
 	struct sockaddr_in  addr;
 
-	fd_t _cgiSockets[2];
-	pid_t _pid;
+	fd_t  cgiSockets[2];
+	int   option;
+	pid_t pid;
 
 	uint32_t     requestState;
 	BinaryBuffer buffer;
@@ -132,9 +133,10 @@ typedef struct RequestContext_s {
 
 		this->addr = other.addr;
 
-		this->_cgiSockets[0] = other._cgiSockets[0];
-		this->_cgiSockets[1] = other._cgiSockets[1];
-		this->_pid = other._pid;
+		this->cgiSockets[0] = other.cgiSockets[0];
+		this->cgiSockets[1] = other.cgiSockets[1];
+		this->option		 = other.option;
+		this->pid = other.pid;
 
 		this->requestState  = other.requestState;
 		this->buffer        = other.buffer;
