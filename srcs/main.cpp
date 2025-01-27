@@ -1,4 +1,5 @@
 #include <iostream>
+#include <unistd.h>
 
 #include "Server.hpp"
 #include "webserv.hpp"
@@ -34,6 +35,7 @@ int main(int argc, char *argv[]) {
 	} catch (std::exception &e) {
 		std::cerr << "Fatal: " << e.what() << std::endl;
 		server.~Server();
+		sleep(5);
 		goto server_restart;
 	}
 	while (g_signal == 0) {

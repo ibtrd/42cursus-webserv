@@ -248,7 +248,7 @@ error_t RequestPOST::_executeCGI(void) {
 
 	CgiBuilder::destroy(envp);
 	CgiBuilder::destroy(argv);
-	exit(1);
+	std::exit(1);
 }
 
 error_t RequestPOST::_checkHeaders(void) {

@@ -1,7 +1,6 @@
 SRCS_DIR = srcs/
 SRC = \
 	BinaryBuffer \
-	Client \
 	CgiBuilder \
 	ft \
 	LocationBlock \
@@ -39,5 +38,15 @@ REQUEST_SRC = \
 	RequestPUT \
 	RequestGET-autoindex \
 	RequestHEAD \
+	RequestGET-cgi \
+	ARequest-cgi \
+
+SRC += $(addprefix $(CLIENT_DIR), $(CLIENT_SRC))
+CLIENT_DIR=Client/
+
+CLIENT_SRC = \
+	Client \
+	Client-errorPages \
+	Client-parse \
 
 SRCS := $(addsuffix .cpp, $(SRC))

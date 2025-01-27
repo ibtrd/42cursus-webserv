@@ -1,19 +1,13 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 
-#include <cerrno>
-#include <cstring>
-#include <iostream>
-
 #include "RequestDELETE.hpp"
 #include "RequestGET.hpp"
 #include "RequestHEAD.hpp"
 #include "RequestPOST.hpp"
 #include "RequestPUT.hpp"
 #include "Server.hpp"
-#include "fcntl.h"
 #include "ft.hpp"
-#include "webservHTML.hpp"
 
 uint8_t Client::_readBuffer[REQ_BUFFER_SIZE];
 
@@ -70,7 +64,7 @@ Client::~Client(void) {
 	if (this->_request) {
 		delete this->_request;
 	}
-	// std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
+	std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
 	// if (this->_context.cgiSockets[PARENT_SOCKET] != -1) {
 	// 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	// }
@@ -105,6 +99,8 @@ Client &Client::operator=(const Client &other) {
 	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
+
+bool Client::operator==(const Client &other) const { return (this->_idSocket == other._idSocket); }
 
 /* ************************************************************************** */
 
@@ -203,148 +199,6 @@ error_t Client::_readSocket(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t Client::_parseRequest(void) {
-	error_t ret;
-
-	// Parse request line
-	if (!IS_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState)) {
-		ret = this->_parseRequestLine();
-		if (ret != REQ_DONE) {
-			return (ret);
-		}
-	}
-
-	// Parse headers
-	if (!IS_REQ_READ_HEADERS_COMPLETE(this->_context.requestState)) {
-		ret = this->_parseHeaders();
-		if (ret != REQ_DONE) {
-			return (ret);
-		}
-	}
-
-	if (this->_context.response.statusCode() == STATUS_NONE) {
-		ret = this->_resolveARequest();
-		if (ret != REQ_CONTINUE) {
-			return (ret);
-		}
-	}
-
-	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-	return (REQ_DONE);
-}
-
-error_t Client::_parseRequestLine(void) {
-	std::string requestLine;
-
-	// Check at least one line is present
-	size_t pos = this->_context.buffer.find("\r\n");
-	if (pos == std::string::npos) {
-		return (REQ_CONTINUE);
-	}
-	requestLine = this->_context.buffer.substr(0, pos);
-	this->_context.buffer.erase(0, pos + 2);
-
-	// Parse request line
-
-	// Method
-	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	std::string method = requestLine.substr(0, pos);
-	if (method.empty()) {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	this->_context.method = Method(method);
-	requestLine.erase(0, pos + 1);
-	if (!this->_context.method.isValid()) {
-		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-
-	// Target
-	pos = requestLine.find(' ');
-	if (pos == std::string::npos) {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	this->_context.target = requestLine.substr(0, pos);
-	if (this->_context.target.empty() || this->_context.target[0] != '/') {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	requestLine.erase(0, pos + 1);
-
-	//  Query string
-		pos = this->_context.target.find('?');
-		if (pos != std::string::npos) {
-			this->_context.queries = Queries(this->_context.target.substr(pos + 1));
-			this->_context.target.erase(pos);
-		}
-
-	// Protocol version
-	this->_context.protocolVersion = requestLine;
-	if (this->_context.protocolVersion.empty()) {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	if (this->_context.protocolVersion != HTTP_PROTOCOL_VERSION) {
-		this->_context.response.setStatusCode(STATUS_HTTP_VERSION_NOT_SUPPORTED);
-		SET_REQ_READ_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-
-	std::cerr << "Method: |" << this->_context.method.string() << "|" << std::endl;
-	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-	std::cerr << "Queries: |" << this->_context.queries.queryLine() << "|" << std::endl;
-	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
-
-	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
-
-	return (REQ_DONE);
-}
-
-error_t Client::_parseHeaders(void) {
-	size_t      pos;
-	std::string line;
-	std::string key;
-	std::string value;
-
-	// std::cerr << "Parsing headers..." << std::endl;
-	while ((pos = this->_context.buffer.find("\r\n")) != std::string::npos) {
-		line = this->_context.buffer.substr(0, pos);
-		this->_context.buffer.erase(0, pos + 2);
-		if (line.empty()) {
-			if (this->_context.headers.find(HEADER_HOST) == this->_context.headers.end()) {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_READ_COMPLETE(this->_context.requestState);
-			} else {
-				SET_REQ_READ_HEADERS_COMPLETE(this->_context.requestState);
-			}
-			return (REQ_DONE);
-		}
-		pos = line.find(": ");
-		if (pos == std::string::npos) {
-			this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-			SET_REQ_READ_COMPLETE(this->_context.requestState);
-			return (REQ_DONE);
-		}
-		key                         = line.substr(0, pos);
-		value                       = line.substr(pos + 2);
-		this->_context.headers[key] = value;
-		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
-	}
-	return (REQ_CONTINUE);
-}
-
 error_t Client::_resolveARequest(void) {
 	this->_context.serverBlock = &(this->_context.server.findServerBlock(
 	    this->_idSocket, this->_context.headers[HEADER_HOST]));
@@ -375,7 +229,7 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
-	std::cerr << "After processing status: " << this->_requestStateStr() << std::endl;
+	// std::cerr << "After processing status: " << this->_requestStateStr() << std::endl;
 	if (-1 != this->_context.cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
@@ -410,7 +264,7 @@ error_t Client::_switchToWrite(void) {
 }
 
 error_t Client::_sendResponse(void) {
-	std::cerr << "Sending response..." << std::endl;
+	// std::cerr << "Sending response..." << std::endl;
 	// std::cerr << ".";
 	ssize_t bytes;
 
@@ -440,71 +294,12 @@ error_t Client::_sendResponse(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t Client::_openErrorPage(void) {
-	// std::cerr << "Loading error page" << std::endl;
-
-	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
-		std::cerr << "[Info] page requested before workIn was marked completed" << std::endl;	// DEBUG
-	} else {
-		std::cerr << "[Info] page requested after workIn was marked completed" << std::endl;	// DEBUG
-	}
-
-	if (!this->_context.serverBlock) {
-		return REQ_ERROR;
-	}
-
-	const Path *errorPathPtr =
-	    this->_context.serverBlock->findErrorPage(this->_context.response.statusCode());
-	if (!errorPathPtr) {
-		return REQ_ERROR;
-	}
-
-	Path errorPath = *errorPathPtr;
-	if (0 == errorPath.access(F_OK) && 0 == errorPath.stat() && 0 == errorPath.access(R_OK) &&
-	    errorPath.isFile()) {
-		this->_errorPage.open(errorPath.string().c_str(), std::ios::in | std::ios::binary);
-		if (this->_errorPage.is_open()) {
-			this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
-			                                  ft::numToStr(errorPath.size()));
-			return REQ_DONE;
-			UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
-		}
-	}
-	return REQ_ERROR;
-}
-
-void Client::_loadErrorPage(void) {
-	if (this->_openErrorPage() == REQ_ERROR) {
-		std::string errorBody;
-		errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-								statusCodeToMsg(this->_context.response.statusCode()));
-		this->_context.response.setBody(errorBody);
-		this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
-											ft::numToStr(errorBody.length()));
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-	}
-}
-
-void Client::_readErrorPage(void) {
-	uint8_t buffer[REQ_BUFFER_SIZE];
-
-	this->_errorPage.read((char *)buffer, REQ_BUFFER_SIZE);
-	ssize_t bytes = this->_errorPage.gcount();
-	if (bytes == 0) {
-		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
-		return;
-	}
-
-	this->_context.responseBuffer.append(buffer, bytes);
-	return;
-}
-
 # include <iomanip>
 
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
 
-std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
+// std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -541,7 +336,7 @@ std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_re
 		return (REQ_ERROR);
 	}
 	
-	std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr() << std::endl;
+	// std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr() << std::endl;
 
 	return (REQ_CONTINUE);
 }
@@ -549,7 +344,7 @@ std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_re
 error_t Client::_handleSocketOut(void) {
 	error_t ret;
 
-std::cerr << std::setw(45) << "_handleSocketOut req status start : " << this->_requestStateStr() << std::endl;
+// std::cerr << std::setw(45) << "_handleSocketOut req status start : " << this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) &&
 	    this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
@@ -561,26 +356,26 @@ std::cerr << std::setw(45) << "_handleSocketOut req status start : " << this->_r
 	}
 
 	if ((ret = this->_sendResponse()) != REQ_DONE) {
-		std::cerr << std::setw(45) << "_handleSocketOut req status continue : " << this->_requestStateStr() << std::endl;
+		// std::cerr << std::setw(45) << "_handleSocketOut req status continue : " << this->_requestStateStr() << std::endl;
 
 		return (ret);
 	}
-	std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
+	// std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 	return (REQ_DONE);
 }
 
 error_t Client::_handleCGIIn(void) {
-		std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr() << std::endl;
+		// std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr() << std::endl;
 	// std::cerr << "CGI in" << std::endl;
 	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
-		std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr() << std::endl;
+		// std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr() << std::endl;
 	// std::cerr << "CGI out" << std::endl;
 	error_t ret = this->_request->CGIOut();
 
-		std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr() << std::endl;
+		// std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr() << std::endl;
 	return (ret);
 }
 
@@ -709,5 +504,3 @@ std::ostream &operator<<(std::ostream &os, const Client &client) {
 	os << std::endl;
 	return os;
 }
-
-bool Client::operator==(const Client &other) const { return (this->_idSocket == other._idSocket); }
