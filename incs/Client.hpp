@@ -14,7 +14,6 @@
 class Client {
 private:
 	static uint8_t _readBuffer[REQ_BUFFER_SIZE];
-	static int32_t _epollFd;
 	static ARequest *(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 
 	time_t                   _timestamp[TIMEOUT_COUNT];
@@ -52,6 +51,8 @@ private:
 	friend std::ostream &operator<<(std::ostream &os, const Client &client);
 
 public:
+	static int32_t epollFd;
+
 	Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	       const struct sockaddr_in &addr);
 	Client(const Client &other);

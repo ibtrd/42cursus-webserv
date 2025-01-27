@@ -106,8 +106,10 @@ static status_code_t cgiStatusToStatus(std::string &statusHeader) {
 	if (!std::isdigit(statusHeader[0]) || !std::isdigit(statusHeader[1]) || !std::isdigit(statusHeader[2])) {
 		return (STATUS_INTERNAL_SERVER_ERROR);
 	}
+
+	status_code_t code = (statusHeader[0] - '0') * 100 + (statusHeader[1] - '0') * 10 + (statusHeader[2] - '0');
 	statusHeader.erase(0, 4);
-	return (statusHeader[0] - '0' * 100 + statusHeader[1] - '0' * 10 + statusHeader[2] - '0');
+	return (code);
 }
 
 void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {

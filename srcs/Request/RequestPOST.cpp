@@ -40,6 +40,7 @@ RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 /* ************************************************************************** */
 
 void RequestPOST::_openCGI(void) {
+	std::cerr << "RequestPOST _openCGI" << std::endl;
 	if (0 != this->_cgiPath->access(X_OK)) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
@@ -71,13 +72,27 @@ void RequestPOST::_openCGI(void) {
 
 void RequestPOST::_saveFile(void) {
 	std::cerr << "RequestPOST _saveFile" << std::endl;
+
 	shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 	this->_context.response.setStatusCode(STATUS_OK);
+
+
+	struct epoll_event event;
+	event.events  = EPOLLIN;
+	event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
+	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
+		throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
+	}
+
+	std::cerr << "RequestPOST shutdown" << std::endl;
 }
 
 error_t RequestPOST::_readContent(void) {
 	std::cerr << "RequestPOST _readContent" << std::endl;
 	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
+
+		std::cerr << "J'ENVOIE AU CGI" << std::endl;
+
 		ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -326,6 +341,7 @@ error_t RequestPOST::CGIIn(void) {
 
 error_t RequestPOST::CGIOut(void) {
 	std::cerr << "RequestPOST CGIOut" << std::endl;
+
 	if (this->_chunked) {
 		return (this->_readChunked());
 	} else {

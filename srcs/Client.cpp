@@ -17,7 +17,7 @@
 
 uint8_t Client::_readBuffer[REQ_BUFFER_SIZE];
 
-int32_t Client::_epollFd = -1;
+int32_t Client::epollFd = -1;
 
 ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) = {
     createRequestGET, createRequestPOST, createRequestDELETE, createRequestPUT, createRequestHEAD,
@@ -381,7 +381,7 @@ error_t Client::_resolveARequest(void) {
 		struct epoll_event event;
 		event.events  = this->_context.option;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
-		if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
+		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
 			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
 			return REQ_ERROR;
 		}
@@ -401,8 +401,8 @@ error_t Client::_switchToWrite(void) {
 	struct epoll_event event;
 	event.events  = EPOLLOUT;
 	event.data.fd = this->_clientEvent.data.fd;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
-		close(this->_clientEvent.data.fd);
+	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
+		// close(this->_clientEvent.data.fd);
 		return (-1);
 	}
 	SET_REQ_CAN_WRITE(this->_context.requestState);
@@ -590,7 +590,7 @@ error_t Client::init(void) {
 	this->_context.requestState = REQ_STATE_NONE;
 
 	this->_clientEvent.events  = EPOLLIN;
-	if (-1 == epoll_ctl(Client::_epollFd, EPOLL_CTL_ADD, this->_clientEvent.data.fd, &this->_clientEvent)) {
+	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_clientEvent.data.fd, &this->_clientEvent)) {
 		close(this->_clientEvent.data.fd);
 		return (-1);
 	}
@@ -684,7 +684,7 @@ pid_t Client::cgiPid(void) const { return this->_context.pid; }
 
 /* SETTERS ****************************************************************** */
 
-void Client::setEpollFd(const int32_t fd) { Client::_epollFd = fd; }
+void Client::setEpollFd(const int32_t fd) { Client::epollFd = fd; }
 
 /* EXCEPTIONS *************************************************************** */
 
