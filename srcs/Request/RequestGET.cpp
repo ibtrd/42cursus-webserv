@@ -60,7 +60,7 @@ void RequestGET::_openDir(void) {
 	// std::cerr << "RequestGET _openDir" << std::endl;
 	this->_dir = opendir(this->_path.string().c_str());
 	if (this->_dir == NULL) {
-		std::cerr << "opendir: " << strerror(errno) << std::endl;
+		std::cerr << "Error: opendir(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -70,8 +70,12 @@ void RequestGET::_openDir(void) {
 }
 
 void RequestGET::_openCGI(void) {
+	if (0 != this->_cgiPath->access(X_OK)) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return;
+	}
 	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context._cgiSockets)) {
-		std::cerr << "Error: socketpair: " << strerror(errno) << std::endl;
+		std::cerr << "Error: socketpair(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -80,7 +84,7 @@ void RequestGET::_openCGI(void) {
 
 	this->_context._pid = fork();
 	if (-1 == this->_context._pid) {
-		std::cerr << "Error: fork: " << strerror(errno) << std::endl;
+		std::cerr << "Error: fork(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
