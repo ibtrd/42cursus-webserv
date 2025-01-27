@@ -40,6 +40,10 @@ RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 /* ************************************************************************** */
 
 void RequestPOST::_openCGI(void) {
+	if (0 != this->_cgiPath->access(X_OK)) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return;
+	}
 	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context._cgiSockets)) {
 		std::cerr << "Error: socketpair: " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);

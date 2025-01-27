@@ -23,6 +23,13 @@ Server::~Server() {
 	     it != this->_serverBlocks.end(); ++it) {
 		close(it->first);
 	}
+	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end(); ++it) {
+		close(it->first);
+	}
+	this->_serverBlocks.clear();
+	this->_fdClientMap.clear();
+	this->_mimetypes.clear();
+	this->_clients.clear();
 }
 
 void Server::configure(const Configuration &config) {
@@ -83,7 +90,7 @@ void Server::routine(void) {
 	// // -----
 
 	// New connections and read events
-	for (int32_t i = 0; i < nfds; i++) {
+	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
@@ -94,25 +101,17 @@ void Server::routine(void) {
 		}
 		if (this->_events[i].events & EPOLLIN) {
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
-
 			if (it == this->_fdClientMap.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-
-			switch (it->second->handleIn(fd)) {
-				case REQ_ERROR:
-					std::cerr << "Close connection (Error)" << std::endl;
-					this->_removeConnection(fd);
-					break;
-
-				case REQ_DONE:
-					std::cerr << "Close connection (Done)" << std::endl;
-					this->_removeConnection(fd);
-					break;
-
-				default:
-					break;
+			error_t err = it->second->handleIn(fd);
+			if (REQ_ERROR == err) {
+				std::cerr << "Close connection (Error)" << std::endl;
+				this->_removeConnection(fd);
+			} else if (REQ_DONE == err) {
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
 			}
 		} else if (!(this->_events[i].events & EPOLLOUT)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
@@ -132,7 +131,7 @@ void Server::routine(void) {
 	// // -----
 
 	// Write events
-	for (int32_t i = 0; i < nfds; i++) {
+	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
@@ -142,20 +141,13 @@ void Server::routine(void) {
 				std::cerr << "No client for fd " << fd << std::endl;
 				continue;
 			}
-
-			switch (it->second->handleOut(fd)) {
-				case REQ_ERROR:
-					std::cerr << "Close connection (Error)" << std::endl;
-					this->_removeConnection(fd);
-					break;
-
-				case REQ_DONE:
-					std::cerr << "Close connection (Done)" << std::endl;
-					this->_removeConnection(fd);
-					break;
-
-				default:
-					break;
+			error_t err = it->second->handleOut(fd);
+			if (REQ_ERROR == err) {
+				std::cerr << "Close connection (Error)" << std::endl;
+				this->_removeConnection(fd);
+			} else if (REQ_DONE == err) {
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
 			}
 		} else if (!(this->_events[i].events & EPOLLIN)) {
 			std::cerr << "Unknown event on fd " << fd << std::endl;
@@ -172,7 +164,12 @@ void Server::routine(void) {
 	// 	std::cerr << it->socket() << std::endl;
 	// }
 	// // -----
-
+	if (0 != g_signal) {
+		while (this->_clients.size()) {
+			this->_removeConnection(this->_clients.front().socket());
+		}
+		return;
+	}
 	this->_checkClientsTimeout();
 
 	// // DEBUG
@@ -330,7 +327,6 @@ void Server::_removeConnection(const fd_t fd) {
 		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], &event)) {
 			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
 			std::cerr << "fd: " << fds[0] << std::endl;
-			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
 		this->_fdClientMap.erase(fds[0]);
 		close(fds[0]);
