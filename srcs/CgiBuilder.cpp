@@ -14,10 +14,12 @@ CgiBuilder::CgiBuilder(const CgiBuilder &other) { *this = other; }
 
 CgiBuilder::CgiBuilder(const ARequest *req) {
 	this->_addContext(req->context());
-	this->addEnvar("SERVER_SOFTWARE", WEBSERV_VERSION);
     this->addEnvar("SCRIPT_FILENAME", req->path().string());
-	this->_arguments.push_back(req->cgiPath().string());
-	this->_arguments.push_back(req->path().string());
+	this->addEnvar("GATEWAY_INTERFACE", CGI_PROTOCOL_VERSION);
+	this->addEnvar("SERVER_PROTOCOL", HTTP_PROTOCOL_VERSION);
+	this->addEnvar("SERVER_SOFTWARE", WEBSERV_VERSION);
+	this->addArgument(req->cgiPath().string());
+	this->addArgument(req->path().string());
 }
 
 CgiBuilder::~CgiBuilder(void) {}
@@ -29,6 +31,7 @@ CgiBuilder &CgiBuilder::operator=(const CgiBuilder &other) {
 		return (*this);
 	}
 	this->_envars = other._envars;
+	this->_arguments = other._arguments;
 	return (*this);
 }
 
@@ -38,8 +41,12 @@ void CgiBuilder::addEnvar(const std::string &key, const std::string &val) {
 	this->_envars.push_back(key + "=" + val);
 }
 
+void CgiBuilder::addArgument(const std::string &arg) {
+	this->_arguments.push_back(arg);
+}
+
 char **CgiBuilder::envp(void) const {
-	char **envp                = new char *[this->_envars.size() + 1];
+	char **envp = new char *[this->_envars.size() + 1];
 	envp[this->_envars.size()] = NULL;
 	for (uint32_t i = 0; i < this->_envars.size(); ++i) {
 		envp[i] = new char[this->_envars.at(i).size() + 1];
@@ -92,7 +99,6 @@ void CgiBuilder::_addContext(const RequestContext_t &context) {
 	this->addEnvar("REDIRECT_STATUS", "");
 	this->addEnvar("PATH_INFO", context.target);
 	this->addEnvar("REQUEST_URI", context.target + context.queries.originalQueryLine());
-	this->addEnvar("CONTENT_LENGTH", "10");
 }
 
 void CgiBuilder::_addHeaders(const headers_t &headers) {
@@ -109,8 +115,13 @@ void CgiBuilder::_addHeaders(const headers_t &headers) {
 /* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const CgiBuilder &envp) {
+	os << "CGI-envp:\n";
 	for (uint32_t i = 0; i < envp._envars.size(); ++i) {
 		os << envp._envars.at(i) << "\n";
+	}
+	os << "CGI-argv:\n";
+	for (uint32_t i = 0; i < envp._arguments.size(); ++i) {
+		os << envp._arguments.at(i) << "\n";
 	}
 	os.flush();
 	return os;

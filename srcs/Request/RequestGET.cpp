@@ -129,35 +129,46 @@ error_t RequestGET::_readCGI(void) {
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		return (REQ_ERROR);
 	}
-
 	this->_context.responseBuffer.append(buffer, bytes);
+	// std::cerr << this->_context.responseBuffer  << std::endl;
+	// std::cerr << this->_context.response.statusCode() << std::endl;
+	// if (this->_context.response.statusCode() == STATUS_OK) {
+	// 	size_t pos = this->_context.responseBuffer.find("Status: ");
+	// 	if (pos != std::string::npos) {
+	// 	}
+	// }
 	return (REQ_CONTINUE);
 }
 
 error_t RequestGET::_executeCGI(void) {
 	CgiBuilder builder(this);
+	
+	// std::cerr << builder;
 
 	char **envp = builder.envp();
 	char **argv = builder.argv();
 
-	// std::cerr << "ARGV: " << std::endl;
-	// std::cerr << argv[0] << std::endl;
-	// std::cerr << argv[1] << std::endl;
-	// // std::cerr << argv[2] << std::endl;
-	// std::cerr << "----------------" << std::endl;
-	// std::cerr << "ENV: " << builder << std::endl;
+	std::cerr << "CGI-argv:\n";
+	for (uint32_t i = 0; argv[i]; ++i) {
+		std::cerr << argv[i] << "\n";
+	}
+	std::cerr << "CGI-envp:\n";
+	for (uint32_t i = 0; envp[i]; ++i) {
+		std::cerr << envp[i] << "\n";
+	}
+	std::cerr.flush();
 
 	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
 	close(this->_context._cgiSockets[PARENT_SOCKET]);
+	close(STDIN_FILENO);
 
+	std::cerr << "EXECVE!" << std::endl;
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 	// execlp("/bin/ls", "ls", NULL, NULL);
 
-	std::cerr << "execlp: " << strerror(errno) << std::endl;
-
-	CgiBuilder::destroy(envp);
+	std::cerr << "execve(): " << strerror(errno) << std::endl;
 	CgiBuilder::destroy(argv);
-
+	CgiBuilder::destroy(envp);
 	exit(1);
 }
 
