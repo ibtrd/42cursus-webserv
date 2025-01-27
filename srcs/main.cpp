@@ -10,6 +10,11 @@ int main(int argc, char *argv[]) {
 		return (1);
 	}
 
+	server_restart:
+	if (0 != g_signal) {
+		return (0);
+	}
+
 	Server server;
 
 	try {
@@ -28,13 +33,16 @@ int main(int argc, char *argv[]) {
 		return (1);
 	} catch (std::exception &e) {
 		std::cerr << "Fatal: " << e.what() << std::endl;
-		return (1);
+		server.~Server();
+		goto server_restart;
 	}
 	while (g_signal == 0) {
 		try {
 			server.routine();
 		} catch (std::exception &error) {
 			std::cerr << "Fatal: " << error.what() << std::endl;
+			server.~Server();
+			goto server_restart;
 		}
 	}
 	return 0;
