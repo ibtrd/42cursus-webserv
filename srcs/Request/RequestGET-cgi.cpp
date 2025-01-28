@@ -19,7 +19,7 @@ void RequestGET::_openCGI(void) {
 
 	this->_context.option = EPOLLIN;
 
-	this->_context.response.setStatusCode(STATUS_OK);
+	// this->_context.response.setStatusCode(STATUS_OK);
 
 	this->_context.pid = fork();
 	if (-1 == this->_context.pid) {
@@ -32,6 +32,7 @@ void RequestGET::_openCGI(void) {
 		this->_executeCGI();
 	} else {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
+		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
@@ -41,7 +42,8 @@ void RequestGET::_openCGI(void) {
 error_t RequestGET::_executeCGI(void) {
 	CgiBuilder builder(this);
 	
-	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)) {
+	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
+		|| -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
 		std::exit(1);
 	}
 	// std::cerr << builder;
@@ -58,10 +60,9 @@ error_t RequestGET::_executeCGI(void) {
 		std::cerr << envp[i] << "\n";
 	}
 	std::cerr.flush();
-
-	// close(this->_context.cgiSockets[CHILD_SOCKET]);
+	
 	close(this->_context.cgiSockets[PARENT_SOCKET]);
-	close(STDIN_FILENO);
+	// close(STDIN_FILENO);
 
 	std::cerr << "EXECVE! [GET]" << std::endl;
 	execve(this->_cgiPath->string().c_str(), argv, envp);
