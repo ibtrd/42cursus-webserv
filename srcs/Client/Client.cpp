@@ -253,7 +253,7 @@ error_t Client::_resolveARequest(void) {
 
 error_t Client::_switchToWrite(void) {
 	struct epoll_event event;
-	event.events  = EPOLLOUT;
+	event.events  = EPOLLOUT | EPOLLIN;
 	event.data.fd = this->_clientEvent.data.fd;
 	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
 		// close(this->_clientEvent.data.fd);

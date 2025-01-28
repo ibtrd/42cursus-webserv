@@ -122,7 +122,7 @@ error_t RequestPOST::_readChunked(void) {
 	ssize_t bytes = 0;
 
 	while (!this->_context.buffer.empty()) {
-		std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
+		// std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read end of chunk
 		if (this->_contentLength == 0) {
@@ -294,19 +294,19 @@ error_t RequestPOST::_checkHeaders(void) {
 }
 
 error_t RequestPOST::_validateLocalFile(void) {
-	if (0 != this->_path.stat()) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return (REQ_DONE);
-	}
-	if (0 != this->_path.access(R_OK)) {
-		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		return (REQ_DONE);
-	}
-	if (this->_path.isFile()) {
+	// if (0 != this->_path.stat()) {
+	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	// 	return (REQ_DONE);
+	// }
+	// if (0 != this->_path.access(R_OK)) {
+	// 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	// 	return (REQ_DONE);
+	// }
+	// if (this->_path.isFile()) {
 		this->_openCGI();
 		return (REQ_DONE);
-	}
-	return (REQ_CONTINUE);
+	// }
+	// return (REQ_CONTINUE);
 }
 
 /* ************************************************************************** */
@@ -319,13 +319,13 @@ void RequestPOST::processing(void) {
 	}
 
 	if (!this->_cgiPath) {
-		this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);
+		this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
 		return;
 	}
-	if (0 != this->_path.access(F_OK)) {
-		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-		return;
-	}
+	// if (0 != this->_path.access(F_OK)) {
+	// 	this->_context.response.setStatusCode(STATUS_NOT_FOUND);
+	// 	return;
+	// }
 	if (REQ_CONTINUE != this->_validateLocalFile()) {
 		return;
 	}

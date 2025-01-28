@@ -100,6 +100,7 @@ void Server::routine(void) {
 			continue;
 		}
 		if (this->_events[i].events & EPOLLIN) {
+			std::cerr << "Read event on fd " << fd << std::endl;
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
 			if (it == this->_fdClientMap.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
@@ -135,6 +136,7 @@ void Server::routine(void) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
+			std::cerr << "Write event on fd " << fd << std::endl;
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
 
 			if (it == this->_fdClientMap.end()) {
