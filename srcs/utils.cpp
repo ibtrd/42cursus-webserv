@@ -12,11 +12,25 @@
 std::string statusCodeToReason(const status_code_t code) {
 	switch (code) {
 		case STATUS_OK:
-			return ("STATUS_OK");
+			return ("OK");
 		case STATUS_CREATED:
 			return ("Created");
 		case STATUS_NO_CONTENT:
 			return ("No content");
+		case STATUS_MULTIPLE_CHOICES:
+			return ("Multiple Choices");
+		case STATUS_MOVED_PERMANENTLY:
+			return ("Moved Permanently");
+		case STATUS_FOUND:
+			return ("Found");
+		case STATUS_SEE_OTHER:
+			return ("See Other");
+		case STATUS_NOT_MODIFIED:
+			return ("Not Modified");
+		case STATUS_TEMPORARY_REDIRECT:
+			return ("Temporary Redirect");
+		case STATUS_PERMANENT_REDIRECT:
+			return ("Permanent Redirect");
 		case STATUS_BAD_REQUEST:
 			return ("Bad Request");
 		case STATUS_UNAUTHORIZED:
