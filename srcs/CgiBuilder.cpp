@@ -108,6 +108,9 @@ void CgiBuilder::_addHeaders(const headers_t &headers) {
 		for (std::string::iterator it = var.begin(); it != var.end(); ++it) {
 			*it = toupper(*it);
 		}
+		if (it->first == HEADER_CONTENT_TYPE || it->first == HEADER_CONTENT_LENGTH) {
+			this->addEnvar(var, it->second);
+		}
 		this->addEnvar("HTTP_" + var, it->second);
 	}
 }
