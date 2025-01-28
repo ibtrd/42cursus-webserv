@@ -277,7 +277,12 @@ error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 		std::cerr << "Error: accept(): " << strerror(errno) << std::endl;
 		return -1;
 	}
-	this->_clients.push_front(Client(socket, requestSocket, *this, clientAddr));
+	try {
+		this->_clients.push_front(Client(socket, requestSocket, *this, clientAddr));
+	} catch (...) {
+		close(requestSocket);
+		return -1;
+	}
 	if (-1 == this->_clients.front().init()) {
 		return -1;
 	}

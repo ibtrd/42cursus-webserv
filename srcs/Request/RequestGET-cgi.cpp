@@ -41,6 +41,9 @@ void RequestGET::_openCGI(void) {
 error_t RequestGET::_executeCGI(void) {
 	CgiBuilder builder(this);
 	
+	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)) {
+		std::exit(1);
+	}
 	// std::cerr << builder;
 
 	char **envp = builder.envp();
@@ -56,11 +59,11 @@ error_t RequestGET::_executeCGI(void) {
 	}
 	std::cerr.flush();
 
-	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
+	// close(this->_context.cgiSockets[CHILD_SOCKET]);
 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	close(STDIN_FILENO);
 
-	std::cerr << "EXECVE!" << std::endl;
+	std::cerr << "EXECVE! [GET]" << std::endl;
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 	// execlp("/bin/ls", "ls", NULL, NULL);
 
