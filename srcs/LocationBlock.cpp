@@ -19,6 +19,7 @@ LocationBlock::LocationBlock(const Path &path) : _path(path) {
 	this->_dirListing  = UNDEFINED;
 	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
+	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 LocationBlock::~LocationBlock(void) {}
@@ -69,6 +70,9 @@ void LocationBlock::fill(const LocationBlock &other) {
 	}
 	if (0 == this->_gcis.size()) {
 		this->_gcis = other._gcis;
+	}
+	if (this->_clientBodyTempPath.empty()) {
+		this->_clientBodyTempPath = other._clientBodyTempPath;
 	}
 }
 
@@ -136,6 +140,10 @@ void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
 	this->_gcis[ext] = Path(bin);
 }
 
+void LocationBlock::setClientBodyTempPath(const std::string &str) {
+	this->_clientBodyTempPath = Path(str);
+}
+
 /* GETTERS ****************************************************************** */
 
 const Path &LocationBlock::path(void) const { return this->_path; }
@@ -160,6 +168,10 @@ const Path *LocationBlock::findCGI(const std::string &extension) const {
 		return &it->second;
 	}
 	return NULL;
+}
+
+const Path &LocationBlock::clientBodyTempPath(void) const {
+	return this->_clientBodyTempPath;
 }
 
 /* ************************************************************************** */

@@ -14,6 +14,7 @@
 #define DEFAULT_MAXBODYSIZE 1048576
 #define DEFAULT_REDIRECTON std::make_pair(0, "")
 #define DEFAULT_INDEX "index.html"
+#define DEFAULT_TEMP_PATH "/tmp/"
 
 #define DIRLISTING_ON "on"
 #define DIRLISTING_OFF "off"
@@ -43,6 +44,7 @@ public:
 	void    setRedirect(const uint16_t status, const std::string &body);
 	void    addIndex(const std::string &str);
 	void    addCGI(const std::string &ext, const std::string &bin);
+	void	setClientBodyTempPath(const std::string &str);
 
 	void setDefaults(void);
 
@@ -55,6 +57,7 @@ public:
 	const redirect_t               &getRedirect(void) const;
 	const std::vector<std::string> &indexes(void) const;
 	const Path                     *findCGI(const std::string &extension) const;
+	const Path					   &clientBodyTempPath(void) const;
 
 private:
 	Path                     _path;
@@ -65,6 +68,7 @@ private:
 	redirect_t               _redirection;
 	std::vector<std::string> _indexes;
 	cgis_t                   _gcis;
+	Path			         _clientBodyTempPath;
 
 	friend std::ostream &operator<<(std::ostream &os, const LocationBlock &location);
 };
