@@ -76,7 +76,6 @@ void RequestPOST::_saveFile(void) {
 	shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 	this->_context.response.setStatusCode(STATUS_OK);
 
-
 	struct epoll_event event;
 	event.events  = EPOLLIN;
 	event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
@@ -119,11 +118,11 @@ error_t RequestPOST::_readContent(void) {
 AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLMMMMMMMMMNNNNNNNNNOOOOOOOOOPPPPPPPPP
 */
 error_t RequestPOST::_readChunked(void) {
-	std::cerr << "RequestPOST _readChunked" << std::endl;
+	// std::cerr << "RequestPOST _readChunked" << std::endl;
 	ssize_t bytes = 0;
 
 	while (!this->_context.buffer.empty()) {
-		// std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
+		std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read end of chunk
 		if (this->_contentLength == 0) {
@@ -197,6 +196,9 @@ error_t RequestPOST::_readChunked(void) {
 
 		// Read chunk
 		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {
+
+			std::cerr << "J'ENVOIE AU CGI" << std::endl;
+
 			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_contentLength, MSG_NOSIGNAL);
 			if (bytes == -1) {
 				std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -206,6 +208,9 @@ error_t RequestPOST::_readChunked(void) {
 			this->_context.buffer.erase(0, this->_contentLength);
 			this->_contentLength = 0;
 		} else if (static_cast<int32_t>(this->_context.buffer.size()) <= this->_contentLength) {
+
+			std::cerr << "J'ENVOIE AU CGI" << std::endl;
+
 			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
 			if (bytes == -1) {
 				std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -325,7 +330,7 @@ void RequestPOST::processing(void) {
 		return;
 	}
 	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-	this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);  // TESTER
+	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
 }
 
 error_t RequestPOST::workOut(void) {
@@ -340,7 +345,7 @@ error_t RequestPOST::CGIIn(void) {
 }
 
 error_t RequestPOST::CGIOut(void) {
-	std::cerr << "RequestPOST CGIOut" << std::endl;
+	// std::cerr << "RequestPOST CGIOut" << std::endl;
 
 	if (this->_chunked) {
 		return (this->_readChunked());

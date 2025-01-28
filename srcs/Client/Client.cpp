@@ -299,7 +299,7 @@ error_t Client::_sendResponse(void) {
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
 
-// std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
+std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -394,6 +394,7 @@ error_t Client::init(void) {
 }
 
 error_t Client::handleIn(fd_t fd) {
+	std::cerr << "Client(" << this->_clientEvent.data.fd << ") handleIn" << std::endl;
 	if (fd == this->_clientEvent.data.fd) {
 		return (this->_handleSocketIn());
 	} else {

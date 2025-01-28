@@ -68,26 +68,26 @@ void Server::routine(void) {
 		return;
 	}
 
-	// std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
-	// std::cerr << "nfds: " << nfds << std::endl;
+	std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
+	std::cerr << "nfds: " << nfds << std::endl;
 
-	// for (int32_t i = 0; i < nfds; i++) {
-	// 	std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
-	// }
+	for (int32_t i = 0; i < nfds; i++) {
+		std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
+	}
 
-	// std::cerr << std::endl;
+	std::cerr << std::endl;
 
-	// // DEBUG
-	// std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
-	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	//      ++it) {
-	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	// }
-	// std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
-	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-	// 	std::cerr << it->socket() << std::endl;
-	// }
-	// // -----
+	// DEBUG
+	std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
+	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	     ++it) {
+		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	}
+	std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
+	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+		std::cerr << it->socket() << std::endl;
+	}
+	// -----
 
 	// New connections and read events
 	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
