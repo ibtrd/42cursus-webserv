@@ -64,7 +64,6 @@ void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {
 			headers_t::iterator statusHeader = this->_context.response.header(HEADER_STATUS);
 			if (statusHeader == this->_context.response.headersEnd()) {
 				this->_context.response.setStatusCode(STATUS_OK);
-				// SET_REQ_READ_COMPLETE(this->_context.requestState);
 			} else {
 				this->_context.response.setStatusCode(cgiStatusToStatus(statusHeader->second));
 				this->_context.response.setReasonPhrase(statusHeader->second);
@@ -73,7 +72,6 @@ void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {
 			SET_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState);
 			this->_context.response.clearBody();
 			this->_context.responseBuffer = this->_context.response.response();
-			// return (REQ_DONE);
 			return;
 		}
 		pos = line.find(": ");
@@ -83,7 +81,6 @@ void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {
 			this->_context.response.clear();
 			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 			this->_context.responseBuffer = this->_context.response.response();
-			// return (REQ_DONE);
 			return;
 		}
 		key                         = line.substr(0, pos);
@@ -91,7 +88,6 @@ void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {
 		this->_context.response.setHeader(key, value);
 		std::cerr << "cgiHeader: |" << key << "| |" << value << "|" << std::endl;
 	}
-	// return (REQ_CONTINUE);
 	return;
 }
 
