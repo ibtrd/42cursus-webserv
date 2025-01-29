@@ -10,7 +10,6 @@ LocationBlock::LocationBlock(void) {
 	this->_dirListing         = UNDEFINED;
 	this->_maxBodySize        = UNDEFINED;
 	this->_redirection        = DEFAULT_REDIRECTON;
-	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 LocationBlock::LocationBlock(const LocationBlock &other) { *this = other; }
@@ -20,7 +19,6 @@ LocationBlock::LocationBlock(const Path &path) : _path(path) {
 	this->_dirListing  = UNDEFINED;
 	this->_maxBodySize = UNDEFINED;
 	this->_redirection = DEFAULT_REDIRECTON;
-	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 LocationBlock::~LocationBlock(void) {}
@@ -136,6 +134,7 @@ void LocationBlock::addIndex(const std::string &str) { this->_indexes.push_back(
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
+	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
