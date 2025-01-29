@@ -109,6 +109,14 @@ Path Path::dir(void) const {
 	return Path(this->_str.substr(0, pos));
 }
 
+std::string Path::notdir(void) const {
+	const std::size_t pos = this->_str.find_last_of('/');
+	if (pos == std::string::npos) {
+		return this->_str;
+	}
+	return this->_str.substr(pos + 1);
+}
+
 uint32_t Path::length(void) const { return this->_chunks.size(); }
 
 uint32_t Path::prefixLength(void) const {

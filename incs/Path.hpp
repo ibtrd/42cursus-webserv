@@ -35,6 +35,7 @@ public:
 
 	std::string extension(void) const;
 	Path        dir(void) const;
+	std::string notdir(void) const;
 	uint32_t    length(void) const;
 	uint32_t    prefixLength(void) const;
 	bool        prefixMatch(const Path &other) const;

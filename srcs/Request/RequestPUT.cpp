@@ -51,13 +51,17 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 /* ************************************************************************** */
 
 error_t RequestPUT::_generateFilename(void) {
-	std::string tmp;
+	std::string basename = this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	std::string tmp; 
 	int32_t     i = 0;
+
+	if (0 != this->_context.ruleBlock->clientBodyTempPath().access(W_OK)) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		return (REQ_DONE);
+	}
+
 	do {
-		tmp = this->_path.string();
-		tmp += ".";
-		tmp += ft::generateRandomString(8);
-		tmp += ".tmp";
+		tmp = basename + '.' + ft::generateRandomString(8) + ".tmp";
 		++i;
 	} while (0 == access(tmp.c_str(), F_OK) && i < 100);
 	if (i == 100) {
@@ -254,6 +258,14 @@ void RequestPUT::processing(void) {
 		return;
 	}
 	Path parent = this->_path.dir();
+	if (0 != this->_path.access(F_OK)) {
+		if (0 != this->_path.access(W_OK)) {
+			this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		} else {
+			this->_openFile();
+		}
+		return ;
+	}
 	if (0 != parent.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else if (0 != parent.stat()) {
@@ -261,8 +273,6 @@ void RequestPUT::processing(void) {
 	} else if (!parent.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != parent.access(W_OK)) {
-		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	} else if (0 == this->_path.access(F_OK) && 0 != this->_path.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 	} else {
 		this->_openFile();
