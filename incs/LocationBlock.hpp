@@ -44,6 +44,7 @@ public:
 	void    setRedirect(const uint16_t status, const std::string &body);
 	void    addIndex(const std::string &str);
 	void    addCGI(const std::string &ext, const std::string &bin);
+	void	setClientBodyUploadPath(const std::string &str);
 	void	setClientBodyTempPath(const std::string &str);
 
 	void setDefaults(void);
@@ -52,12 +53,15 @@ public:
 	const Path                     &path(void) const;
 	bool                            isAllowed(const Method &method) const;
 	bool                            isDirListing(void) const;
+	bool							canUpload(void) const;
 	int32_t                         getMaxBodySize(void) const;
 	const Path                     &getRoot(void) const;
 	const redirect_t               &getRedirect(void) const;
 	const std::vector<std::string> &indexes(void) const;
 	const Path                     *findCGI(const std::string &extension) const;
+	const Path					   &clientBodyUploadPath(void) const;
 	const Path					   &clientBodyTempPath(void) const;
+	
 
 private:
 	Path                     _path;
@@ -68,6 +72,7 @@ private:
 	redirect_t               _redirection;
 	std::vector<std::string> _indexes;
 	cgis_t                   _gcis;
+	Path					 _clientBodyUploadPath;
 	Path			         _clientBodyTempPath;
 
 	friend std::ostream &operator<<(std::ostream &os, const LocationBlock &location);
