@@ -55,15 +55,15 @@ error_t RequestGET::_executeCGI(void) {
 	char **envp = builder.envp();
 	char **argv = builder.argv();
 
-	std::cerr << "CGI-argv:\n";
-	for (uint32_t i = 0; argv[i]; ++i) {
-		std::cerr << argv[i] << "\n";
-	}
-	std::cerr << "CGI-envp:\n";
-	for (uint32_t i = 0; envp[i]; ++i) {
-		std::cerr << envp[i] << "\n";
-	}
-	std::cerr.flush();
+	// std::cerr << "CGI-argv:\n";
+	// for (uint32_t i = 0; argv[i]; ++i) {
+	// 	std::cerr << argv[i] << "\n";
+	// }
+	// std::cerr << "CGI-envp:\n";
+	// for (uint32_t i = 0; envp[i]; ++i) {
+	// 	std::cerr << envp[i] << "\n";
+	// }
+	// std::cerr.flush();
 	
 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	// close(STDIN_FILENO);

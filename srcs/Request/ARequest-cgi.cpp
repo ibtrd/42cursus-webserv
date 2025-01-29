@@ -12,7 +12,7 @@ error_t ARequest::_readCGI(void) {
 
 	ssize_t bytes = read(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
 	if (bytes == 0) {
-		std::cerr << "read: EOF" << std::endl;
+		// std::cerr << "read: EOF" << std::endl;
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		return (REQ_CONTINUE);
 	}
@@ -86,7 +86,7 @@ void ARequest::_parseCGIHeaders(BinaryBuffer &buffer) {
 		key                         = line.substr(0, pos);
 		value                       = line.substr(pos + 2);
 		this->_context.response.setHeader(key, value);
-		std::cerr << "cgiHeader: |" << key << "| |" << value << "|" << std::endl;
+		// std::cerr << "cgiHeader: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return;
 }
