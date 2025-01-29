@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/sendfile.h>
 
 #include <cstring>
 #include <iostream>
@@ -55,6 +56,8 @@ error_t RequestPUT::_generateFilename(void) {
 	std::string tmp; 
 	int32_t     i = 0;
 
+	std::cerr << "tmp: " << this->_context.ruleBlock->clientBodyTempPath() << std::endl;
+	std::cerr << "basename: " << basename << std::endl;
 	if (0 != this->_context.ruleBlock->clientBodyTempPath().access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return (REQ_DONE);
@@ -69,6 +72,7 @@ error_t RequestPUT::_generateFilename(void) {
 		return (REQ_DONE);
 	}
 	this->_tmpFilename = tmp;
+	std::cerr << "tmpFilename: " << this->_tmpFilename << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -120,17 +124,35 @@ error_t RequestPUT::_checkHeaders(void) {
 }
 
 void RequestPUT::_saveFile(void) {
-	// std::cerr << "RequestPUT _saveFile" << std::endl;
+	std::cerr << "RequestPUT _saveFile" << std::endl;
 	this->_file.close();
 	this->_context.response.setStatusCode(STATUS_CREATED);
-	if (0 == this->_path.access(F_OK)) {
-		if (0 != std::remove(this->_path.c_str())) {
-			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		}
-	}
-	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
+	if (0 == this->_path.access(F_OK) &&
+		0 != std::remove(this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
+	// if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
+	// 	this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);
+	// 	std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
+	// }
+	int source = -1;
+	int dest = -1;
+	if ((source = open(this->_tmpFilename.c_str(), O_RDONLY)) == -1 ||
+		(dest = open(this->_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		std::cerr << "Error: open(): " << std::strerror(errno) << std::endl;
+		close(source);
+		close(dest);
+		std::remove(this->_tmpFilename.c_str());
+		return;
+	}
+	struct stat statbuf;
+	if (fstat(source, &statbuf) == -1 || sendfile(dest, source, NULL, statbuf.st_size) == -1) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		std::cerr << "Error: saveFile: " << std::strerror(errno) << std::endl;
+	}
+	close(source);
+	close(dest);
 	std::remove(this->_tmpFilename.c_str());
 }
 
@@ -247,11 +269,13 @@ error_t RequestPUT::_readChunked(void) {
 /* ************************************************************************** */
 
 void RequestPUT::processing(void) {
+	std::cerr << "RequestPUT processing" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
 	}
 
+	std::cerr << "PUT Path:" << this->_path << std::endl;
 	// Check path
 	if (this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
@@ -259,7 +283,7 @@ void RequestPUT::processing(void) {
 	}
 	Path parent = this->_path.dir();
 	if (0 != this->_path.access(F_OK)) {
-		if (0 != this->_path.access(W_OK)) {
+		if (0 != parent.access(W_OK)) {
 			this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 		} else {
 			this->_openFile();

@@ -48,13 +48,13 @@ const ConfFile::locationDirectives ConfFile::_locationDirectives =
 ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	locationDirectives map;
 
-	map["root"]                 = &ConfFile::_rootDirective;
-	map["allow"]                = &ConfFile::_allowDirective;
-	map["client_max_body_size"] = &ConfFile::_clientMaxBodySizeDirective;
-	map["autoindex"]            = &ConfFile::_autoindexDirective;
-	map["redirect"]             = &ConfFile::_redirectionDirective;
-	map["index"]                = &ConfFile::_indexDirective;
-	map["cgi"]                  = &ConfFile::_cgiDirective;
-	map["client_body_temp_path"] = &ConfFile::_clientBodyTempPath;
+	map["root"]                  = &ConfFile::_rootDirective;
+	map["allow"]                 = &ConfFile::_allowDirective;
+	map["client_max_body_size"]  = &ConfFile::_clientMaxBodySizeDirective;
+	map["autoindex"]             = &ConfFile::_autoindexDirective;
+	map["redirect"]              = &ConfFile::_redirectionDirective;
+	map["index"]                 = &ConfFile::_indexDirective;
+	map["cgi"]                   = &ConfFile::_cgiDirective;
+	map["client_body_temp_path"] = &ConfFile::_clientBodyTempPathDirective;
 	return map;
 }

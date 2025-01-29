@@ -34,9 +34,9 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
 	this->_clientEvent.events             = EPOLLIN;
 	this->_clientEvent.data.fd            = requestSocket;
-	this->_context.cgiSockets[0] = -1;
-	this->_context.cgiSockets[1]  = -1;
-	this->_context.pid                       = -1;
+	this->_context.cgiSockets[0]          = -1;
+	this->_context.cgiSockets[1]          = -1;
+	this->_context.pid                    = -1;
 	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
 }
@@ -272,7 +272,7 @@ error_t Client::_sendResponse(void) {
 	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
+		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
 		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -282,7 +282,7 @@ error_t Client::_sendResponse(void) {
 			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
-		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
@@ -394,7 +394,7 @@ error_t Client::init(void) {
 }
 
 error_t Client::handleIn(fd_t fd) {
-	std::cerr << "Client(" << this->_clientEvent.data.fd << ") handleIn" << std::endl;
+	// std::cerr << "Client(" << this->_clientEvent.data.fd << ") handleIn" << std::endl;
 	if (fd == this->_clientEvent.data.fd) {
 		return (this->_handleSocketIn());
 	} else {

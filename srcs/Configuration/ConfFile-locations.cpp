@@ -150,7 +150,7 @@ void ConfFile::_cgiDirective(std::vector<ConfToken>::const_iterator &token,
 	++token;
 }
 
-void ConfFile::_clientBodyTempPath(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_clientBodyTempPathDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
 	const uint32_t                               args      = this->_countArgs(token);
 	const std::vector<ConfToken>::const_iterator directive = token++;
 

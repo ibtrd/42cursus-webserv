@@ -6,9 +6,9 @@
 error_t ARequest::_readCGI(void) {
 	uint8_t buffer[REQ_BUFFER_SIZE];
 
-	static int compteur = 0;
+	// static int compteur = 0;
 
-	std::cerr << "Request _readCGI: " << compteur++ << std::endl;
+	// std::cerr << "Request _readCGI: " << compteur++ << std::endl;
 
 	ssize_t bytes = read(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
 	if (bytes == 0) {
@@ -23,12 +23,12 @@ error_t ARequest::_readCGI(void) {
 		return (REQ_ERROR);
 	}
 
-	std::cerr << "Request _readCGI: " << bytes << std::endl;
-	std::cerr << "Request _readCGI: |";
-	for (ssize_t i = 0; i < bytes; ++i) {
-		std::cerr << buffer[i];
-	}
-	std::cerr << "|" << std::endl;
+	// std::cerr << "Request _readCGI: " << bytes << std::endl;
+	// std::cerr << "Request _readCGI: |";
+	// for (ssize_t i = 0; i < bytes; ++i) {
+	// 	std::cerr << buffer[i];
+	// }
+	// std::cerr << "|" << std::endl;
 	BinaryBuffer bBuffer(buffer, bytes);
 	if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_parseCGIHeaders(bBuffer);

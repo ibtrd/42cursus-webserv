@@ -6,10 +6,11 @@
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed     = DEFAULT_ALLOW;
-	this->_dirListing  = UNDEFINED;
-	this->_maxBodySize = UNDEFINED;
-	this->_redirection = DEFAULT_REDIRECTON;
+	this->_allowed            = DEFAULT_ALLOW;
+	this->_dirListing         = UNDEFINED;
+	this->_maxBodySize        = UNDEFINED;
+	this->_redirection        = DEFAULT_REDIRECTON;
+	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 LocationBlock::LocationBlock(const LocationBlock &other) { *this = other; }
@@ -38,6 +39,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
 	this->_gcis        = other._gcis;
+	this->_clientBodyTempPath = other._clientBodyTempPath;
 	return (*this);
 }
 
@@ -195,6 +197,16 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 			os << Method::methods[i] << " ";
 		}
 	}
-	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;
+	os << "\n\tmaxBodySize: " << location._maxBodySize;
+	os << "\n\tCGI: ";
+	for (cgis_t::const_iterator it = location._gcis.begin(); it != location._gcis.end(); ++it) {
+		if (it != location._gcis.begin()) {
+			os << "\n\t     ";
+		}
+		os << it->first << " -> " << it->second;
+	}
+	os << "\n\tredirect: " << location._redirection.first << " -> " << location._redirection.second;
+	os << "\n\tclientBodyTempPath: " << location._clientBodyTempPath;
+	os << "\n}" << std::endl;
 	return os;
 }

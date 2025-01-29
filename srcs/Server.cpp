@@ -57,6 +57,47 @@ void Server::configure(const Configuration &config) {
 		this->_timeouts[type] = config.timeout(type);
 	}
 	this->_mimetypes = config.mimetypes();
+
+	// // DEBUG
+	// for (servermap_t::const_iterator it = this->_serverBlocks.begin(); it != this->_serverBlocks.end(); ++it) {
+	// 	std::cerr << "Server socket: " << it->first << std::endl;
+	// 	for (std::size_t i = 0; i < it->second.size(); ++i) {
+	// 		// std::cerr << it->second[i] << std::endl;
+	// 		for (std::size_t j = 0; j < it->second[i].locations().size(); ++j) {
+	// 			std::cerr << it->second[i].locations()[j] << std::endl;
+	// 		}
+	// 	}
+	// }
+
+	// // DEBUG
+	// std::cerr << "clientmap: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end(); ++it) {
+	// 	std::cerr << "\t" << it->first << " -> " << it->second->socket() << std::endl;
+	// }
+
+	// // DEBUG
+	// std::cerr << "client list: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << "\t" << it->socket() << std::endl;
+	// }
+
+	// // DEBUG
+	// std::cerr << "mimetypes: " << this->_mimetypes.size() << std::endl;
+	// for (mimetypes_t::const_iterator it = this->_mimetypes.begin(); it != this->_mimetypes.end(); ++it) {
+	// 	std::cerr << "\t" << it->first << " -> " << it->second << std::endl;
+	// }
+
+	// // DEBUG
+	// std::cerr << "timeouts: " << TIMEOUT_COUNT << std::endl;
+	// for (uint32_t i = 0; i < TIMEOUT_COUNT; ++i) {
+	// 	std::cerr << "\t" << i << " -> " << this->_timeouts[i] << std::endl;
+	// }
+
+	// // DEBUG
+	// std::cerr << "epollFd: " << this->_epollFd << std::endl;
+
+	// // DEBUG
+	// std::cerr << "Server configured" << std::endl;
 }
 
 void Server::routine(void) {
@@ -68,26 +109,26 @@ void Server::routine(void) {
 		return;
 	}
 
-	std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
-	std::cerr << "nfds: " << nfds << std::endl;
+	// std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
+	// std::cerr << "nfds: " << nfds << std::endl;
 
-	for (int32_t i = 0; i < nfds; i++) {
-		std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
-	}
+	// for (int32_t i = 0; i < nfds; i++) {
+	// 	std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
+	// }
 
-	std::cerr << std::endl;
+	// std::cerr << std::endl;
 
-	// DEBUG
-	std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
-	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
-	     ++it) {
-		std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
-	}
-	std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
-	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
-	}
-	// -----
+	// // DEBUG
+	// std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
+	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();
+	//      ++it) {
+	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second << std::endl;
+	// }
+	// std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
+	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+	// 	std::cerr << it->socket() << std::endl;
+	// }
+	// // -----
 
 	// New connections and read events
 	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
@@ -100,7 +141,7 @@ void Server::routine(void) {
 			continue;
 		}
 		if (this->_events[i].events & EPOLLIN) {
-			std::cerr << "Read event on fd " << fd << std::endl;
+			// std::cerr << "Read event on fd " << fd << std::endl;
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
 			if (it == this->_fdClientMap.end()) {
 				std::cerr << "No client for fd " << fd << std::endl;
@@ -136,7 +177,7 @@ void Server::routine(void) {
 		fd_t fd = this->_events[i].data.fd;
 
 		if (this->_events[i].events & EPOLLOUT) {
-			std::cerr << "Write event on fd " << fd << std::endl;
+			// std::cerr << "Write event on fd " << fd << std::endl;
 			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
 
 			if (it == this->_fdClientMap.end()) {
