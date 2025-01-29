@@ -21,7 +21,7 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 
 Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
-    : _idSocket(idSocket),
+    : _connectSocket(idSocket),
     //   _socket(requestSocket),
       _request(NULL),
       _context(server, addr),
@@ -42,11 +42,11 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 }
 
 Client::Client(const Client &other)
-    : _idSocket(other._idSocket),
+    : _connectSocket(other._connectSocket),
       _request(other._request),
       _context(other._context),
       _bytesSent(other._bytesSent) {
-	std::cerr << "[WARNING] Client copy" << std::endl;	// Not updated
+	std::cerr << "[WARNING] Client(" << other._clientEvent.data.fd << ") copy" << std::endl;	// Not updated
 
 	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
 		this->_timestamp[i] = other._timestamp[i];
@@ -100,7 +100,7 @@ Client &Client::operator=(const Client &other) {
 	return (*this);
 }
 
-bool Client::operator==(const Client &other) const { return (this->_idSocket == other._idSocket); }
+bool Client::operator==(const Client &other) const { return (this->_clientEvent.data.fd == other._clientEvent.data.fd); }
 
 /* ************************************************************************** */
 
@@ -201,7 +201,7 @@ error_t Client::_readSocket(void) {
 
 error_t Client::_resolveARequest(void) {
 	this->_context.serverBlock = &(this->_context.server.findServerBlock(
-	    this->_idSocket, this->_context.headers[HEADER_HOST]));
+	    this->_connectSocket, this->_context.headers[HEADER_HOST]));
 	this->_context.ruleBlock =
 	    (this->_context.serverBlock->findLocationBlock(this->_context.target));
 	if (!this->_context.ruleBlock || this->_context.ruleBlock->getRoot().empty()) {
@@ -234,9 +234,10 @@ error_t Client::_resolveARequest(void) {
 		// add to epoll
 		struct epoll_event event;
 		event.events  = this->_context.option;
+		std::cerr << "Adding CGI socket to epoll: " << this->_context.cgiSockets[PARENT_SOCKET] << " with option: " << this->_context.option << std::endl;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
 		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
-			std::cerr << "Error: epoll_ctl: " << strerror(errno) << std::endl;
+			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 			return REQ_ERROR;
 		}
 		// add to server clientbindmap
@@ -257,6 +258,7 @@ error_t Client::_switchToWrite(void) {
 	event.data.fd = this->_clientEvent.data.fd;
 	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
 		// close(this->_clientEvent.data.fd);
+		throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		return (-1);
 	}
 	SET_REQ_CAN_WRITE(this->_context.requestState);

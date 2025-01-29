@@ -132,7 +132,9 @@ void Server::routine(void) {
 	}
 	std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
 	for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
-		std::cerr << it->socket() << std::endl;
+		fd_t fds[2];
+		it->sockets(fds);
+		std::cerr << it->socket() << " with cgi at " << fds[1] << std::endl;
 	}
 	// -----
 
@@ -305,11 +307,13 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 }
 
 error_t Server::addCGIToClientMap(const fd_t socket, const Client &client) {
-	std::cerr << "Adding cgi socket: " << socket << std::endl;
+	std::cerr << "Try adding cgi socket: " << socket << " to c" << client.socket() << std::endl;
 	std::list<Client>::iterator itClient = std::find(this->_clients.begin(), this->_clients.end(), client);
 	if (itClient == this->_clients.end()) {
+		std::cerr << "Error: addCGIToClientMap: client not found" << std::endl;
 		return -1;
 	}
+	std::cerr << "Adding cgi socket: " << socket << " to c" << itClient->socket() << std::endl;
 	this->_fdClientMap[socket] = itClient;
 	return 0;
 }
@@ -362,6 +366,7 @@ void Server::_removeConnection(const fd_t fd) {
 
 	fd_t fds[2];
 	client->sockets(fds);
+	std::cerr << "fds: " << fds[0] << " " << fds[1] << std::endl;
 	// for (int i = 0; i < 2; ++i) {
 	// 	if (fds[i] != -1) {
 	// 		struct epoll_event event;
@@ -376,23 +381,22 @@ void Server::_removeConnection(const fd_t fd) {
 	// 	}
 	// }
 	if (fds[0] != -1) {
-		struct epoll_event event;
 		errno = 0;
-		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], &event)) {
-			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL)) {
 			std::cerr << "fd: " << fds[0] << std::endl;
+			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
+		std::cerr << "Removing fd: " << fds[0] << std::endl;
 		this->_fdClientMap.erase(fds[0]);
 		close(fds[0]);
 	}
 	if (fds[1] != -1) {
-		struct epoll_event event;
 		errno = 0;
-		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], &event)) {
-			std::cerr << "Error: epoll_ctl(): " << strerror(errno) << std::endl;
+		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL)) {
 			std::cerr << "fd: " << fds[1] << std::endl;
-			// throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
+		std::cerr << "Removing fd: " << fds[1] << std::endl;
 		this->_fdClientMap.erase(fds[1]);
 		close(fds[1]);
 		pid_t pid = client->cgiPid();

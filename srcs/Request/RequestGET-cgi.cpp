@@ -77,7 +77,3 @@ error_t RequestGET::_executeCGI(void) {
 	CgiBuilder::destroy(envp);
 	std::exit(1);
 }
-
-error_t RequestGET::CGIIn(void) {
-	return (this->_readCGI());
-}
