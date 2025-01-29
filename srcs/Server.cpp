@@ -20,11 +20,17 @@ Server::~Server() {
 		close(this->_epollFd);
 	}
 	for (servermap_t::const_iterator it = this->_serverBlocks.begin();
-	     it != this->_serverBlocks.end(); ++it) {
+		it != this->_serverBlocks.end(); ++it) {
 		close(it->first);
 	}
 	for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end(); ++it) {
 		close(it->first);
+	}
+	for (std::list<Client>::const_iterator it = this->_clients.begin(); it != this->_clients.end(); ++it) {
+		pid_t pid = it->cgiPid();
+		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
+			kill(pid, SIGKILL);
+		}
 	}
 	this->_serverBlocks.clear();
 	this->_fdClientMap.clear();
@@ -45,7 +51,7 @@ void Server::configure(const Configuration &config) {
 		const std::vector<struct sockaddr_in> &hosts = blocks[i].hosts();
 		for (std::size_t j = 0; j < hosts.size(); ++j) {
 			socketbindmap_t::const_iterator it =
-			    ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
+				ft::isBound<fd_t, struct sockaddr_in>(bound, hosts[j]);
 			if (bound.end() == it) {
 				bound[this->_addSocket(blocks[i], hosts[j])].push_back(hosts[j]);
 			} else {
@@ -293,7 +299,7 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 	}
 
 	std::cout << "Socket " << fd << " listening on " << ip << ":" << ntohs(boundAddr.sin_port)
-	          << std::endl;
+			  << std::endl;
 	this->_serverBlocks[fd].push_back(block);
 	return fd;
 }
@@ -392,7 +398,7 @@ void Server::_removeConnection(const fd_t fd) {
 		pid_t pid = client->cgiPid();
 		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
 			std::cerr << "Killing CGI process: " << pid << std::endl;
-			kill(pid, SIGINT);
+			kill(pid, SIGKILL);
 		}
 	}
 

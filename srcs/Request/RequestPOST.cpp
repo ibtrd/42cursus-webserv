@@ -61,7 +61,11 @@ void RequestPOST::_openCGI(void) {
 	}
 
 	if (this->_context.pid == 0) {
-		this->_executeCGI();
+		try {
+			this->_executeCGI();
+		} catch (...) {
+			std::exit(1);
+		}
 	} else {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);

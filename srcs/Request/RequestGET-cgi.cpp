@@ -29,7 +29,11 @@ void RequestGET::_openCGI(void) {
 	}
 
 	if (this->_context.pid == 0) {
-		this->_executeCGI();
+		try {
+			this->_executeCGI();
+		} catch (...) {
+			std::exit(1);
+		}
 	} else {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
