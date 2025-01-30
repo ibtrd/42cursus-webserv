@@ -17,6 +17,8 @@ public:
 	~Path(void);
 
 	Path &operator=(const Path &other);
+	bool operator==(const Path &other);
+	bool operator!=(const Path &other);
 
 	bool    empty(void) const;
 	bool    isOriginForm(void) const;
@@ -29,6 +31,7 @@ public:
 	bool          isDir(void) const;
 	const time_t &mTime(void) const;
 	long          size(void) const;
+	dev_t         deviceID(void) const;
 
 	const std::string &string(void) const;
 	const char        *c_str(void) const;

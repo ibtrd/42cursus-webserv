@@ -54,6 +54,7 @@ private:
 	                           LocationBlock                          &location);
 	void _indexDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void _cgiDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
+	void _clientBodyUploadPathDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 	void _clientBodyTempPathDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location);
 
 	uint32_t _countArgs(const std::vector<ConfToken>::const_iterator &directive) const;

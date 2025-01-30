@@ -44,6 +44,14 @@ Path &Path::operator=(const Path &other) {
 	return (*this);
 }
 
+bool Path::operator!=(const Path &other) {
+	return (this->_str != other._str);
+}
+
+bool Path::operator==(const Path &other) {
+	return (this->_str == other._str);
+}
+
 /* ************************************************************************** */
 
 bool Path::empty(void) const { return this->_str.empty(); }
@@ -90,6 +98,13 @@ long Path::size(void) const {
 		throw std::logic_error("No stat() data for this Path instance");
 	}
 	return this->_stat.st_size;
+}
+
+dev_t Path::deviceID(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
+	return this->_stat.st_dev;
 }
 
 std::string Path::extension(void) const {
