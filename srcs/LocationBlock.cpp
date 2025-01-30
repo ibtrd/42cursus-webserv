@@ -138,7 +138,6 @@ void LocationBlock::addIndex(const std::string &str) { this->_indexes.push_back(
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
-	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
@@ -182,6 +181,9 @@ const Path *LocationBlock::findCGI(const std::string &extension) const {
 }
 
 const Path &LocationBlock::clientBodyTempPath(void) const {
+	if (this->_clientBodyTempPath.empty()) {
+		return this->_clientBodyUploadPath;
+	}
 	return this->_clientBodyTempPath;
 }
 

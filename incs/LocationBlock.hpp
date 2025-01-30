@@ -14,7 +14,6 @@
 #define DEFAULT_MAXBODYSIZE 1048576
 #define DEFAULT_REDIRECTON std::make_pair(0, "")
 #define DEFAULT_INDEX "index.html"
-#define DEFAULT_TEMP_PATH "/tmp/"
 
 #define DIRLISTING_ON "on"
 #define DIRLISTING_OFF "off"
