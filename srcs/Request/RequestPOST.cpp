@@ -190,7 +190,7 @@ error_t RequestPOST::_validateLocalFile(void) {
 /* ************************************************************************** */
 
 void RequestPOST::processing(void) {
-	// std::cerr << "RequestPOST parse" << std::endl;
+	std::cerr << "RequestPOST parse" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
@@ -211,6 +211,16 @@ void RequestPOST::processing(void) {
 	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
 }
 
+error_t RequestPOST::workIn(void) {
+	std::cerr << "RequestPOST workIn" << std::endl;
+	if (this->_chunked) {
+		return (this->_readChunked());
+	} else {
+		return (this->_readContent());
+	}
+	return (REQ_DONE);
+}
+
 error_t RequestPOST::workOut(void) {
 	std::cerr << "RequestPOST workOut" << std::endl;
 	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
@@ -218,12 +228,12 @@ error_t RequestPOST::workOut(void) {
 }
 
 error_t RequestPOST::CGIIn(void) {
-	// std::cerr << "RequestPOST CGIInt" << std::endl;
+	std::cerr << "RequestPOST CGIInt" << std::endl;
 	return (this->_readCGI());
 }
 
 error_t RequestPOST::CGIOut(void) {
-	// std::cerr << "RequestPOST CGIOut" << std::endl;
+	std::cerr << "RequestPOST CGIOut" << std::endl;
 
 	if (this->_chunked) {
 		return (this->_readChunked());

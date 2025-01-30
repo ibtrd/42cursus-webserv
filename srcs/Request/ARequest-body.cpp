@@ -21,11 +21,13 @@ error_t ARequest::_readContent(void) {
 	} else {
 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	if (this->_contentLength == 0) {
 		this->_saveFile();
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
 	}
 	return (REQ_CONTINUE);
@@ -43,6 +45,7 @@ error_t ARequest::_readChunked(void) {
 				if (pos == std::string::npos) {
 					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 					SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+					SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 					return (REQ_DONE);
 				}
 				this->_context.buffer.erase(0, pos + 2);
@@ -50,6 +53,7 @@ error_t ARequest::_readChunked(void) {
 			} else if (this->_context.buffer.size() == 1 && this->_context.buffer[0] != '\r') {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
 			} else {
 				return (REQ_CONTINUE);
@@ -66,12 +70,14 @@ error_t ARequest::_readChunked(void) {
 			if (line.empty()) {  // refuse empty chunk
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
 			}
 			this->_contentLength = sToContentLength(line, true);
 			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
 			}
 			// Read end of transfer
@@ -89,6 +95,7 @@ error_t ARequest::_readChunked(void) {
 				}
 
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
 			}
 			this->_context.buffer.erase(0, pos + 2);
@@ -98,6 +105,7 @@ error_t ARequest::_readChunked(void) {
 			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
 				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 				return (REQ_DONE);
 			}
 		}

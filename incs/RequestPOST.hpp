@@ -37,6 +37,7 @@ public:
 
 	void      processing(void);
 	
+	error_t   workIn(void);
 	error_t   workOut(void);
 
 	error_t   CGIIn(void);
