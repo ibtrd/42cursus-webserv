@@ -22,13 +22,13 @@ error_t ARequest::_readContent(void) {
 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 	}
 	if (this->_contentLength == 0) {
 		this->_saveFile();
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
+		return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 	}
 	return (REQ_CONTINUE);
 }
@@ -54,7 +54,7 @@ error_t ARequest::_readChunked(void) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			} else {
 				return (REQ_CONTINUE);
 			}
@@ -71,14 +71,14 @@ error_t ARequest::_readChunked(void) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 			this->_contentLength = sToContentLength(line, true);
 			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
 				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 			// Read end of transfer
 			if (this->_contentLength == 0) {
@@ -96,7 +96,7 @@ error_t ARequest::_readChunked(void) {
 
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 			this->_context.buffer.erase(0, pos + 2);
 			this->_contentTotalLength += this->_contentLength;
@@ -106,7 +106,7 @@ error_t ARequest::_readChunked(void) {
 				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
 				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
+				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 		}
 
