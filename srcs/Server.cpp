@@ -148,24 +148,58 @@ void Server::routine(void) {
 			}
 			continue;
 		}
+		clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+		if (this->_events[i].events & (EPOLLERR | EPOLLHUP)) {
+			std::cerr << "Close connection (EPOLLERR | EPOLLHUP) on fd " << fd << std::endl;
+			if (it != this->_fdClientMap.end()) {
+				this->_removeConnection(fd);
+				break;
+			} else {
+				std::cerr << "No client for fd" << fd << "removing it..." << std::endl;
+				if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fd, NULL)) {
+					std::cerr << "fd: " << fd << std::endl;
+					throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
+				}
+			}
+			continue;
+		}
 		if (this->_events[i].events & EPOLLIN) {
 			std::cerr << "Read event on fd " << fd << std::endl;
-			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
-			if (it == this->_fdClientMap.end()) {
-				std::cerr << "No client for fd " << fd << std::endl;
-				continue;
-			}
+			
+
 			error_t err = it->second->handleIn(fd);
 			if (REQ_ERROR == err) {
 				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
+				break;
 			} else if (REQ_DONE == err) {
 				std::cerr << "Close connection (Done)" << std::endl;
 				this->_removeConnection(fd);
+				break;
 			}
-		} else if (!(this->_events[i].events & EPOLLOUT)) {
-			std::cerr << "Unknown event on fd " << fd << std::endl;
 		}
+		if (this->_events[i].events & EPOLLOUT) {
+			std::cerr << "Write event on fd " << fd << std::endl;
+			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
+
+			if (it == this->_fdClientMap.end()) {
+				std::cerr << "No client for fd " << fd << std::endl;
+				continue;
+			}
+			error_t err = it->second->handleOut(fd);
+			if (REQ_ERROR == err) {
+				std::cerr << "Close connection (Error)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+			} else if (REQ_DONE == err) {
+				std::cerr << "Close connection (Done)" << std::endl;
+				this->_removeConnection(fd);
+				break;
+			}
+		}
+		// else if (!(this->_events[i].events & EPOLLOUT)) {
+		// 	std::cerr << "Unknown event on fd " << fd << std::endl;
+		// }
 	}
 
 	// // DEBUG
@@ -181,29 +215,16 @@ void Server::routine(void) {
 	// // -----
 
 	// Write events
-	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
-		fd_t fd = this->_events[i].data.fd;
-
-		if (this->_events[i].events & EPOLLOUT) {
-			std::cerr << "Write event on fd " << fd << std::endl;
-			clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
-
-			if (it == this->_fdClientMap.end()) {
-				std::cerr << "No client for fd " << fd << std::endl;
-				continue;
-			}
-			error_t err = it->second->handleOut(fd);
-			if (REQ_ERROR == err) {
-				std::cerr << "Close connection (Error)" << std::endl;
-				this->_removeConnection(fd);
-			} else if (REQ_DONE == err) {
-				std::cerr << "Close connection (Done)" << std::endl;
-				this->_removeConnection(fd);
-			}
-		} else if (!(this->_events[i].events & EPOLLIN)) {
-			std::cerr << "Unknown event on fd " << fd << std::endl;
-		}
-	}
+// 	for (int32_t i = 0; i < nfds && 0 == g_signal; i++) {
+// 		fd_t fd = this->_events[i].data.fd;
+// 		if (this->_events[i].events & (EPOLLERR | EPOLLHUP)) {
+// 			std::cerr << "Close connection (EPOLLERR | EPOLLHUP)" << std::endl;
+// 			this->_removeConnection(fd);
+// 		}
+//  else if (!(this->_events[i].events & EPOLLIN)) {
+// 			std::cerr << "Unknown event on fd " << fd << std::endl;
+// 		}
+// 	}
 	// // DEBUG
 	// std::cerr << "\nclientmap pre timeout check: " << this->_fdClientMap.size() << std::endl;
 	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it != this->_fdClientMap.end();

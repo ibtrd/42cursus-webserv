@@ -95,7 +95,8 @@ Client &Client::operator=(const Client &other) {
 	}
 
 	this->_context = other._context;
-
+	this->_clientEvent.events = other._clientEvent.events;
+	this->_clientEvent.data   = other._clientEvent.data;
 	this->_bytesSent = other._bytesSent;
 	return (*this);
 }
