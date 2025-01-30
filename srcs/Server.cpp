@@ -385,6 +385,7 @@ void Server::_removeConnection(const fd_t fd) {
 		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
 			std::cerr << "Killing CGI process: " << pid << std::endl;
 			kill(pid, SIGKILL);
+			waitpid(pid, NULL, 0);
 		}
 	}
 
