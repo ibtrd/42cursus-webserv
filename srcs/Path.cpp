@@ -92,6 +92,13 @@ long Path::size(void) const {
 	return this->_stat.st_size;
 }
 
+dev_t Path::deviceID(void) const {
+	if (!this->_statDone) {
+		throw std::logic_error("No stat() data for this Path instance");
+	}
+	return this->_stat.st_dev;
+}
+
 std::string Path::extension(void) const {
 	const std::string &src = this->_chunks.back();
 	const std::size_t  pos = src.find_last_of('.');

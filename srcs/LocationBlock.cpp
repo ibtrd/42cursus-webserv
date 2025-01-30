@@ -37,6 +37,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
 	this->_gcis        = other._gcis;
+	this->_clientBodyUploadPath = other._clientBodyUploadPath;
 	this->_clientBodyTempPath = other._clientBodyTempPath;
 	return (*this);
 }
@@ -218,7 +219,14 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 		os << it->first << " -> " << it->second;
 	}
 	os << "\n\tredirect: " << location._redirection.first << " -> " << location._redirection.second;
-	os << "\n\tclientBodyTempPath: " << location._clientBodyTempPath;
+	if (location.canUpload()) {
+		os << "\n\tUpload: Allowed";
+		os << "\n\tclientBodyUploadPath: " << location._clientBodyUploadPath;
+		os << "\n\tclientBodyTempPath: " << location._clientBodyTempPath;
+	} else {
+		os << "\n\tUpload: Not allowed";
+		os << "\n\t" << location._clientBodyUploadPath;
+	}
 	os << "\n}" << std::endl;
 	return os;
 }

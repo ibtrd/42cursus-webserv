@@ -58,15 +58,9 @@ error_t RequestPUT::_generateFilename(void) {
 
 	std::cerr << "tmp: " << this->_context.ruleBlock->clientBodyTempPath() << std::endl;
 	std::cerr << "basename: " << basename << std::endl;
-	if (0 != this->_context.ruleBlock->clientBodyTempPath().access(W_OK)) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return (REQ_DONE);
-	}
-
 	do {
 		tmp = basename + '.' + ft::generateRandomString(8) + ".tmp";
-		++i;
-	} while (0 == access(tmp.c_str(), F_OK) && i < 100);
+	} while (0 == access(tmp.c_str(), F_OK) && ++i < 100);
 	if (i == 100) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return (REQ_DONE);
@@ -274,30 +268,35 @@ void RequestPUT::processing(void) {
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
 	}
-
 	std::cerr << "PUT Path:" << this->_path << std::endl;
 	// Check path
 	if (this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	Path parent = this->_path.dir();
-	if (0 != this->_path.access(F_OK)) {
-		if (0 != parent.access(W_OK)) {
-			this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-		} else {
-			this->_openFile();
-		}
-		return ;
+	if (!this->_context.ruleBlock->canUpload()) {
+		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
+		return;
 	}
-	if (0 != parent.access(F_OK)) {
+
+	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
+
+	this->_path = this->_context.ruleBlock->clientBodyUploadPath().string() + this->_context.target.substr(matchLength, std::string::npos);
+	Path upload = this->_path.dir();
+	Path temp = this->_context.ruleBlock->clientBodyTempPath();
+
+	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n" << temp.string() << "\n" << this->path() << std::endl;
+
+	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-	} else if (0 != parent.stat()) {
+	} else if (0 != upload.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	} else if (!parent.isDir()) {
+	} else if (!upload.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
-	} else if (0 != parent.access(W_OK)) {
+	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	} else if (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) || upload.deviceID() != temp.deviceID()) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_openFile();
 	}
