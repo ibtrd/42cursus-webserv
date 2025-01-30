@@ -37,6 +37,7 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
 	this->_gcis        = other._gcis;
+	this->_clientBodyUploadPath = other._clientBodyUploadPath;
 	this->_clientBodyTempPath = other._clientBodyTempPath;
 	return (*this);
 }
@@ -70,6 +71,9 @@ void LocationBlock::fill(const LocationBlock &other) {
 	}
 	if (0 == this->_gcis.size()) {
 		this->_gcis = other._gcis;
+	}
+	if (this->_clientBodyUploadPath.empty()) {
+		this->_clientBodyUploadPath = other._clientBodyUploadPath;
 	}
 	if (this->_clientBodyTempPath.empty()) {
 		this->_clientBodyTempPath = other._clientBodyTempPath;
@@ -134,11 +138,14 @@ void LocationBlock::addIndex(const std::string &str) { this->_indexes.push_back(
 void LocationBlock::setDefaults(void) {
 	this->setDirListing(DEFAULT_DIRLISTING);
 	this->_maxBodySize = DEFAULT_MAXBODYSIZE;
-	this->_clientBodyTempPath = Path(DEFAULT_TEMP_PATH);
 }
 
 void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
 	this->_gcis[ext] = Path(bin);
+}
+
+void LocationBlock::setClientBodyUploadPath(const std::string &str) {
+	this->_clientBodyUploadPath = Path(str);
 }
 
 void LocationBlock::setClientBodyTempPath(const std::string &str) {
@@ -150,6 +157,8 @@ void LocationBlock::setClientBodyTempPath(const std::string &str) {
 const Path &LocationBlock::path(void) const { return this->_path; }
 
 bool LocationBlock::isDirListing(void) const { return this->_dirListing == 1; }
+
+bool LocationBlock::canUpload(void) const { return !this->_clientBodyUploadPath.empty(); }
 
 int32_t LocationBlock::getMaxBodySize(void) const { return this->_maxBodySize; }
 
@@ -172,7 +181,14 @@ const Path *LocationBlock::findCGI(const std::string &extension) const {
 }
 
 const Path &LocationBlock::clientBodyTempPath(void) const {
+	if (this->_clientBodyTempPath.empty()) {
+		return this->_clientBodyUploadPath;
+	}
 	return this->_clientBodyTempPath;
+}
+
+const Path &LocationBlock::clientBodyUploadPath(void) const {
+	return this->_clientBodyUploadPath;
 }
 
 /* ************************************************************************** */

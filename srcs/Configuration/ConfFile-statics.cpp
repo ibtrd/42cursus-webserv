@@ -55,6 +55,7 @@ ConfFile::locationDirectives ConfFile::_initLocationDirectives(void) {
 	map["redirect"]              = &ConfFile::_redirectionDirective;
 	map["index"]                 = &ConfFile::_indexDirective;
 	map["cgi"]                   = &ConfFile::_cgiDirective;
+	map["client_body_upload_path"] = &ConfFile::_clientBodyUploadPathDirective;
 	map["client_body_temp_path"] = &ConfFile::_clientBodyTempPathDirective;
 	return map;
 }
