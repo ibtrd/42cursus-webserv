@@ -11,7 +11,7 @@
 /* CONSTRUCTORS ************************************************************* */
 
 RequestPOST::RequestPOST(RequestContext_t &context)
-	: ARequest(context), _chunked(false), _contentLength(0) {
+	: ARequest(context) {
 	// std::cerr << "RequestPOST created" << std::endl;
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 	// SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
@@ -20,7 +20,7 @@ RequestPOST::RequestPOST(RequestContext_t &context)
 }
 
 RequestPOST::RequestPOST(const RequestPOST &other)
-    : ARequest(other), _chunked(false), _contentLength(0) {
+    : ARequest(other) {
 	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
 }
@@ -33,6 +33,9 @@ RequestPOST::~RequestPOST(void) {
 
 RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 	// std::cerr << "RequestPOST assign" << std::endl;
+	// int32_t _contentLength;
+
+	// int32_t _contentTotalLength;
 	(void)other;
 	return (*this);
 }
@@ -90,140 +93,12 @@ void RequestPOST::_saveFile(void) {
 	std::cerr << "RequestPOST shutdown" << std::endl;
 }
 
-error_t RequestPOST::_readContent(void) {
-	std::cerr << "RequestPOST _readContent" << std::endl;
-	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
-
-		std::cerr << "J'ENVOIE AU CGI" << std::endl;
-
-		ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
-		if (bytes == -1) {
-			std::cerr << "Error: send: " << strerror(errno) << std::endl;
-			// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
-			return (REQ_ERROR);
-		}
-		this->_contentLength -= this->_context.buffer.size();
-		this->_context.buffer.clear();
-		// std::cerr << ".";	// DEBUG
-		std::cerr << "Remaining contentLength: " << this->_contentLength << std::endl;
-	} else {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
-	if (this->_contentLength == 0) {
-		this->_saveFile();
-		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
-	return (REQ_CONTINUE);
-}
-/*
-AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLMMMMMMMMMNNNNNNNNNOOOOOOOOOPPPPPPPPP
-*/
-error_t RequestPOST::_readChunked(void) {
-	// std::cerr << "RequestPOST _readChunked" << std::endl;
-	ssize_t bytes = 0;
-
-	while (!this->_context.buffer.empty()) {
-		// std::cerr << "RequestPOST begin buffer: |" << this->_context.buffer << "|" << std::endl;
-
-		// Read end of chunk
-		if (this->_contentLength == 0) {
-			if (this->_context.buffer.size() >= 2) {
-				size_t pos = this->_context.buffer.rfind("\r\n", 0);
-				if (pos == std::string::npos) {
-					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-					SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-					return (REQ_CONTINUE);
-				}
-				this->_context.buffer.erase(0, pos + 2);
-				this->_contentLength = -1;
-			} else if (this->_context.buffer.size() == 1 && this->_context.buffer[0] != '\r') {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_CONTINUE);
-			} else {
-				return (REQ_CONTINUE);
-			}
-		}
-
-		// Read chunk size
-		if (-1 == this->_contentLength) {
-			// std::cerr << "RequestPOST contentLength -1" << std::endl;
-			size_t pos = this->_context.buffer.find("\r\n");
-			if (pos == std::string::npos) {
-				return (REQ_CONTINUE);
-			}
-			std::string line = this->_context.buffer.substr(0, pos);
-			if (line.empty()) {  // refuse empty chunk
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_CONTINUE);
-			}
-			// this->_context.buffer.erase(0, pos + 2);
-			this->_contentLength = sToContentLength(line, true);
-			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_CONTINUE);
-			}
-			// Read end of transfer
-			if (this->_contentLength == 0) {
-				if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[0])) {
-					this->_saveFile();
-				} else {
-					for (size_t i = 1; i < CHUNK_TERMINATOR_SIZE; ++i) {
-						if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[i])) {
-							this->_contentLength = -1;
-							return (REQ_CONTINUE);
-						}
-					}
-					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				}
-
-				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_CONTINUE);
-			}
-			this->_context.buffer.erase(0, pos + 2);
-			this->_contentTotalLength += this->_contentLength;
-			if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
-			    this->_contentLength > this->_context.ruleBlock->getMaxBodySize() ||
-			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
-				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
-				SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-				return (REQ_CONTINUE);
-			}
-		}
-		// std::cerr << "RequestPOST contentLength: " << this->_contentLength << std::endl;
-		// std::cerr << "RequestPOST content buffer: |" << this->_context.buffer << "|" << std::endl;
-
-		// Read chunk
-		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {
-
-			std::cerr << "J'ENVOIE AU CGI" << std::endl;
-
-			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_contentLength, MSG_NOSIGNAL);
-			if (bytes == -1) {
-				std::cerr << "Error: send: " << strerror(errno) << std::endl;
-				// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
-				return (REQ_ERROR);
-			}
-			this->_context.buffer.erase(0, this->_contentLength);
-			this->_contentLength = 0;
-		} else if (static_cast<int32_t>(this->_context.buffer.size()) <= this->_contentLength) {
-
-			std::cerr << "J'ENVOIE AU CGI" << std::endl;
-
-			bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
-			if (bytes == -1) {
-				std::cerr << "Error: send: " << strerror(errno) << std::endl;
-				// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
-				return (REQ_ERROR);
-			}
-			this->_contentLength -= this->_context.buffer.size();
-			this->_context.buffer.clear();
-		}
+error_t RequestPOST::_writeChunk(void) {
+	ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
+	if (bytes == -1) {
+		std::cerr << "Error: send: " << strerror(errno) << std::endl;
+		// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+		return (REQ_ERROR);
 	}
 	return (REQ_CONTINUE);
 }

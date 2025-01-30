@@ -10,17 +10,17 @@ private:
 	std::ofstream _file;
 	Path          _tmpFilename;
 
-	bool    _chunked;
-	int32_t _contentLength;
+	// bool    _chunked;
+	// int32_t _contentLength;
 
-	int32_t _contentTotalLength;
+	// int32_t _contentTotalLength;
 
 	error_t _generateFilename(void);
 	void    _openFile(void);
 	error_t _checkHeaders(void);
+
 	void    _saveFile(void);
-	error_t _readContent(void);
-	error_t _readChunked(void);
+	error_t _writeChunk(void);
 
 public:
 	RequestPUT(RequestContext_t &context);

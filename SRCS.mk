@@ -32,14 +32,15 @@ REQUEST_DIR=Request/
 
 REQUEST_SRC = \
 	ARequest \
+	ARequest-body \
+	ARequest-cgi \
 	RequestGET \
+	RequestGET-autoindex \
+	RequestGET-cgi \
 	RequestPOST \
 	RequestDELETE \
 	RequestPUT \
-	RequestGET-autoindex \
 	RequestHEAD \
-	RequestGET-cgi \
-	ARequest-cgi \
 
 SRC += $(addprefix $(CLIENT_DIR), $(CLIENT_SRC))
 CLIENT_DIR=Client/

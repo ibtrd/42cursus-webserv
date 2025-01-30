@@ -12,7 +12,7 @@ const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0
 // 	// std::cerr << "ARequest created" << std::endl;
 // }
 
-ARequest::ARequest(RequestContext_t &context) : _context(context) {
+ARequest::ARequest(RequestContext_t &context) : _context(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "ARequest created" << std::endl;
 	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
@@ -27,7 +27,7 @@ ARequest::ARequest(RequestContext_t &context) : _context(context) {
 	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
-ARequest::ARequest(const ARequest &other) : _context(other._context) {
+ARequest::ARequest(const ARequest &other) : _context(other._context), _chunked(false), _contentLength(0) {
 	// std::cerr << "ARequest copy" << std::endl;
 	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
