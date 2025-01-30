@@ -5,6 +5,8 @@
 
 #include "RequestContext.hpp"
 
+#include <fstream>
+
 // # define CHUMK_TERMINATOR "0\r\n\r\n"
 #define CHUNK_TERMINATOR_SIZE 5
 
@@ -16,6 +18,9 @@ protected:
 	Path             _path;
 	const Path       *_cgiPath;
 
+	std::ofstream _file;
+	Path          _tmpFilename;
+
 	bool    _chunked;
 	int32_t _contentLength;
 
@@ -24,8 +29,11 @@ protected:
 	error_t _readCGI(void);
 	void    _parseCGIHeaders(BinaryBuffer &buffer);
 
-	virtual void    _saveFile(void);
-	virtual error_t _writeChunk(void);
+	error_t _generateFilename(void);
+	void    _openFile(void);
+
+	void    _saveFile(void);
+	error_t _writeChunk(void);
 	error_t         _readContent(void);
 	error_t         _readChunked(void);
 

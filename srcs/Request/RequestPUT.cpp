@@ -51,37 +51,6 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 
 /* ************************************************************************** */
 
-error_t RequestPUT::_generateFilename(void) {
-	std::string basename = this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
-	std::string tmp; 
-	int32_t     i = 0;
-
-	std::cerr << "tmp: " << this->_context.ruleBlock->clientBodyTempPath() << std::endl;
-	std::cerr << "basename: " << basename << std::endl;
-	do {
-		tmp = basename + '.' + ft::generateRandomString(8) + ".tmp";
-	} while (0 == access(tmp.c_str(), F_OK) && ++i < 100);
-	if (i == 100) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return (REQ_DONE);
-	}
-	this->_tmpFilename = tmp;
-	std::cerr << "tmpFilename: " << this->_tmpFilename << std::endl;
-	return (REQ_CONTINUE);
-}
-
-void RequestPUT::_openFile(void) {
-	if (REQ_CONTINUE != this->_generateFilename()) {
-		return;
-	}
-	this->_file.open(this->_tmpFilename.c_str(),
-	                 std::ios::out | std::ios::trunc | std::ios::binary);
-	if (!this->_file.is_open()) {
-		std::cerr << "open(): " << std::strerror(errno) << std::endl;
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	}
-}
-
 error_t RequestPUT::_checkHeaders(void) {
 	headers_t::const_iterator it = this->_context.headers.find(HEADER_CONTENT_LENGTH);
 	if (it == this->_context.headers.end()) {
@@ -114,44 +83,6 @@ error_t RequestPUT::_checkHeaders(void) {
 	} else {
 		this->_contentLength = -1;	// -1: Need to read chunk size
 	}
-	return (REQ_CONTINUE);
-}
-
-void RequestPUT::_saveFile(void) {
-	std::cerr << "RequestPUT _saveFile" << std::endl;
-	this->_file.close();
-	this->_context.response.setStatusCode(STATUS_CREATED);
-	if (0 == this->_path.access(F_OK) &&
-		0 != std::remove(this->_path.c_str())) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	}
-	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
-	}
-	// int source = -1;
-	// int dest = -1;
-	// if ((source = open(this->_tmpFilename.c_str(), O_RDONLY)) == -1 ||
-	// 	(dest = open(this->_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
-	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	// 	std::cerr << "Error: open(): " << std::strerror(errno) << std::endl;
-	// 	close(source);
-	// 	close(dest);
-	// 	std::remove(this->_tmpFilename.c_str());
-	// 	return;
-	// }
-	// struct stat statbuf;
-	// if (fstat(source, &statbuf) == -1 || sendfile(dest, source, NULL, statbuf.st_size) == -1) {
-	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	// 	std::cerr << "Error: saveFile: " << std::strerror(errno) << std::endl;
-	// }
-	// close(source);
-	// close(dest);
-	std::remove(this->_tmpFilename.c_str());
-}
-
-error_t RequestPUT::_writeChunk(void) {
-	this->_file.write(this->_context.buffer.c_str(), this->_contentLength);
 	return (REQ_CONTINUE);
 }
 

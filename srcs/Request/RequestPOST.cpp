@@ -13,9 +13,10 @@
 RequestPOST::RequestPOST(RequestContext_t &context)
 	: ARequest(context) {
 	// std::cerr << "RequestPOST created" << std::endl;
-	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
+	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 	// SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 	// SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);	// No workOut needed
 	this->_contentTotalLength = 0;
 }
 
@@ -77,31 +78,31 @@ void RequestPOST::_openCGI(void) {
 	}
 }
 
-void RequestPOST::_saveFile(void) {
-	std::cerr << "RequestPOST _saveFile" << std::endl;
+// void RequestPOST::_saveFile(void) {
+// 	std::cerr << "RequestPOST _saveFile" << std::endl;
 
-	shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
-	this->_context.response.setStatusCode(STATUS_OK);
+// 	shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
+// 	this->_context.response.setStatusCode(STATUS_OK);
 
-	struct epoll_event event;
-	event.events  = EPOLLIN;
-	event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
-	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
-		throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
-	}
+// 	struct epoll_event event;
+// 	event.events  = EPOLLIN;
+// 	event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
+// 	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
+// 		throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
+// 	}
 
-	std::cerr << "RequestPOST shutdown" << std::endl;
-}
+// 	std::cerr << "RequestPOST shutdown" << std::endl;
+// }
 
-error_t RequestPOST::_writeChunk(void) {
-	ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
-	if (bytes == -1) {
-		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-		// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
-		return (REQ_ERROR);
-	}
-	return (REQ_CONTINUE);
-}
+// error_t RequestPOST::_writeChunk(void) {
+// 	ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
+// 	if (bytes == -1) {
+// 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
+// 		// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+// 		return (REQ_ERROR);
+// 	}
+// 	return (REQ_CONTINUE);
+// }
 
 error_t RequestPOST::_executeCGI(void) {
 	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
@@ -135,7 +136,6 @@ error_t RequestPOST::_executeCGI(void) {
 }
 
 error_t RequestPOST::_checkHeaders(void) {
-	std::cerr << "CHECK HEADER" << std::endl;
 	headers_t::const_iterator it = this->_context.headers.find(HEADER_CONTENT_LENGTH);
 	if (it == this->_context.headers.end()) {
 		it = this->_context.headers.find(HEADER_TRANSFER_ENCODING);
@@ -164,9 +164,8 @@ error_t RequestPOST::_checkHeaders(void) {
 			this->_context.response.setStatusCode(STATUS_NO_CONTENT);
 			return (REQ_DONE);
 		}
-		std::cerr << "QQQQQQQQQQQQQQQQQ RequestPOST contentLength: " << this->_contentLength << std::endl;
 	} else {
-		this->_contentLength = -1;
+		this->_contentLength = -1;	// -1: Need to read chunk size
 	}
 	return (REQ_CONTINUE);
 }
@@ -196,19 +195,47 @@ void RequestPOST::processing(void) {
 		return;
 	}
 
-	if (!this->_cgiPath) {
-		this->_context.response.setStatusCode(STATUS_NOT_IMPLEMENTED);
+	// CGI
+	if (this->_cgiPath) {
+		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
+		if (REQ_CONTINUE != this->_validateLocalFile()) {
+			return;
+		}
+		// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
+		this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
 		return;
 	}
-	// if (0 != this->_path.access(F_OK)) {
-	// 	this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-	// 	return;
-	// }
-	if (REQ_CONTINUE != this->_validateLocalFile()) {
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+
+	// Upload
+	if (this->_path.isDirFormat()) {
+		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
+	if (!this->_context.ruleBlock->canUpload()) {
+		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
+		return;
+	}
+
+	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
+
+	this->_path = this->_context.ruleBlock->clientBodyUploadPath().string() + this->_context.target.substr(matchLength, std::string::npos);
+	Path upload = this->_path.dir();
+	Path temp = this->_context.ruleBlock->clientBodyTempPath();
+
+	if (0 != upload.access(F_OK)) {
+		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
+	} else if (0 != upload.stat()) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	} else if (!upload.isDir()) {
+		this->_context.response.setStatusCode(STATUS_CONFLICT);
+	} else if (0 != upload.access(W_OK)) {
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	} else if ( upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) || upload.deviceID() != temp.deviceID())) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	} else {
+		this->_openFile();
+	}
 }
 
 error_t RequestPOST::workIn(void) {

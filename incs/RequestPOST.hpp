@@ -7,20 +7,7 @@
 
 class RequestPOST : public ARequest {
 private:
-	std::ofstream _file;
-	Path          _tmpFilename;
-
-	// bool    _chunked;
-	// int32_t _contentLength;
-
-	// int32_t _contentTotalLength;
-
-	error_t _generateFilename(void);
-	void    _openFile(void);
 	void    _openCGI(void);
-
-	void    _saveFile(void);
-	error_t _writeChunk(void);
 
 	error_t _executeCGI(void);
 	
