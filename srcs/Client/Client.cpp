@@ -22,7 +22,6 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
     : _connectSocket(idSocket),
-    //   _socket(requestSocket),
       _request(NULL),
       _context(server, addr),
       _bytesSent(0) {
@@ -34,10 +33,6 @@ Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
 	this->_timestamp[SEND_TIMEOUT]        = std::numeric_limits<time_t>::max();
 	this->_clientEvent.events             = EPOLLIN;
 	this->_clientEvent.data.fd            = requestSocket;
-	this->_context.cgiSockets[0]          = -1;
-	this->_context.cgiSockets[1]          = -1;
-	this->_context.pid                    = -1;
-	this->_context.requestState           = REQ_STATE_NONE;
 	this->_request                        = NULL;
 }
 
@@ -74,32 +69,6 @@ Client::~Client(void) {
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
-
-Client &Client::operator=(const Client &other) {
-	std::cerr << "[WARNING] Client assign" << std::endl;	// Not updated
-	if (this == &other) {
-		return (*this);
-	}
-
-	if (this->_request) {
-		delete this->_request;
-	}
-	if (other._request) {
-		this->_request = other._request->clone();
-	} else {
-		this->_request = NULL;
-	}
-
-	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
-		this->_timestamp[i] = other._timestamp[i];
-	}
-
-	this->_context = other._context;
-	this->_clientEvent.events = other._clientEvent.events;
-	this->_clientEvent.data   = other._clientEvent.data;
-	this->_bytesSent = other._bytesSent;
-	return (*this);
-}
 
 bool Client::operator==(const Client &other) const { return (this->_clientEvent.data.fd == other._clientEvent.data.fd); }
 

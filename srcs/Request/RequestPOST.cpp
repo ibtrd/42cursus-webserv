@@ -249,7 +249,7 @@ error_t RequestPOST::_executeCGI(void) {
 	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
 	// dup2(this->_context.cgiSockets[CHILD_SOCKET], STDERR_FILENO);
 	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO);
-	// close(this->_context.cgiSockets[PARENT_SOCKET]);
+	close(this->_context.cgiSockets[PARENT_SOCKET]);
 
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 

@@ -38,6 +38,7 @@ public:
 
 private:
 	int32_t            _epollFd;
+	int32_t            _nfds;
 	servermap_t        _serverBlocks;
 	struct epoll_event _events[MAX_EVENTS];
 	std::list<Client>  _clients;

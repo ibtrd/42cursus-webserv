@@ -124,7 +124,10 @@ typedef struct RequestContext_s {
 	BinaryBuffer responseBuffer;
 
 	RequestContext_s(Server &server, const struct sockaddr_in &addr)
-	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
+	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr), pid(-1), requestState(REQ_STATE_NONE) {
+		this->cgiSockets[PARENT_SOCKET] = -1;
+		this->cgiSockets[CHILD_SOCKET]  = -1;
+	}
 
 	RequestContext_s &operator=(const RequestContext_s &other) {
 		if (this == &other) {

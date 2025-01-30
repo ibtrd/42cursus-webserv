@@ -59,7 +59,7 @@ public:
 
 	~Client(void);
 
-	Client &operator=(const Client &other);
+	// Client &operator=(const Client &other);
 
 	// error_t		init(const fd_t idSocket, const fd_t requestSocket, Server const *server);
 	error_t init(void);
