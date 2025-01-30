@@ -229,9 +229,14 @@ error_t RequestPOST::_readChunked(void) {
 }
 
 error_t RequestPOST::_executeCGI(void) {
+	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
+		|| -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
+		std::exit(1);
+	}
+	close(this->_context.cgiSockets[PARENT_SOCKET]);
+	close(this->_context.cgiSockets[CHILD_SOCKET]);
+
 	CgiBuilder builder(this);
-	
-	// std::cerr << builder;
 
 	char **envp = builder.envp();
 	char **argv = builder.argv();
@@ -246,13 +251,7 @@ error_t RequestPOST::_executeCGI(void) {
 	// }
 	// std::cerr.flush();
 
-	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
-	// dup2(this->_context.cgiSockets[CHILD_SOCKET], STDERR_FILENO);
-	dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO);
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
-
 	execve(this->_cgiPath->string().c_str(), argv, envp);
-
 	std::cerr << "execve(): " << strerror(errno) << std::endl;
 
 	CgiBuilder::destroy(envp);
