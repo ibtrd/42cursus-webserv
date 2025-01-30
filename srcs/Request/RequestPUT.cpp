@@ -112,7 +112,7 @@ error_t RequestPUT::_checkHeaders(void) {
 			return (REQ_DONE);
 		}
 	} else {
-		this->_contentLength = -1;
+		this->_contentLength = -1;	// -1: Need to read chunk size
 	}
 	return (REQ_CONTINUE);
 }
@@ -125,28 +125,28 @@ void RequestPUT::_saveFile(void) {
 		0 != std::remove(this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
-	// if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
-	// 	this->_context.response.setStatusCode(STATUS_I_AM_A_TEAPOT);
-	// 	std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
+	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+		std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
+	}
+	// int source = -1;
+	// int dest = -1;
+	// if ((source = open(this->_tmpFilename.c_str(), O_RDONLY)) == -1 ||
+	// 	(dest = open(this->_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
+	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	// 	std::cerr << "Error: open(): " << std::strerror(errno) << std::endl;
+	// 	close(source);
+	// 	close(dest);
+	// 	std::remove(this->_tmpFilename.c_str());
+	// 	return;
 	// }
-	int source = -1;
-	int dest = -1;
-	if ((source = open(this->_tmpFilename.c_str(), O_RDONLY)) == -1 ||
-		(dest = open(this->_path.c_str(), O_WRONLY | O_CREAT | O_TRUNC, 0644)) == -1) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		std::cerr << "Error: open(): " << std::strerror(errno) << std::endl;
-		close(source);
-		close(dest);
-		std::remove(this->_tmpFilename.c_str());
-		return;
-	}
-	struct stat statbuf;
-	if (fstat(source, &statbuf) == -1 || sendfile(dest, source, NULL, statbuf.st_size) == -1) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		std::cerr << "Error: saveFile: " << std::strerror(errno) << std::endl;
-	}
-	close(source);
-	close(dest);
+	// struct stat statbuf;
+	// if (fstat(source, &statbuf) == -1 || sendfile(dest, source, NULL, statbuf.st_size) == -1) {
+	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+	// 	std::cerr << "Error: saveFile: " << std::strerror(errno) << std::endl;
+	// }
+	// close(source);
+	// close(dest);
 	std::remove(this->_tmpFilename.c_str());
 }
 
