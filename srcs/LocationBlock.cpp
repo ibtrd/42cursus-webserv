@@ -198,14 +198,27 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 	}
 	os << "\n\tmaxBodySize: " << location._maxBodySize;
 	os << "\n\tCGI: ";
+	if (location._gcis.empty()) {
+		os << "none";
+	}
 	for (cgis_t::const_iterator it = location._gcis.begin(); it != location._gcis.end(); ++it) {
 		if (it != location._gcis.begin()) {
 			os << "\n\t     ";
 		}
 		os << it->first << " -> " << it->second;
 	}
-	os << "\n\tredirect: " << location._redirection.first << " -> " << location._redirection.second;
-	os << "\n\tclientBodyTempPath: " << location._clientBodyTempPath;
+	os << "\n\tredirect: ";
+	if (location._redirection.first) {
+		os << location._redirection.first << " -> " << location._redirection.second;
+	} else {
+		os << "none";
+	}
+	os << "\n\tclientBodyTempPath: ";
+	if (location._clientBodyTempPath.empty()) {
+		os << "none";
+	} else {
+		os << location._clientBodyTempPath;
+	}
 	os << "\n}" << std::endl;
 	return os;
 }

@@ -69,6 +69,16 @@ error_t ARequest::workOut(void) {
 	return (REQ_ERROR);
 }
 
+error_t ARequest::CGIIn(void) {
+	throw std::logic_error("ARequest::CGIIn should not be called");
+	return (REQ_ERROR);
+}
+
+error_t ARequest::CGIOut(void) {
+	throw std::logic_error("ARequest::CGIOut should not be called");
+	return (REQ_ERROR);
+}
+
 /* GETTERS ****************************************************************** */
 
 const RequestContext_t &ARequest::context(void) const {

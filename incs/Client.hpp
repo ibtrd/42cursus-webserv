@@ -17,7 +17,7 @@ private:
 	static ARequest *(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 
 	time_t                   _timestamp[TIMEOUT_COUNT];
-	const fd_t               _idSocket;
+	const fd_t               _connectSocket;	// Socket used to accept connections
 	struct epoll_event       _clientEvent;
 	// const fd_t               _socket;
 
@@ -59,7 +59,7 @@ public:
 
 	~Client(void);
 
-	Client &operator=(const Client &other);
+	// Client &operator=(const Client &other);
 
 	// error_t		init(const fd_t idSocket, const fd_t requestSocket, Server const *server);
 	error_t init(void);

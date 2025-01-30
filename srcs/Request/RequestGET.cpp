@@ -163,6 +163,10 @@ error_t RequestGET::workOut(void) {
 	return (REQ_ERROR);
 }
 
+error_t RequestGET::CGIIn(void) {
+	return (this->_readCGI());
+}
+
 ARequest *RequestGET::clone(void) const {
 	// std::cerr << "RequestGET clone" << std::endl;
 	return (new RequestGET(*this));

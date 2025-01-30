@@ -44,28 +44,29 @@ void RequestGET::_openCGI(void) {
 }
 
 error_t RequestGET::_executeCGI(void) {
-	CgiBuilder builder(this);
-	
 	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
 		|| -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
 		std::exit(1);
 	}
+	close(this->_context.cgiSockets[PARENT_SOCKET]);
+	close(this->_context.cgiSockets[CHILD_SOCKET]);
+	
+	CgiBuilder builder(this);
 	// std::cerr << builder;
 
 	char **envp = builder.envp();
 	char **argv = builder.argv();
 
-	std::cerr << "CGI-argv:\n";
-	for (uint32_t i = 0; argv[i]; ++i) {
-		std::cerr << argv[i] << "\n";
-	}
-	std::cerr << "CGI-envp:\n";
-	for (uint32_t i = 0; envp[i]; ++i) {
-		std::cerr << envp[i] << "\n";
-	}
-	std::cerr.flush();
+	// std::cerr << "CGI-argv:\n";
+	// for (uint32_t i = 0; argv[i]; ++i) {
+	// 	std::cerr << argv[i] << "\n";
+	// }
+	// std::cerr << "CGI-envp:\n";
+	// for (uint32_t i = 0; envp[i]; ++i) {
+	// 	std::cerr << envp[i] << "\n";
+	// }
+	// std::cerr.flush();
 	
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	// close(STDIN_FILENO);
 
 	std::cerr << "EXECVE! [GET]" << std::endl;
@@ -76,8 +77,4 @@ error_t RequestGET::_executeCGI(void) {
 	CgiBuilder::destroy(argv);
 	CgiBuilder::destroy(envp);
 	std::exit(1);
-}
-
-error_t RequestGET::CGIIn(void) {
-	return (this->_readCGI());
 }
