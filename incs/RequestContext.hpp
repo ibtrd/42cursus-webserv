@@ -6,7 +6,7 @@
 #include "Response.hpp"
 #include "ServerBlock.hpp"
 
-#define REQ_BUFFER_SIZE 65535
+#define REQ_BUFFER_SIZE 65536
 #define REQ_DIR_BUFFER_SIZE 128
 
 #define REQ_CONTINUE 0  // Incomplete task, skip to next call
@@ -42,6 +42,8 @@
 #define REQ_STATE_CAN_WRITE 0x00000100
 // The response has been written
 #define REQ_STATE_WRITE_COMPLETE 0x00000200
+// CGI headers have been read
+#define REQ_STATE_CGI_HEADERS_COMPLETE 0x00000400
 
 #define IS_REQ_READ_REQUEST_LINE_COMPLETE(x) \
 	((x & REQ_STATE_READ_REQUEST_LINE_COMPLETE) == REQ_STATE_READ_REQUEST_LINE_COMPLETE)
@@ -59,6 +61,8 @@
 #define IS_REQ_WORK_COMPLETE(x) ((x & REQ_STATE_WORK_COMPLETE) == REQ_STATE_WORK_COMPLETE)
 #define IS_REQ_CAN_WRITE(x) ((x & REQ_STATE_CAN_WRITE) == REQ_STATE_CAN_WRITE)
 #define IS_REQ_WRITE_COMPLETE(x) ((x & REQ_STATE_WRITE_COMPLETE) == REQ_STATE_WRITE_COMPLETE)
+#define IS_REQ_CGI_HEADERS_COMPLETE(x) \
+	((x & REQ_STATE_CGI_HEADERS_COMPLETE) == REQ_STATE_CGI_HEADERS_COMPLETE)
 
 #define SET_REQ_READ_REQUEST_LINE_COMPLETE(x) (x |= REQ_STATE_READ_REQUEST_LINE_COMPLETE)
 #define SET_REQ_READ_HEADERS_COMPLETE(x) (x |= REQ_STATE_READ_HEADERS_COMPLETE)
@@ -71,14 +75,12 @@
 #define SET_REQ_WORK_COMPLETE(x) (x |= REQ_STATE_WORK_COMPLETE)
 #define SET_REQ_CAN_WRITE(x) (x |= REQ_STATE_CAN_WRITE)
 #define SET_REQ_WRITE_COMPLETE(x) (x |= REQ_STATE_WRITE_COMPLETE)
+#define SET_REQ_CGI_HEADERS_COMPLETE(x) (x |= REQ_STATE_CGI_HEADERS_COMPLETE)
 
 #define UNSET_REQ_WORK_OUT_COMPLETE(x) (x &= ~REQ_STATE_WORK_OUT_COMPLETE)
 #define UNSET_REQ_CGI_IN_COMPLETE(x) (x &= ~REQ_STATE_CGI_IN_COMPLETE)
+#define UNSET_REQ_CGI_OUT_COMPLETE(x) (x &= ~REQ_STATE_CGI_OUT_COMPLETE)
 
-#define RETURN_UNLESS(ret, code) \
-	if (ret != code) {           \
-		return ret;              \
-	}
 
 #define HEADER_HOST "Host"
 #define HEADER_CONTENT_LENGTH "Content-Length"
@@ -88,6 +90,7 @@
 #define HEADER_LOCATION "Location"
 #define HEADER_TRANSFER_ENCODING "Transfer-Encoding"
 #define HEADER_SERVER "Server"
+#define HEADER_STATUS "Status"
 
 #define CONTENT_LENGTH_INVALID -2
 #define CONTENT_LENGTH_TOO_LARGE -1
@@ -102,8 +105,9 @@ typedef struct RequestContext_s {
 	const LocationBlock *ruleBlock;
 	struct sockaddr_in  addr;
 
-	fd_t _cgiSockets[2];
-	pid_t _pid;
+	fd_t  cgiSockets[2];
+	int   option;
+	pid_t pid;
 
 	uint32_t     requestState;
 	BinaryBuffer buffer;
@@ -120,7 +124,10 @@ typedef struct RequestContext_s {
 	BinaryBuffer responseBuffer;
 
 	RequestContext_s(Server &server, const struct sockaddr_in &addr)
-	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr) {}
+	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr), pid(-1), requestState(REQ_STATE_NONE) {
+		this->cgiSockets[PARENT_SOCKET] = -1;
+		this->cgiSockets[CHILD_SOCKET]  = -1;
+	}
 
 	RequestContext_s &operator=(const RequestContext_s &other) {
 		if (this == &other) {
@@ -131,9 +138,10 @@ typedef struct RequestContext_s {
 
 		this->addr = other.addr;
 
-		this->_cgiSockets[PARENT_SOCKET] = other._cgiSockets[PARENT_SOCKET];
-		this->_cgiSockets[CHILD_SOCKET] = other._cgiSockets[CHILD_SOCKET];
-		this->_pid = other._pid;
+		this->cgiSockets[0] = other.cgiSockets[0];
+		this->cgiSockets[1] = other.cgiSockets[1];
+		this->option		 = other.option;
+		this->pid = other.pid;
 
 		this->requestState  = other.requestState;
 		this->buffer        = other.buffer;

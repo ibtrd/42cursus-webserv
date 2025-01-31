@@ -40,7 +40,7 @@ RequestGET &RequestGET::operator=(const RequestGET &other) {
 	return (*this);
 }
 
-/* ************************************************************************** */
+/* PRIVATE METHODS ********************************************************** */
 
 void RequestGET::_openFile(void) {
 	// std::cerr << "RequestGET _openFile" << std::endl;
@@ -60,40 +60,13 @@ void RequestGET::_openDir(void) {
 	// std::cerr << "RequestGET _openDir" << std::endl;
 	this->_dir = opendir(this->_path.string().c_str());
 	if (this->_dir == NULL) {
-		std::cerr << "opendir: " << strerror(errno) << std::endl;
+		std::cerr << "Error: opendir(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
 	this->_context.response.setBody(INDEXOF(this->_context.target));
-}
-
-void RequestGET::_openCGI(void) {
-	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context._cgiSockets)) {
-		std::cerr << "Error: socketpair: " << strerror(errno) << std::endl;
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return;
-	}
-
-	this->_context.response.setStatusCode(STATUS_OK);
-
-	this->_context._pid = fork();
-	if (-1 == this->_context._pid) {
-		std::cerr << "Error: fork: " << strerror(errno) << std::endl;
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return;
-	}
-
-	if (this->_context._pid == 0) {
-		this->_executeCGI();
-	} else {
-		close(this->_context._cgiSockets[CHILD_SOCKET]);
-		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
-		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		this->_context.response.enableIsCgi();
-		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
-	}
 }
 
 error_t RequestGET::_readFile(void) {
@@ -110,52 +83,6 @@ error_t RequestGET::_readFile(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t RequestGET::_readCGI(void) {
-	uint8_t buffer[REQ_BUFFER_SIZE];
-
-	ssize_t bytes = read(this->_context._cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE);
-	if (bytes == 0) {
-		std::cerr << "read: EOF" << std::endl;
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_CONTINUE);
-	}
-	if (bytes == -1) {
-		std::cerr << "read: " << strerror(errno) << std::endl;
-		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		SET_REQ_WORK_COMPLETE(this->_context.requestState);
-		return (REQ_ERROR);
-	}
-
-	this->_context.responseBuffer.append(buffer, bytes);
-	return (REQ_CONTINUE);
-}
-
-error_t RequestGET::_executeCGI(void) {
-	CgiBuilder builder(this);
-
-	char **envp = builder.envp();
-	char **argv = builder.argv();
-
-	// std::cerr << "ARGV: " << std::endl;
-	// std::cerr << argv[0] << std::endl;
-	// std::cerr << argv[1] << std::endl;
-	// // std::cerr << argv[2] << std::endl;
-	// std::cerr << "----------------" << std::endl;
-	// std::cerr << "ENV: " << builder << std::endl;
-
-	dup2(this->_context._cgiSockets[CHILD_SOCKET], STDOUT_FILENO);
-	close(this->_context._cgiSockets[PARENT_SOCKET]);
-
-	execve(this->_cgiPath->string().c_str(), argv, envp);
-	// execlp("/bin/ls", "ls", NULL, NULL);
-
-	std::cerr << "execlp: " << strerror(errno) << std::endl;
-
-	CgiBuilder::destroy(envp);
-	CgiBuilder::destroy(argv);
-
-	exit(1);
-}
 
 error_t RequestGET::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
@@ -181,7 +108,9 @@ error_t RequestGET::_validateLocalFile(void) {
 	if (this->_path.isFile()) {
 		if (this->_cgiPath) {
 			this->_openCGI();
+			std::cerr << "RequestGET CGIIIIIIIIIIII GET" << std::endl;
 		} else {
+			std::cerr << "RequestGET _validateLocalFile" << std::endl;
 			this->_openFile();
 		}
 		return (REQ_DONE);
@@ -189,7 +118,7 @@ error_t RequestGET::_validateLocalFile(void) {
 	return (REQ_CONTINUE);
 }
 
-/* ************************************************************************** */
+/* PUBLIC METHODS *********************************************************** */
 
 void RequestGET::processing(void) {
 	// std::cerr << "RequestGET parse" << std::endl;
@@ -204,7 +133,7 @@ void RequestGET::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
+	// std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/' + this->_context.queries.originalQueryLine());
@@ -217,8 +146,7 @@ void RequestGET::processing(void) {
 		this->_openDir();
 		return;
 	}
-	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
+	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }
 
 error_t RequestGET::workOut(void) {
@@ -227,7 +155,6 @@ error_t RequestGET::workOut(void) {
 	if (this->_path.isFileFormat()) {
 		return (this->_readFile());
 	}
-
 	if (this->_path.isDirFormat()) {
 		return (this->_readDir());
 	}
@@ -236,6 +163,7 @@ error_t RequestGET::workOut(void) {
 }
 
 error_t RequestGET::CGIIn(void) {
+	std::cerr << "RequestGET CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 
@@ -243,12 +171,6 @@ ARequest *RequestGET::clone(void) const {
 	// std::cerr << "RequestGET clone" << std::endl;
 	return (new RequestGET(*this));
 }
-
-/* GETTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
 
 /* OTHERS *********************************************************************/
 

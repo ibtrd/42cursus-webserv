@@ -6,10 +6,10 @@
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed     = DEFAULT_ALLOW;
-	this->_dirListing  = UNDEFINED;
-	this->_maxBodySize = UNDEFINED;
-	this->_redirection = DEFAULT_REDIRECTON;
+	this->_allowed            = DEFAULT_ALLOW;
+	this->_dirListing         = UNDEFINED;
+	this->_maxBodySize        = UNDEFINED;
+	this->_redirection        = DEFAULT_REDIRECTON;
 }
 
 LocationBlock::LocationBlock(const LocationBlock &other) { *this = other; }
@@ -37,6 +37,8 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	this->_redirection = other._redirection;
 	this->_indexes     = other._indexes;
 	this->_gcis        = other._gcis;
+	this->_clientBodyUploadPath = other._clientBodyUploadPath;
+	this->_clientBodyTempPath = other._clientBodyTempPath;
 	return (*this);
 }
 
@@ -69,6 +71,12 @@ void LocationBlock::fill(const LocationBlock &other) {
 	}
 	if (0 == this->_gcis.size()) {
 		this->_gcis = other._gcis;
+	}
+	if (this->_clientBodyUploadPath.empty()) {
+		this->_clientBodyUploadPath = other._clientBodyUploadPath;
+	}
+	if (this->_clientBodyTempPath.empty()) {
+		this->_clientBodyTempPath = other._clientBodyTempPath;
 	}
 }
 
@@ -136,11 +144,21 @@ void LocationBlock::addCGI(const std::string &ext, const std::string &bin) {
 	this->_gcis[ext] = Path(bin);
 }
 
+void LocationBlock::setClientBodyUploadPath(const std::string &str) {
+	this->_clientBodyUploadPath = Path(str);
+}
+
+void LocationBlock::setClientBodyTempPath(const std::string &str) {
+	this->_clientBodyTempPath = Path(str);
+}
+
 /* GETTERS ****************************************************************** */
 
 const Path &LocationBlock::path(void) const { return this->_path; }
 
 bool LocationBlock::isDirListing(void) const { return this->_dirListing == 1; }
+
+bool LocationBlock::canUpload(void) const { return !this->_clientBodyUploadPath.empty(); }
 
 int32_t LocationBlock::getMaxBodySize(void) const { return this->_maxBodySize; }
 
@@ -160,6 +178,17 @@ const Path *LocationBlock::findCGI(const std::string &extension) const {
 		return &it->second;
 	}
 	return NULL;
+}
+
+const Path &LocationBlock::clientBodyTempPath(void) const {
+	if (this->_clientBodyTempPath.empty()) {
+		return this->_clientBodyUploadPath;
+	}
+	return this->_clientBodyTempPath;
+}
+
+const Path &LocationBlock::clientBodyUploadPath(void) const {
+	return this->_clientBodyUploadPath;
 }
 
 /* ************************************************************************** */
@@ -183,6 +212,29 @@ std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {
 			os << Method::methods[i] << " ";
 		}
 	}
-	os << "\n\tmaxBodySize: " << location._maxBodySize << "\n}" << std::endl;
+	os << "\n\tmaxBodySize: " << location._maxBodySize;
+	os << "\n\tCGI: ";
+	if (location._gcis.empty()) {
+		os << "none";
+	}
+	for (cgis_t::const_iterator it = location._gcis.begin(); it != location._gcis.end(); ++it) {
+		if (it != location._gcis.begin()) {
+			os << "\n\t     ";
+		}
+		os << it->first << " -> " << it->second;
+	}
+	os << "\n\tredirect: ";
+	if (location._redirection.first) {
+		os << location._redirection.first << " -> " << location._redirection.second;
+	} else {
+		os << "none";
+	}
+	os << "\n\tclientBodyTempPath: ";
+	if (location._clientBodyTempPath.empty()) {
+		os << "none";
+	} else {
+		os << location._clientBodyTempPath;
+	}
+	os << "\n}" << std::endl;
 	return os;
 }

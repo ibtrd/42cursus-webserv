@@ -2,6 +2,7 @@
 
 #include <fcntl.h>
 #include <unistd.h>
+#include <sys/sendfile.h>
 
 #include <cstring>
 #include <iostream>
@@ -16,16 +17,16 @@
 // }
 
 RequestPUT::RequestPUT(RequestContext_t &context)
-    : ARequest(context), _chunked(false), _contentLength(0) {
+    : ARequest(context) {
 	// std::cerr << "RequestPUT created" << std::endl;
-	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);	// No workOut needed
 	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);	// TMP
 	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);	// TMP
 	this->_contentTotalLength = 0;
 }
 
 RequestPUT::RequestPUT(const RequestPUT &other)
-    : ARequest(other), _chunked(false), _contentLength(0) {
+    : ARequest(other) {
 	// std::cerr << "RequestPUT copy" << std::endl;
 	*this = other;
 }
@@ -49,36 +50,6 @@ RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
 }
 
 /* ************************************************************************** */
-
-error_t RequestPUT::_generateFilename(void) {
-	std::string tmp;
-	int32_t     i = 0;
-	do {
-		tmp = this->_path.string();
-		tmp += ".";
-		tmp += ft::generateRandomString(8);
-		tmp += ".tmp";
-		++i;
-	} while (0 == access(tmp.c_str(), F_OK) && i < 100);
-	if (i == 100) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		return (REQ_DONE);
-	}
-	this->_tmpFilename = tmp;
-	return (REQ_CONTINUE);
-}
-
-void RequestPUT::_openFile(void) {
-	if (REQ_CONTINUE != this->_generateFilename()) {
-		return;
-	}
-	this->_file.open(this->_tmpFilename.c_str(),
-	                 std::ios::out | std::ios::trunc | std::ios::binary);
-	if (!this->_file.is_open()) {
-		std::cerr << "open(): " << std::strerror(errno) << std::endl;
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	}
-}
 
 error_t RequestPUT::_checkHeaders(void) {
 	headers_t::const_iterator it = this->_context.headers.find(HEADER_CONTENT_LENGTH);
@@ -110,132 +81,7 @@ error_t RequestPUT::_checkHeaders(void) {
 			return (REQ_DONE);
 		}
 	} else {
-		this->_contentLength = -1;
-	}
-	return (REQ_CONTINUE);
-}
-
-void RequestPUT::_saveFile(void) {
-	// std::cerr << "RequestPUT _saveFile" << std::endl;
-	this->_file.close();
-	this->_context.response.setStatusCode(STATUS_CREATED);
-	if (0 == this->_path.access(F_OK)) {
-		if (0 != std::remove(this->_path.c_str())) {
-			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-		}
-	}
-	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
-		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	}
-	std::remove(this->_tmpFilename.c_str());
-}
-
-error_t RequestPUT::_readContent(void) {
-	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
-		this->_file.write(this->_context.buffer.c_str(), this->_context.buffer.size());
-		this->_contentLength -= this->_context.buffer.size();
-		this->_context.buffer.clear();
-		// std::cerr << ".";	// DEBUG
-	} else {
-		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	if (this->_contentLength == 0) {
-		this->_saveFile();
-		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-		return (REQ_DONE);
-	}
-	return (REQ_CONTINUE);
-}
-/*
-AAAAAAAAAABBBBBBBBBBCCCCCCCCCCDDDDDDDDDDEEEEEEEEEEFFFFFFFFFFGGGGGGGGGGHHHHHHHHHHIIIIIIIIIIJJJJJJJJJJKKKKKKKKKKLLLLLLLLLMMMMMMMMMNNNNNNNNNOOOOOOOOOPPPPPPPPP
-*/
-error_t RequestPUT::_readChunked(void) {
-	// std::cerr << "RequestPUT _readChunked" << std::endl;
-	while (!this->_context.buffer.empty()) {
-		// std::cerr << "RequestPUT begin buffer: |" << this->_context.buffer << "|" << std::endl;
-
-		// Read end of chunk
-		if (this->_contentLength == 0) {
-			if (this->_context.buffer.size() >= 2) {
-				size_t pos = this->_context.buffer.rfind("\r\n", 0);
-				if (pos == std::string::npos) {
-					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-					SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-					return (REQ_DONE);
-				}
-				this->_context.buffer.erase(0, pos + 2);
-				this->_contentLength = -1;
-			} else if (this->_context.buffer.size() == 1 && this->_context.buffer[0] != '\r') {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			} else {
-				return (REQ_CONTINUE);
-			}
-		}
-
-		// Read chunk size
-		if (-1 == this->_contentLength) {
-			// std::cerr << "RequestPUT contentLength -1" << std::endl;
-			size_t pos = this->_context.buffer.find("\r\n");
-			if (pos == std::string::npos) {
-				return (REQ_CONTINUE);
-			}
-			std::string line = this->_context.buffer.substr(0, pos);
-			if (line.empty()) {  // refuse empty chunk
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			}
-			// this->_context.buffer.erase(0, pos + 2);
-			this->_contentLength = sToContentLength(line, true);
-			if (this->_contentLength == CONTENT_LENGTH_INVALID) {
-				this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			}
-			// Read end of transfer
-			if (this->_contentLength == 0) {
-				if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[0])) {
-					this->_saveFile();
-				} else {
-					for (size_t i = 1; i < CHUNK_TERMINATOR_SIZE; ++i) {
-						if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[i])) {
-							this->_contentLength = -1;
-							return (REQ_CONTINUE);
-						}
-					}
-					this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
-				}
-
-				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			}
-			this->_context.buffer.erase(0, pos + 2);
-			this->_contentTotalLength += this->_contentLength;
-			if (this->_contentLength == CONTENT_LENGTH_TOO_LARGE ||
-			    this->_contentLength > this->_context.ruleBlock->getMaxBodySize() ||
-			    this->_contentTotalLength > this->_context.ruleBlock->getMaxBodySize()) {
-				this->_context.response.setStatusCode(STATUS_PAYLOAD_TOO_LARGE);
-				SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-				return (REQ_DONE);
-			}
-		}
-		// std::cerr << "RequestPUT contentLength: " << this->_contentLength << std::endl;
-		// std::cerr << "RequestPUT content buffer: |" << this->_context.buffer << "|" << std::endl;
-
-		// Read chunk
-		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {
-			this->_file.write(this->_context.buffer.c_str(), this->_contentLength);
-			this->_context.buffer.erase(0, this->_contentLength);
-			this->_contentLength = 0;
-		} else if (static_cast<int32_t>(this->_context.buffer.size()) <= this->_contentLength) {
-			this->_file.write(this->_context.buffer.c_str(), this->_context.buffer.size());
-			this->_contentLength -= this->_context.buffer.size();
-			this->_context.buffer.clear();
-		}
+		this->_contentLength = -1;	// -1: Need to read chunk size
 	}
 	return (REQ_CONTINUE);
 }
@@ -243,27 +89,40 @@ error_t RequestPUT::_readChunked(void) {
 /* ************************************************************************** */
 
 void RequestPUT::processing(void) {
+	std::cerr << "RequestPUT processing" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
 	}
-
+	std::cerr << "PUT Path:" << this->_path << std::endl;
 	// Check path
 	if (this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	Path parent = this->_path.dir();
-	if (0 != parent.access(F_OK)) {
+	if (!this->_context.ruleBlock->canUpload()) {
+		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
+		return;
+	}
+
+	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
+
+	this->_path = this->_context.ruleBlock->clientBodyUploadPath().string() + this->_context.target.substr(matchLength, std::string::npos);
+	Path upload = this->_path.dir();
+	Path temp = this->_context.ruleBlock->clientBodyTempPath();
+
+	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n" << temp.string() << "\n" << this->path() << std::endl;
+
+	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-	} else if (0 != parent.stat()) {
+	} else if (0 != this->_path.stat() || 0 != upload.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	} else if (!parent.isDir()) {
+	} else if (this->_path.isDir() || !upload.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
-	} else if (0 != parent.access(W_OK)) {
+	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	} else if (0 == this->_path.access(F_OK) && 0 != this->_path.access(W_OK)) {
-		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+	} else if ( upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) || upload.deviceID() != temp.deviceID())) {
+		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_openFile();
 	}

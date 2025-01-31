@@ -20,7 +20,6 @@ private:
 
 	error_t _readFile(void);
 	error_t _readDir(void);
-	error_t _readCGI(void);
 
 	error_t _executeCGI(void);
 

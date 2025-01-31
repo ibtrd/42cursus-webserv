@@ -17,6 +17,7 @@ public:
 	CgiBuilder &operator=(const CgiBuilder &other);
 
 	void   addEnvar(const std::string &key, const std::string &val);
+	void   addArgument(const std::string &arg);
 	char **envp(void) const;
 	char **argv(void) const;
 

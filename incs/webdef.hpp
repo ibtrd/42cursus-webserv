@@ -6,6 +6,8 @@
 #include <map>
 #include <string>
 
+#define HTTP_PROTOCOL_VERSION "HTTP/1.1"
+#define CGI_PROTOCOL_VERSION "CGI/1.1"
 #define WEBSERV_VERSION "webserv/0.5"
 
 typedef int32_t error_t;
@@ -49,8 +51,8 @@ typedef uint16_t status_code_t;
 
 enum timeout { CLIENT_HEADER_TIMEOUT, CLIENT_BODY_TIMEOUT, SEND_TIMEOUT, TIMEOUT_COUNT };
 
-std::string statusCodeToReason(const status_code_t code);
-std::string statusCodeToMsg(const status_code_t code);
-int32_t     sToContentLength(const std::string &str, bool chunked);
+std::string   statusCodeToReason(const status_code_t code);
+std::string   statusCodeToMsg(const status_code_t code);
+int32_t       sToContentLength(const std::string &str, bool chunked);
 
 #endif
