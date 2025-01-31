@@ -219,9 +219,9 @@ void RequestPOST::processing(void) {
 
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-	} else if (0 != this->_path.stat() || 0 != upload.stat()) {
+	} else if (0 != upload.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	} else if (this->_path.isDir() || !upload.isDir()) {
+	} else if ((0 == this->_path.access(F_OK) && 0 == this->_path.stat() && this->_path.isDir()) || !upload.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
