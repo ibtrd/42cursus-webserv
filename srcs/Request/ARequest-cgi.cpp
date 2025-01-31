@@ -14,6 +14,11 @@ error_t ARequest::_readCGI(void) {
 	if (bytes == 0) {
 		std::cerr << "read: EOF" << std::endl;
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
+			this->_context.response.clear();
+			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+			this->_context.responseBuffer = this->_context.response.response();
+		}
 		return (REQ_CONTINUE);
 	}
 	if (bytes == -1) {
