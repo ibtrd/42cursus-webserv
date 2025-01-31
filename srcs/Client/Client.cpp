@@ -149,7 +149,7 @@ const std::string Client::_requestStateStr(void) const {
 
 error_t Client::_readSocket(void) {
 	ssize_t bytes;
-	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, 0);
+	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
 		std::cerr << "Client disconnected" << std::endl;
 		return (REQ_DONE);
@@ -160,12 +160,12 @@ error_t Client::_readSocket(void) {
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
 
-	std::cerr << "Client read size: " << bytes << std::endl;
-	std::cerr << "Client read data: |";
-	for (ssize_t i = 0; i < bytes; ++i) {
-		std::cerr << Client::_readBuffer[i];
-	}
-	std::cerr << "|" << std::endl;
+	// std::cerr << "Client read size: " << bytes << std::endl;
+	// std::cerr << "Client read data: |";
+	// for (ssize_t i = 0; i < bytes; ++i) {
+	// 	std::cerr << Client::_readBuffer[i];
+	// }
+	// std::cerr << "|" << std::endl;
 	return (REQ_CONTINUE);
 }
 

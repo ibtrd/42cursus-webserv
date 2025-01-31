@@ -15,6 +15,9 @@
 #define REQUEST_TIMEOUT 2
 #define DEFAULT_MIMETYPE "application/octet-stream"
 
+#define SERVER_IGNORE_HANGUP 0
+#define SERVER_REMOVE 1
+
 typedef std::map<fd_t, std::vector<ServerBlock> >        servermap_t;
 typedef std::map<fd_t, std::vector<struct sockaddr_in> > socketbindmap_t;
 typedef std::map<fd_t, std::list<Client>::iterator>      clientbindmap_t;
@@ -48,7 +51,7 @@ private:
 
 	fd_t    _addSocket(const ServerBlock &block, const struct sockaddr_in &host);
 	error_t _addConnection(const int32_t socket);
-	void    _removeConnection(const fd_t fd);
+	error_t _removeConnection(const fd_t fd);
 	void    _checkClientsTimeout(void);
 };
 

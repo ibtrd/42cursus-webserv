@@ -44,15 +44,6 @@ const LocationBlock *ServerBlock::findLocationBlock(const Path &target) const {
 			continue;
 		}
 		if (locations[i].match(target)) {
-			// // OG
-			// if (path.prefixLength() == target.prefixLength()) {
-			// 	return &locations[i];
-			// } else if (path.prefixLength() > bestMatch || !selected) {
-			// 	bestMatch = path.prefixLength();
-			// 	selected  = &locations[i];
-			// }
-
-			// TESTER
 			if (path.prefixLength() == target.length()) {
 				return &locations[i];
 			} else if (path.prefixLength() > bestMatch || !selected) {

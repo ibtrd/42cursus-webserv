@@ -146,8 +146,7 @@ void RequestGET::processing(void) {
 		this->_openDir();
 		return;
 	}
-	// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-	this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
+	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }
 
 error_t RequestGET::workOut(void) {
@@ -164,6 +163,7 @@ error_t RequestGET::workOut(void) {
 }
 
 error_t RequestGET::CGIIn(void) {
+	std::cerr << "RequestGET CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 
