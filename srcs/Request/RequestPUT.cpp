@@ -150,8 +150,8 @@ void RequestPUT::_saveFile(void) {
 	std::remove(this->_tmpFilename.c_str());
 }
 
-error_t RequestPUT::_writeChunk(void) {
-	this->_file.write(this->_context.buffer.c_str(), this->_contentLength);
+error_t RequestPUT::_writeChunk(size_t size) {
+	this->_file.write(this->_context.buffer.c_str(), size);
 	return (REQ_CONTINUE);
 }
 

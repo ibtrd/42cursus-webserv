@@ -5,15 +5,16 @@ void ARequest::_saveFile(void) {
 	throw std::logic_error("ARequest::_saveFile should not be called");
 }
 
-error_t ARequest::_writeChunk(void) {
+error_t ARequest::_writeChunk(size_t size) {
 	std::cerr << "ARequest _writeChunk" << std::endl;
+	(void)size;
 	throw std::logic_error("ARequest::_writeChunk should not be called");
 	return (REQ_ERROR);
 }
 
 error_t ARequest::_readContent(void) {
 	if (this->_contentLength - static_cast<int32_t>(this->_context.buffer.size()) >= 0) {
-		if (this->_writeChunk() == REQ_ERROR) {
+		if (this->_writeChunk(this->_context.buffer.size()) == REQ_ERROR) {
 			return (REQ_ERROR);
 		}
 		this->_contentLength -= this->_context.buffer.size();
@@ -36,7 +37,7 @@ error_t ARequest::_readContent(void) {
 error_t ARequest::_readChunked(void) {
 	// std::cerr << "RequestPUT _readChunked" << std::endl;
 	while (!this->_context.buffer.empty()) {
-		// std::cerr << "RequestPUT begin buffer: |" << this->_context.buffer << "|" << std::endl;
+		std::cerr << "RequestPUT begin buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read end of chunk
 		if (this->_contentLength == 0) {
@@ -83,6 +84,7 @@ error_t ARequest::_readChunked(void) {
 			// Read end of transfer
 			if (this->_contentLength == 0) {
 				if (0 == this->_context.buffer.compare(ARequest::_chunkTerminator[0])) {
+					this->_context.buffer.clear();
 					this->_saveFile();
 				} else {
 					for (size_t i = 1; i < CHUNK_TERMINATOR_SIZE; ++i) {
@@ -110,15 +112,18 @@ error_t ARequest::_readChunked(void) {
 			}
 		}
 
+		std::cerr << "RequestPUT chunk size: " << this->_contentLength << std::endl;
+		std::cerr << "RequestPUT inter buffer: |" << this->_context.buffer << "|" << std::endl;
+
 		// Read chunk
 		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {
-			if (this->_writeChunk() == REQ_ERROR) {
+			if (this->_writeChunk(this->_contentLength) == REQ_ERROR) {
 				return (REQ_ERROR);
 			}
 			this->_context.buffer.erase(0, this->_contentLength);
 			this->_contentLength = 0;
 		} else if (static_cast<int32_t>(this->_context.buffer.size()) <= this->_contentLength) {
-			if (this->_writeChunk() == REQ_ERROR) {
+			if (this->_writeChunk(this->_context.buffer.size()) == REQ_ERROR) {
 				return (REQ_ERROR);
 			}
 			this->_contentLength -= this->_context.buffer.size();

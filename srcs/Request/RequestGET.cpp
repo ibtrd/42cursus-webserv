@@ -164,6 +164,7 @@ error_t RequestGET::workOut(void) {
 }
 
 error_t RequestGET::CGIIn(void) {
+	std::cerr << "RequestGET CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 

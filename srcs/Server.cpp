@@ -160,6 +160,11 @@ void Server::routine(void) {
 		// Error events
 		if (this->_events[i].events & (EPOLLERR | EPOLLHUP)) {
 			std::cerr << "Close connection (EPOLLERR | EPOLLHUP) on fd " << fd << std::endl;
+			if (this->_events[i].events & EPOLLERR) {
+				std::cerr << "EPOLLERR" << std::endl;
+			} else if (this->_events[i].events & EPOLLHUP) {
+				std::cerr << "EPOLLHUP" << std::endl;
+			}
 			this->_removeConnection(fd);
 			// break;
 			continue;

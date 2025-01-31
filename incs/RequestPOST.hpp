@@ -20,7 +20,7 @@ private:
 	void    _openCGI(void);
 
 	void    _saveFile(void);
-	error_t _writeChunk(void);
+	error_t _writeChunk(size_t size);
 
 	error_t _executeCGI(void);
 	

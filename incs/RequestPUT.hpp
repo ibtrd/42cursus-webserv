@@ -20,7 +20,7 @@ private:
 	error_t _checkHeaders(void);
 
 	void    _saveFile(void);
-	error_t _writeChunk(void);
+	error_t _writeChunk(size_t size);
 
 public:
 	RequestPUT(RequestContext_t &context);
