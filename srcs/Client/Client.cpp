@@ -159,6 +159,10 @@ error_t Client::_readSocket(void) {
 		return (REQ_ERROR);
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
+	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState)) {
+		std::cerr << "TIMEOUT UPDATE" << std::endl;
+		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
+	}
 
 	// std::cerr << "Client read size: " << bytes << std::endl;
 	// std::cerr << "Client read data: |";
@@ -405,7 +409,7 @@ error_t Client::timeoutCheck(const time_t now) {
 		return (REQ_CONTINUE);
 	}
 
-	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState) &&
+	if ((!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState) || !IS_REQ_CGI_OUT_COMPLETE(this->_context.requestState)) &&
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
