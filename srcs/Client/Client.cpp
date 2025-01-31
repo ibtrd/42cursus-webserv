@@ -149,7 +149,7 @@ const std::string Client::_requestStateStr(void) const {
 
 error_t Client::_readSocket(void) {
 	ssize_t bytes;
-	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, 0);
+	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
 		std::cerr << "Client disconnected" << std::endl;
 		return (REQ_DONE);
@@ -244,7 +244,7 @@ error_t Client::_sendResponse(void) {
 	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
+		std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
 		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -254,7 +254,7 @@ error_t Client::_sendResponse(void) {
 			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
-		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 

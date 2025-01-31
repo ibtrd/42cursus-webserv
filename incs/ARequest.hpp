@@ -26,14 +26,16 @@ protected:
 
 	int32_t _contentTotalLength;
 
+	BinaryBuffer _readBuffer;
+
 	error_t _readCGI(void);
-	void    _parseCGIHeaders(BinaryBuffer &buffer);
+	void    _parseCGIHeaders(void);
 
 	error_t _generateFilename(void);
 	void    _openFile(void);
 
 	void    _saveFile(void);
-	error_t _writeChunk(void);
+	error_t _writeChunk(size_t size);
 	error_t         _readContent(void);
 	error_t         _readChunked(void);
 

@@ -94,15 +94,6 @@ void RequestPOST::_openCGI(void) {
 // 	std::cerr << "RequestPOST shutdown" << std::endl;
 // }
 
-// error_t RequestPOST::_writeChunk(void) {
-// 	ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), this->_context.buffer.size(), MSG_NOSIGNAL);
-// 	if (bytes == -1) {
-// 		std::cerr << "Error: send: " << strerror(errno) << std::endl;
-// 		// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
-// 		return (REQ_ERROR);
-// 	}
-// 	return (REQ_CONTINUE);
-// }
 
 error_t RequestPOST::_executeCGI(void) {
 	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
@@ -255,7 +246,7 @@ error_t RequestPOST::workOut(void) {
 }
 
 error_t RequestPOST::CGIIn(void) {
-	std::cerr << "RequestPOST CGIInt" << std::endl;
+	std::cerr << "RequestPOST CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 

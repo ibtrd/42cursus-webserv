@@ -160,9 +160,14 @@ void Server::routine(void) {
 		// Error events
 		if (this->_events[i].events & (EPOLLERR | EPOLLHUP)) {
 			std::cerr << "Close connection (EPOLLERR | EPOLLHUP) on fd " << fd << std::endl;
-			this->_removeConnection(fd);
-			// break;
-			continue;
+			if (this->_events[i].events & EPOLLERR) {
+				std::cerr << "EPOLLERR" << std::endl;
+			} else if (this->_events[i].events & EPOLLHUP) {
+				std::cerr << "EPOLLHUP" << std::endl;
+			}
+			if (this->_removeConnection(fd) == SERVER_REMOVE) {
+				continue;
+			}
 		}
 
 		it = this->_fdClientMap.find(fd);
@@ -350,10 +355,10 @@ error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 	return 0;
 }
 
-void Server::_removeConnection(const fd_t fd) {
+error_t Server::_removeConnection(const fd_t fd) {
 	std::list<Client>::iterator client = this->_fdClientMap[fd];
 	if (client == this->_clients.end()) {
-		return;
+		return (SERVER_REMOVE);
 	}
 
 	std::cerr << "Removing client: " << fd << std::endl;
@@ -361,6 +366,11 @@ void Server::_removeConnection(const fd_t fd) {
 	fd_t fds[2];
 	client->sockets(fds);
 	std::cerr << "fds: " << fds[0] << " " << fds[1] << std::endl;
+
+	if (fd == fds[1]) {
+		std::cerr << "CGI Hangup (to ignore)" << std::endl;
+		return (SERVER_IGNORE_HANGUP);
+	}
 
 	if (fds[0] != -1) {
 		errno = 0;
@@ -402,6 +412,7 @@ void Server::_removeConnection(const fd_t fd) {
 
 	std::cout << *client << std::endl;	// LOG
 	this->_clients.erase(client);
+	return (SERVER_REMOVE);
 }
 
 void Server::_checkClientsTimeout(void) {

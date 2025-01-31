@@ -19,6 +19,9 @@ error_t Client::_parseRequest(void) {
 		}
 	}
 
+	// DEBUG (buffer)
+	std::cerr << "Buffer: |" << this->_context.buffer << "|" << std::endl;
+
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
 		if (ret != REQ_CONTINUE) {
@@ -137,7 +140,7 @@ error_t Client::_parseHeaders(void) {
 		key                         = line.substr(0, pos);
 		value                       = line.substr(pos + 2);
 		this->_context.headers[key] = value;
-		// std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
+		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
 }
