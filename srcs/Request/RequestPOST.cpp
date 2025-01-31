@@ -183,6 +183,8 @@ void RequestPOST::processing(void) {
 	std::cerr << "RequestPOST parse" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
+		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);	// To change
+		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 		return;
 	}
 
