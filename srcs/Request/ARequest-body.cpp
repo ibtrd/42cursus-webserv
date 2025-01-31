@@ -42,7 +42,7 @@ void ARequest::_openFile(void) {
 }
 
 void ARequest::_saveFile(void) {
-	std::cerr << "RequestPOST _saveFile" << std::endl;
+	std::cerr << "ARequest _saveFile" << std::endl;
 
 	if (this->_cgiPath) {
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
@@ -64,6 +64,7 @@ void ARequest::_saveFile(void) {
 		0 != std::remove(this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
+	std::cerr << "RENAMEPARAMS:\nold" << this->_tmpFilename.c_str() << "\nnew: " << this->_path.c_str() << std::endl; 
 	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
@@ -110,7 +111,7 @@ error_t ARequest::_readContent(void) {
 error_t ARequest::_readChunked(void) {
 	// std::cerr << "RequestPUT _readChunked" << std::endl;
 	while (!this->_context.buffer.empty()) {
-		std::cerr << "RequestPUT begin buffer: |" << this->_context.buffer << "|" << std::endl;
+		// std::cerr << "ARequest begin buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read end of chunk
 		if (this->_contentLength == 0) {
@@ -185,8 +186,8 @@ error_t ARequest::_readChunked(void) {
 			}
 		}
 
-		std::cerr << "RequestPUT chunk size: " << this->_contentLength << std::endl;
-		std::cerr << "RequestPUT inter buffer: |" << this->_context.buffer << "|" << std::endl;
+		// std::cerr << "ARequest chunk size: " << this->_contentLength << std::endl;
+		// std::cerr << "ARequest inter buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read chunk
 		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {

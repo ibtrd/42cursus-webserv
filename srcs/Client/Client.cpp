@@ -160,12 +160,12 @@ error_t Client::_readSocket(void) {
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
 
-	std::cerr << "Client read size: " << bytes << std::endl;
-	std::cerr << "Client read data: |";
-	for (ssize_t i = 0; i < bytes; ++i) {
-		std::cerr << Client::_readBuffer[i];
-	}
-	std::cerr << "|" << std::endl;
+	// std::cerr << "Client read size: " << bytes << std::endl;
+	// std::cerr << "Client read data: |";
+	// for (ssize_t i = 0; i < bytes; ++i) {
+	// 	std::cerr << Client::_readBuffer[i];
+	// }
+	// std::cerr << "|" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -244,7 +244,7 @@ error_t Client::_sendResponse(void) {
 	                                     ? this->_context.responseBuffer.size()
 	                                     : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
+		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
 		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
@@ -254,7 +254,7 @@ error_t Client::_sendResponse(void) {
 			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
-		std::cerr << "Sent: " << bytes << " bytes" << std::endl;
+		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 

@@ -23,18 +23,18 @@ error_t ARequest::_readCGI(void) {
 		return (REQ_ERROR);
 	}
 
-	std::cerr << "Request _readCGI: " << bytes << std::endl;
-	std::cerr << "Request _readCGI: |";
-	for (ssize_t i = 0; i < bytes; ++i) {
-		std::cerr << buffer[i];
-	}
-	std::cerr << "|" << std::endl;
+	// std::cerr << "ARequest _readCGI: " << bytes << std::endl;
+	// std::cerr << "ARequest _readCGI: |";
+	// for (ssize_t i = 0; i < bytes; ++i) {
+	// 	std::cerr << buffer[i];
+	// }
+	// std::cerr << "|" << std::endl;
 	this->_readBuffer.append(buffer, bytes);
-	std::cerr << "Request _readCGI as bBuffer: |" << this->_readBuffer << "|" << std::endl;
+	// std::cerr << "Request _readCGI as bBuffer: |" << this->_readBuffer << "|" << std::endl;
 	if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_parseCGIHeaders();
 	}
-	std::cerr << "Request _readCGI after header: |" << this->_readBuffer << "|" << std::endl;
+	// std::cerr << "Request _readCGI after header: |" << this->_readBuffer << "|" << std::endl;
 	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_context.responseBuffer.append(this->_readBuffer);
 		this->_readBuffer.clear();

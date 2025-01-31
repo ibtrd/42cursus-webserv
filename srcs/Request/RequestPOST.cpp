@@ -194,8 +194,7 @@ void RequestPOST::processing(void) {
 		if (REQ_CONTINUE != this->_validateLocalFile()) {
 			return;
 		}
-		// this->_context.response.setStatusCode(STATUS_FORBIDDEN); //OG
-		this->_context.response.setStatusCode(STATUS_NOT_FOUND);  // TESTER
+		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 		return;
 	}
 	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
@@ -216,11 +215,13 @@ void RequestPOST::processing(void) {
 	Path upload = this->_path.dir();
 	Path temp = this->_context.ruleBlock->clientBodyTempPath();
 
+	std::cerr << "UPLOAD PARAMS:\n_path=" << this->_path << "\nupload=" << upload.string() << "\ntemp=" << temp.string() << std::endl;
+
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
-	} else if (0 != upload.stat()) {
+	} else if (0 != this->_path.stat() || 0 != upload.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	} else if (!upload.isDir()) {
+	} else if (this->_path.isDir() || !upload.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
