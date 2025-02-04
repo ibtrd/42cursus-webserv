@@ -87,12 +87,10 @@ error_t RequestPUT::_checkHeaders(void) {
 /* ************************************************************************** */
 
 void RequestPUT::processing(void) {
-	std::cerr << "RequestPUT processing" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
 	}
-	std::cerr << "PUT Path:" << this->_path << std::endl;
 	// Check path
 	if (this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
@@ -109,10 +107,6 @@ void RequestPUT::processing(void) {
 	              this->_context.target.substr(matchLength, std::string::npos);
 	Path upload = this->_path.dir();
 	Path temp   = this->_context.ruleBlock->clientBodyTempPath();
-
-	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n"
-	          << temp.string() << "\n"
-	          << this->path() << std::endl;
 
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);

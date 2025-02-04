@@ -51,7 +51,6 @@ ARequest::~ARequest(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 ARequest &ARequest::operator=(const ARequest &other) {
-	std::cerr << "ARequest assign" << std::endl;
 	if (this == &other) {
 		return (*this);
 	}

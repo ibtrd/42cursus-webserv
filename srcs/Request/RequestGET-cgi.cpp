@@ -38,7 +38,6 @@ void RequestGET::_openCGI(void) {
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
 	}
 }
 
@@ -68,11 +67,10 @@ error_t RequestGET::_executeCGI(void) {
 
 	// close(STDIN_FILENO);
 
-	std::cerr << "EXECVE! [GET]" << std::endl;
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 	// execlp("/bin/ls", "ls", NULL, NULL);
 
-	std::cerr << "execve(): " << strerror(errno) << std::endl;
+	std::cerr << "Error: execve(): " << strerror(errno) << std::endl;
 	CgiBuilder::destroy(argv);
 	CgiBuilder::destroy(envp);
 	std::exit(1);

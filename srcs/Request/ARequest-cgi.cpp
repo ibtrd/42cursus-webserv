@@ -13,7 +13,6 @@ error_t ARequest::_readCGI(void) {
 	ssize_t bytes =
 	    recv(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
-		std::cerr << "read: EOF" << std::endl;
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 			this->_context.response.clear();
@@ -23,7 +22,7 @@ error_t ARequest::_readCGI(void) {
 		return (REQ_CONTINUE);
 	}
 	if (bytes == -1) {
-		std::cerr << "read: " << strerror(errno) << std::endl;
+		std::cerr << "Error: read(): " << strerror(errno) << std::endl;
 		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		return (REQ_ERROR);
@@ -69,12 +68,10 @@ void ARequest::_parseCGIHeaders(void) {
 	std::string key;
 	std::string value;
 
-	std::cerr << "Parsing headers..." << std::endl;
 	while ((pos = this->_readBuffer.find("\r\n")) != std::string::npos) {
 		line = this->_readBuffer.substr(0, pos);
 		this->_readBuffer.erase(0, pos + 2);
 		if (line.empty()) {
-			std::cerr << "cgiHeader Done whith |" << line << "| left" << std::endl;
 			headers_t::iterator statusHeader = this->_context.response.header(HEADER_STATUS);
 			if (statusHeader == this->_context.response.headersEnd()) {
 				this->_context.response.setStatusCode(STATUS_OK);
@@ -90,7 +87,6 @@ void ARequest::_parseCGIHeaders(void) {
 		}
 		pos = line.find(": ");
 		if (pos == std::string::npos) {
-			std::cerr << "cgiHeader Bad line: |" << line << "|" << std::endl;
 			SET_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState);
 			SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 			this->_context.response.clear();
@@ -101,7 +97,6 @@ void ARequest::_parseCGIHeaders(void) {
 		key   = line.substr(0, pos);
 		value = line.substr(pos + 2);
 		this->_context.response.setHeader(key, value);
-		std::cerr << "cgiHeader: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return;
 }

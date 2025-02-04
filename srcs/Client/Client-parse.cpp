@@ -20,7 +20,6 @@ error_t Client::_parseRequest(void) {
 	}
 
 	// DEBUG (buffer)
-	std::cerr << "Buffer: |" << this->_context.buffer << "|" << std::endl;
 
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
@@ -108,11 +107,6 @@ error_t Client::_parseRequestLine(void) {
 		return (REQ_DONE);
 	}
 
-	std::cerr << "Method: |" << this->_context.method.string() << "|" << std::endl;
-	std::cerr << "Target: |" << this->_context.target << "|" << std::endl;
-	std::cerr << "Queries: |" << this->_context.queries.queryLine() << "|" << std::endl;
-	std::cerr << "Protocol version: |" << this->_context.protocolVersion << "|" << std::endl;
-
 	SET_REQ_READ_REQUEST_LINE_COMPLETE(this->_context.requestState);
 
 	return (REQ_DONE);
@@ -146,7 +140,6 @@ error_t Client::_parseHeaders(void) {
 		key                         = line.substr(0, pos);
 		value                       = line.substr(pos + 2);
 		this->_context.headers[key] = value;
-		std::cerr << "Header: |" << key << "| |" << value << "|" << std::endl;
 	}
 	return (REQ_CONTINUE);
 }

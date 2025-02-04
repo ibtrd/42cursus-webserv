@@ -147,7 +147,7 @@ void Server::routine(void) {
 		// New connection
 		if (this->_serverBlocks.find(fd) != this->_serverBlocks.end()) {
 			if (this->_addConnection(fd)) {
-				std::cerr << "Error adding connection" << std::endl;
+				std::cerr << "Error: _addConnection(): " << strerror(errno) << std::endl;
 			}
 			continue;
 		}
@@ -155,18 +155,11 @@ void Server::routine(void) {
 		// Existing connection
 		clientbindmap_t::iterator it = this->_fdClientMap.find(fd);
 		if (it == this->_fdClientMap.end()) {
-			std::cerr << "No client for fd " << fd << std::endl;
 			continue;
 		}
 
 		// Error events
 		if (this->_events[i].events & (EPOLLERR | EPOLLHUP)) {
-			std::cerr << "Close connection (EPOLLERR | EPOLLHUP) on fd " << fd << std::endl;
-			if (this->_events[i].events & EPOLLERR) {
-				std::cerr << "EPOLLERR" << std::endl;
-			} else if (this->_events[i].events & EPOLLHUP) {
-				std::cerr << "EPOLLHUP" << std::endl;
-			}
 			if (this->_removeConnection(fd) == SERVER_REMOVE) {
 				continue;
 			}
@@ -174,21 +167,17 @@ void Server::routine(void) {
 
 		it = this->_fdClientMap.find(fd);
 		if (it == this->_fdClientMap.end()) {
-			std::cerr << "No client for read fd " << fd << std::endl;
 			continue;
 		}
 
 		// Read events
 		if (this->_events[i].events & EPOLLIN) {
-			std::cerr << "Read event on fd " << fd << std::endl;
 
 			error_t err = it->second->handleIn(fd);
 			if (REQ_ERROR == err) {
-				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
 				break;
 			} else if (REQ_DONE == err) {
-				std::cerr << "Close connection (Done)" << std::endl;
 				this->_removeConnection(fd);
 				break;
 			}
@@ -196,21 +185,17 @@ void Server::routine(void) {
 
 		it = this->_fdClientMap.find(fd);
 		if (it == this->_fdClientMap.end()) {
-			std::cerr << "No client for write fd " << fd << std::endl;
 			continue;
 		}
 
 		// Write events
 		if (this->_events[i].events & EPOLLOUT) {
-			std::cerr << "Write event on fd " << fd << std::endl;
 
 			error_t err = it->second->handleOut(fd);
 			if (REQ_ERROR == err) {
-				std::cerr << "Close connection (Error)" << std::endl;
 				this->_removeConnection(fd);
 				break;
 			} else if (REQ_DONE == err) {
-				std::cerr << "Close connection (Done)" << std::endl;
 				this->_removeConnection(fd);
 				break;
 			}
@@ -325,14 +310,12 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 }
 
 error_t Server::addCGIToClientMap(const fd_t socket, const Client &client) {
-	std::cerr << "Try adding cgi socket: " << socket << " to c" << client.socket() << std::endl;
 	std::list<Client>::iterator itClient =
 	    std::find(this->_clients.begin(), this->_clients.end(), client);
 	if (itClient == this->_clients.end()) {
 		std::cerr << "Error: addCGIToClientMap: client not found" << std::endl;
 		return -1;
 	}
-	std::cerr << "Adding cgi socket: " << socket << " to c" << itClient->socket() << std::endl;
 	this->_fdClientMap[socket] = itClient;
 	return 0;
 }
@@ -346,7 +329,6 @@ error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
 	errno                 = 0;
 	int32_t requestSocket = accept(socket, (struct sockaddr *)&clientAddr, &clientAddrLen);
 	if (-1 == requestSocket) {
-		std::cerr << "Error: accept(): " << strerror(errno) << std::endl;
 		return -1;
 	}
 	try {
@@ -368,39 +350,30 @@ error_t Server::_removeConnection(const fd_t fd) {
 		return (SERVER_REMOVE);
 	}
 
-	std::cerr << "Removing client: " << fd << std::endl;
-
 	fd_t fds[2];
 	client->sockets(fds);
-	std::cerr << "fds: " << fds[0] << " " << fds[1] << std::endl;
 
 	if (fd == fds[1]) {
-		std::cerr << "CGI Hangup (to ignore)" << std::endl;
 		return (SERVER_IGNORE_HANGUP);
 	}
 
 	if (fds[0] != -1) {
 		errno = 0;
 		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[0], NULL)) {
-			std::cerr << "fd: " << fds[0] << std::endl;
 			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
-		std::cerr << "Removing fd: " << fds[0] << std::endl;
 		this->_fdClientMap.erase(fds[0]);
 		close(fds[0]);
 	}
 	if (fds[1] != -1) {
 		errno = 0;
 		if (epoll_ctl(this->_epollFd, EPOLL_CTL_DEL, fds[1], NULL)) {
-			std::cerr << "fd: " << fds[1] << std::endl;
 			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		}
-		std::cerr << "Removing fd: " << fds[1] << std::endl;
 		this->_fdClientMap.erase(fds[1]);
 		close(fds[1]);
 		pid_t pid = client->cgiPid();
 		if (pid != -1 && 0 == waitpid(pid, NULL, WNOHANG)) {
-			std::cerr << "Killing CGI process: " << pid << std::endl;
 			kill(pid, SIGKILL);
 			waitpid(pid, NULL, 0);
 		}
@@ -429,12 +402,10 @@ void Server::_checkClientsTimeout(void) {
 		std::list<Client>::iterator tmp = it++;
 		switch (tmp->timeoutCheck(now)) {
 			case REQ_DONE:
-				std::cerr << "Done: timeoutCheck" << std::endl;
 				this->_removeConnection(tmp->socket());
 				break;
 
 			case REQ_ERROR:
-				std::cerr << "Error: timeoutCheck" << std::endl;
 				this->_removeConnection(tmp->socket());
 				break;
 

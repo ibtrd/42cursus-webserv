@@ -38,8 +38,6 @@ Client::Client(const Client &other)
       _request(other._request),
       _context(other._context),
       _bytesSent(other._bytesSent) {
-	std::cerr << "[WARNING] Client(" << other._clientEvent.data.fd << ") copy"
-	          << std::endl;  // Not updated
 
 	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
 		this->_timestamp[i] = other._timestamp[i];
@@ -57,7 +55,6 @@ Client::~Client(void) {
 	if (this->_request) {
 		delete this->_request;
 	}
-	std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
 	// if (this->_context.cgiSockets[PARENT_SOCKET] != -1) {
 	// 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	// }
@@ -151,16 +148,13 @@ error_t Client::_readSocket(void) {
 	ssize_t bytes;
 	bytes = recv(this->_clientEvent.data.fd, Client::_readBuffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
-		std::cerr << "Client disconnected" << std::endl;
 		return (REQ_DONE);
 	}
 	if (bytes == -1) {
-		std::cerr << "Client error" << std::endl;
 		return (REQ_ERROR);
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
 	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState)) {
-		std::cerr << "TIMEOUT UPDATE" << std::endl;
 		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
 	}
 
@@ -182,7 +176,6 @@ error_t Client::_resolveARequest(void) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return REQ_CONTINUE;
 	}
-	std::cerr << *this->_context.ruleBlock << std::endl;
 	if (!this->_context.ruleBlock->isAllowed(this->_context.method)) {
 		this->_context.response.setStatusCode(STATUS_METHOD_NOT_ALLOWED);
 		return REQ_CONTINUE;
@@ -208,8 +201,6 @@ error_t Client::_resolveARequest(void) {
 		// add to epoll
 		struct epoll_event event;
 		event.events = this->_context.option;
-		std::cerr << "Adding CGI socket to epoll: " << this->_context.cgiSockets[PARENT_SOCKET]
-		          << " with option: " << this->_context.option << std::endl;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
 		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD,
 		                    this->_context.cgiSockets[PARENT_SOCKET], &event)) {
@@ -219,7 +210,6 @@ error_t Client::_resolveARequest(void) {
 		// add to server clientbindmap
 		if (this->_context.server.addCGIToClientMap(this->_context.cgiSockets[PARENT_SOCKET],
 		                                            *this)) {
-			std::cerr << "Error: addCGIToClientMap" << std::endl;
 			return REQ_ERROR;
 		}
 	}
@@ -279,9 +269,6 @@ error_t Client::_sendResponse(void) {
 
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
-
-	std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr()
-	          << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -377,7 +364,6 @@ error_t Client::init(void) {
 		close(this->_clientEvent.data.fd);
 		return (-1);
 	}
-	std::cerr << "Client(" << this->_clientEvent.data.fd << ") accepted!" << std::endl;
 	return (0);
 }
 
@@ -403,8 +389,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_HEADER_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
-		std::cerr << "Client(" << this->_clientEvent.data.fd << ") header timeout detected!"
-		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
@@ -426,8 +410,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
-		std::cerr << "Client(" << this->_clientEvent.data.fd << ") body timeout detected!"
-		          << std::endl;  // DEBUG
 
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
@@ -446,8 +428,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	if (IS_REQ_CAN_WRITE(this->_context.requestState) &&
 	    this->_context.server.getTimeout(SEND_TIMEOUT) &&
 	    now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
-		std::cerr << "Client(" << this->_clientEvent.data.fd << ") send timeout detected!"
-		          << std::endl;  // DEBUG
 		return (REQ_DONE);
 	}
 

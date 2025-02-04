@@ -41,13 +41,12 @@ RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
 /* ************************************************************************** */
 
 void RequestPOST::_openCGI(void) {
-	std::cerr << "RequestPOST _openCGI" << std::endl;
 	if (0 != this->_cgiPath->access(X_OK)) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
 	if (socketpair(AF_LOCAL, SOCK_STREAM, 0, this->_context.cgiSockets)) {
-		std::cerr << "Error: socketpair: " << strerror(errno) << std::endl;
+		std::cerr << "Error: socketpair(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -56,7 +55,7 @@ void RequestPOST::_openCGI(void) {
 
 	this->_context.pid = fork();
 	if (-1 == this->_context.pid) {
-		std::cerr << "Error: fork: " << strerror(errno) << std::endl;
+		std::cerr << "Error: fork(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -71,7 +70,6 @@ void RequestPOST::_openCGI(void) {
 		close(this->_context.cgiSockets[CHILD_SOCKET]);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		std::cerr << "RequestPOST CGI: " << this->_cgiPath->string() << std::endl;
 	}
 }
 
@@ -115,7 +113,7 @@ error_t RequestPOST::_executeCGI(void) {
 	// std::cerr.flush();
 
 	execve(this->_cgiPath->string().c_str(), argv, envp);
-	std::cerr << "execve(): " << strerror(errno) << std::endl;
+	std::cerr << "Error: execve(): " << strerror(errno) << std::endl;
 
 	CgiBuilder::destroy(envp);
 	CgiBuilder::destroy(argv);
@@ -160,7 +158,6 @@ error_t RequestPOST::_checkHeaders(void) {
 /* ************************************************************************** */
 
 void RequestPOST::processing(void) {
-	std::cerr << "RequestPOST parse" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);  // To change
@@ -193,9 +190,6 @@ void RequestPOST::processing(void) {
 	Path upload = this->_path.dir();
 	Path temp   = this->_context.ruleBlock->clientBodyTempPath();
 
-	std::cerr << "UPLOAD PARAMS:\n_path=" << this->_path << "\nupload=" << upload.string()
-	          << "\ntemp=" << temp.string() << std::endl;
-
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else if (0 != upload.stat()) {
@@ -214,7 +208,6 @@ void RequestPOST::processing(void) {
 }
 
 error_t RequestPOST::workIn(void) {
-	std::cerr << "RequestPOST workIn" << std::endl;
 	if (this->_chunked) {
 		return (this->_readChunked());
 	} else {
@@ -224,19 +217,15 @@ error_t RequestPOST::workIn(void) {
 }
 
 error_t RequestPOST::workOut(void) {
-	std::cerr << "RequestPOST workOut" << std::endl;
 	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 	return (REQ_DONE);
 }
 
 error_t RequestPOST::CGIIn(void) {
-	std::cerr << "RequestPOST CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 
 error_t RequestPOST::CGIOut(void) {
-	std::cerr << "RequestPOST CGIOut" << std::endl;
-
 	if (this->_chunked) {
 		return (this->_readChunked());
 	} else {

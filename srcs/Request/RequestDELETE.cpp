@@ -19,7 +19,6 @@
 // }
 
 RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context) {
-	std::cerr << "RequestDELETE created" << std::endl;
 	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
 	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 }
@@ -36,7 +35,6 @@ RequestDELETE::~RequestDELETE(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestDELETE &RequestDELETE::operator=(const RequestDELETE &other) {
-	std::cerr << "RequestDELETE assign" << std::endl;
 	(void)other;
 	return (*this);
 }
@@ -44,14 +42,6 @@ RequestDELETE &RequestDELETE::operator=(const RequestDELETE &other) {
 /* ************************************************************************** */
 
 void RequestDELETE::processing(void) {
-	std::cerr << "RequestDELETE processing" << std::endl;
-
-	std::cout
-	    << ((LocationBlock *)this->_context.ruleBlock)->getRoot().concat(this->_context.target)
-	    << std::endl;
-
-	std::cerr << this->_path << std::endl;
-
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -81,6 +71,5 @@ ARequest *RequestDELETE::clone(void) const { return (new RequestDELETE(*this)); 
 /* OTHERS *********************************************************************/
 
 ARequest *createRequestDELETE(RequestContext_t &context) {
-	std::cerr << "createRequestDELETE" << std::endl;
 	return (new RequestDELETE(context));
 }

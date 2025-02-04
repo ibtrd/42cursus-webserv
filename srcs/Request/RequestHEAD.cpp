@@ -17,17 +17,14 @@
 /* CONSTRUCTORS ************************************************************* */
 
 RequestHEAD::RequestHEAD(RequestContext_t &context) : ARequest(context), _dir(NULL) {
-	std::cerr << "RequestHEAD created" << std::endl;
 	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
 }
 
 RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) {
-	std::cerr << "RequestHEAD copy" << std::endl;
 	*this = other;
 }
 
 RequestHEAD::~RequestHEAD(void) {
-	std::cerr << "RequestHEAD destroyed" << std::endl;
 	if (this->_file.is_open()) {
 		this->_file.close();
 	}
@@ -39,7 +36,6 @@ RequestHEAD::~RequestHEAD(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestHEAD &RequestHEAD::operator=(const RequestHEAD &other) {
-	std::cerr << "RequestHEAD assign" << std::endl;
 	(void)other;
 	return (*this);
 }
@@ -124,7 +120,6 @@ void RequestHEAD::processing(void) {
 }
 
 ARequest *RequestHEAD::clone(void) const {
-	std::cerr << "RequestHEAD clone" << std::endl;
 	return (new RequestHEAD(*this));
 }
 
@@ -137,6 +132,5 @@ ARequest *RequestHEAD::clone(void) const {
 /* OTHERS *********************************************************************/
 
 ARequest *createRequestHEAD(RequestContext_t &context) {
-	std::cerr << "createRequestHEAD" << std::endl;
 	return (new RequestHEAD(context));
 }

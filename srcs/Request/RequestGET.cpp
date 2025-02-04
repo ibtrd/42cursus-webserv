@@ -45,7 +45,7 @@ void RequestGET::_openFile(void) {
 	// std::cerr << "RequestGET _openFile" << std::endl;
 	this->_file.open(this->_path.c_str(), std::ios::in | std::ios::binary);
 	if (!this->_file.is_open()) {
-		std::cerr << "open(): " << strerror(errno) << std::endl;
+		std::cerr << "Error: open(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
@@ -106,9 +106,7 @@ error_t RequestGET::_validateLocalFile(void) {
 	if (this->_path.isFile()) {
 		if (this->_cgiPath) {
 			this->_openCGI();
-			std::cerr << "RequestGET CGIIIIIIIIIIII GET" << std::endl;
 		} else {
-			std::cerr << "RequestGET _validateLocalFile" << std::endl;
 			this->_openFile();
 		}
 		return (REQ_DONE);
@@ -162,7 +160,6 @@ error_t RequestGET::workOut(void) {
 }
 
 error_t RequestGET::CGIIn(void) {
-	std::cerr << "RequestGET CGIIn" << std::endl;
 	return (this->_readCGI());
 }
 

@@ -75,7 +75,7 @@ error_t RequestGET::_readDir(void) {
 		errno = 0;
 	}
 	if (errno != 0) {
-		std::cerr << "readdir: " << strerror(errno) << std::endl;
+		std::cerr << "Error: readdir(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return (REQ_ERROR);
 	}
