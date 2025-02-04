@@ -13,24 +13,15 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-// RequestDELETE::RequestDELETE(void)
-// {
-// 	// std::cerr << "RequestDELETE created" << std::endl;
-// }
-
 RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context) {
 	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
-	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 }
 
 RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other) {
-	// std::cerr << "RequestDELETE copy" << std::endl;
 	*this = other;
 }
 
-RequestDELETE::~RequestDELETE(void) {
-	// std::cerr << "RequestDELETE destroyed" << std::endl;
-}
+RequestDELETE::~RequestDELETE(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 

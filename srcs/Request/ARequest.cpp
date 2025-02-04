@@ -7,14 +7,8 @@ const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0
 
 /* CONSTRUCTORS ************************************************************* */
 
-// ARequest::ARequest(void)
-// {
-// 	// std::cerr << "ARequest created" << std::endl;
-// }
-
 ARequest::ARequest(RequestContext_t &context)
     : _context(context), _chunked(false), _contentLength(0) {
-	// std::cerr << "ARequest created" << std::endl;
 	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
 	const Path &root         = this->_context.ruleBlock->getRoot().string();
@@ -30,7 +24,6 @@ ARequest::ARequest(RequestContext_t &context)
 
 ARequest::ARequest(const ARequest &other)
     : _context(other._context), _chunked(false), _contentLength(0) {
-	// std::cerr << "ARequest copy" << std::endl;
 	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
 	const Path &root         = this->_context.ruleBlock->getRoot().string();
@@ -44,9 +37,7 @@ ARequest::ARequest(const ARequest &other)
 	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
-ARequest::~ARequest(void) {
-	// std::cerr << "ARequest destroyed" << std::endl;
-}
+ARequest::~ARequest(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
@@ -54,7 +45,6 @@ ARequest &ARequest::operator=(const ARequest &other) {
 	if (this == &other) {
 		return (*this);
 	}
-	// this->_context = other._context;
 	return (*this);
 }
 

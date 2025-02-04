@@ -65,8 +65,6 @@ error_t ARequest::_writeChunk(size_t size) {
 		                     size, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send(): " << strerror(errno) << std::endl;
-			// throw std::runtime_error("RequestPOST::_readContent: send: " +
-			// std::string(strerror(errno)));
 			return (REQ_ERROR);
 		}
 		return (REQ_CONTINUE);
@@ -98,10 +96,7 @@ error_t ARequest::_readContent(void) {
 }
 
 error_t ARequest::_readChunked(void) {
-	// std::cerr << "RequestPUT _readChunked" << std::endl;
 	while (!this->_context.buffer.empty()) {
-		// std::cerr << "ARequest begin buffer: |" << this->_context.buffer << "|" << std::endl;
-
 		// Read end of chunk
 		if (this->_contentLength == 0) {
 			if (this->_context.buffer.size() >= 2) {
@@ -174,9 +169,6 @@ error_t ARequest::_readChunked(void) {
 				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 		}
-
-		// std::cerr << "ARequest chunk size: " << this->_contentLength << std::endl;
-		// std::cerr << "ARequest inter buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read chunk
 		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {

@@ -6,10 +6,6 @@
 error_t ARequest::_readCGI(void) {
 	uint8_t buffer[REQ_BUFFER_SIZE];
 
-	// static int compteur = 0;
-
-	// std::cerr << "Request _readCGI: " << compteur++ << std::endl;
-
 	ssize_t bytes =
 	    recv(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
@@ -23,23 +19,14 @@ error_t ARequest::_readCGI(void) {
 	}
 	if (bytes == -1) {
 		std::cerr << "Error: read(): " << strerror(errno) << std::endl;
-		// this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		return (REQ_ERROR);
 	}
 
-	// std::cerr << "ARequest _readCGI: " << bytes << std::endl;
-	// std::cerr << "ARequest _readCGI: |";
-	// for (ssize_t i = 0; i < bytes; ++i) {
-	// 	std::cerr << buffer[i];
-	// }
-	// std::cerr << "|" << std::endl;
 	this->_readBuffer.append(buffer, bytes);
-	// std::cerr << "Request _readCGI as bBuffer: |" << this->_readBuffer << "|" << std::endl;
 	if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_parseCGIHeaders();
 	}
-	// std::cerr << "Request _readCGI after header: |" << this->_readBuffer << "|" << std::endl;
 	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_context.responseBuffer.append(this->_readBuffer);
 		this->_readBuffer.clear();

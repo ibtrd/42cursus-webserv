@@ -10,19 +10,16 @@
 /* CONSTRUCTORS ************************************************************* */
 
 RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL) {
-	// std::cerr << "RequestGET created" << std::endl;
-	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
+	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
 	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 }
 
 RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
-	// std::cerr << "RequestGET copy" << std::endl;
 	*this = other;
 }
 
 RequestGET::~RequestGET(void) {
-	// std::cerr << "RequestGET destroyed" << std::endl;
 	if (this->_file.is_open()) {
 		this->_file.close();
 	}
@@ -34,7 +31,6 @@ RequestGET::~RequestGET(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestGET &RequestGET::operator=(const RequestGET &other) {
-	// std::cerr << "RequestGET assign" << std::endl;
 	(void)other;
 	return (*this);
 }
@@ -42,7 +38,6 @@ RequestGET &RequestGET::operator=(const RequestGET &other) {
 /* PRIVATE METHODS ********************************************************** */
 
 void RequestGET::_openFile(void) {
-	// std::cerr << "RequestGET _openFile" << std::endl;
 	this->_file.open(this->_path.c_str(), std::ios::in | std::ios::binary);
 	if (!this->_file.is_open()) {
 		std::cerr << "Error: open(): " << strerror(errno) << std::endl;
@@ -56,7 +51,6 @@ void RequestGET::_openFile(void) {
 }
 
 void RequestGET::_openDir(void) {
-	// std::cerr << "RequestGET _openDir" << std::endl;
 	this->_dir = opendir(this->_path.string().c_str());
 	if (this->_dir == NULL) {
 		std::cerr << "Error: opendir(): " << strerror(errno) << std::endl;
@@ -117,7 +111,6 @@ error_t RequestGET::_validateLocalFile(void) {
 /* PUBLIC METHODS *********************************************************** */
 
 void RequestGET::processing(void) {
-	// std::cerr << "RequestGET parse" << std::endl;
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -129,7 +122,6 @@ void RequestGET::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}
-	// std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
 		this->_context.response.setHeader(
@@ -147,8 +139,6 @@ void RequestGET::processing(void) {
 }
 
 error_t RequestGET::workOut(void) {
-	// std::cerr << "RequestGET workOut" << std::endl;
-
 	if (this->_path.isFileFormat()) {
 		return (this->_readFile());
 	}
@@ -164,13 +154,11 @@ error_t RequestGET::CGIIn(void) {
 }
 
 ARequest *RequestGET::clone(void) const {
-	// std::cerr << "RequestGET clone" << std::endl;
 	return (new RequestGET(*this));
 }
 
 /* OTHERS *********************************************************************/
 
 ARequest *createRequestGET(RequestContext_t &context) {
-	// std::cerr << "createRequestGET" << std::endl;
 	return (new RequestGET(context));
 }

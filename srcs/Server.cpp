@@ -62,48 +62,6 @@ void Server::configure(const Configuration &config) {
 		this->_timeouts[type] = config.timeout(type);
 	}
 	this->_mimetypes = config.mimetypes();
-
-	// // DEBUG
-	// for (servermap_t::const_iterator it = this->_serverBlocks.begin(); it !=
-	// this->_serverBlocks.end(); ++it) { 	std::cerr << "\nServerBlock socket: " << it->first <<
-	// std::endl; 	for (std::size_t i = 0; i < it->second.size(); ++i) {
-	// 		// std::cerr << it->second[i] << std::endl;
-	// 		for (std::size_t j = 0; j < it->second[i].locations().size(); ++j) {
-	// 			std::cerr << it->second[i].locations()[j] << std::endl;
-	// 		}
-	// 	}
-	// }
-
-	// // DEBUG
-	// std::cerr << "\nclientmap: " << this->_fdClientMap.size() << std::endl;
-	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it !=
-	// this->_fdClientMap.end(); ++it) { 	std::cerr << "\t" << it->first << " -> " <<
-	// it->second->socket() << std::endl;
-	// }
-
-	// // DEBUG
-	// std::cerr << "\nclient list: " << this->_clients.size() << std::endl;
-	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end();
-	// ++it) { 	std::cerr << "\t" << it->socket() << std::endl;
-	// }
-
-	// // DEBUG
-	// std::cerr << "\nmimetypes: " << this->_mimetypes.size() << std::endl;
-	// for (mimetypes_t::const_iterator it = this->_mimetypes.begin(); it != this->_mimetypes.end();
-	// ++it) { 	std::cerr << "\t" << it->first << " -> " << it->second << std::endl;
-	// }
-
-	// // DEBUG
-	// std::cerr << "\ntimeouts: " << TIMEOUT_COUNT << std::endl;
-	// for (uint32_t i = 0; i < TIMEOUT_COUNT; ++i) {
-	// 	std::cerr << "\t" << i << " -> " << this->_timeouts[i] << std::endl;
-	// }
-
-	// // DEBUG
-	// std::cerr << "\nepollFd: " << this->_epollFd << std::endl;
-
-	// // DEBUG
-	// std::cerr << "\nServer configured" << std::endl;
 }
 
 void Server::routine(void) {
@@ -114,31 +72,6 @@ void Server::routine(void) {
 		}
 		return;
 	}
-
-	// std::cerr << "\n\n--- New epoll_wait ---\n\n" << std::endl;
-	// std::cerr << "nfds: " << this->_nfds << std::endl;
-
-	// for (int32_t i = 0; i < this->_nfds; i++) {
-	// 	std::cerr << "ring fd: " << this->_events[i].data.fd << std::endl;
-	// }
-
-	// std::cerr << std::endl;
-
-	// // DEBUG
-	// std::cerr << "\nclientmap after wait check: " << this->_fdClientMap.size() << std::endl;
-	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it !=
-	// this->_fdClientMap.end();
-	//      ++it) {
-	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second <<
-	// std::endl;
-	// }
-	// std::cerr << "client list after wait check: " << this->_clients.size() << std::endl;
-	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end();
-	// ++it) { 	fd_t fds[2]; 	it->sockets(fds); 	std::cerr << it->socket() << " with cgi at " <<
-	// fds[1]
-	// << std::endl;
-	// }
-	// -----
 
 	// Handle events
 	for (int32_t i = 0; i < this->_nfds && 0 == g_signal; i++) {
@@ -202,20 +135,6 @@ void Server::routine(void) {
 		}
 	}
 
-	// // DEBUG
-	// std::cerr << "\nclientmap pre timeout check: " << this->_fdClientMap.size() << std::endl;
-	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it !=
-	// this->_fdClientMap.end();
-	//      ++it) {
-	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second <<
-	// std::endl;
-	// }
-	// std::cerr << "client list pre timeout check: " << this->_clients.size() << std::endl;
-	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end();
-	// ++it) { 	std::cerr << it->socket() << std::endl;
-	// }
-	// // -----
-
 	if (0 != g_signal) {
 		while (this->_clients.size()) {
 			this->_removeConnection(this->_clients.front().socket());
@@ -223,20 +142,6 @@ void Server::routine(void) {
 		return;
 	}
 	this->_checkClientsTimeout();
-
-	// // DEBUG
-	// std::cerr << "\nclientmap post timeout check: " << this->_fdClientMap.size() << std::endl;
-	// for (clientbindmap_t::const_iterator it = this->_fdClientMap.begin(); it !=
-	// this->_fdClientMap.end();
-	//      ++it) {
-	// 	std::cerr << it->first << " -> " << it->second->socket() << std::endl;// << *it->second <<
-	// std::endl;
-	// }
-	// std::cerr << "client list post timeout check: " << this->_clients.size() << std::endl;
-	// for (std::list<Client>::iterator it = this->_clients.begin(); it != this->_clients.end();
-	// ++it) { 	std::cerr << it->socket() << std::endl;
-	// }
-	// // -----
 }
 
 const std::string &Server::getMimeType(const std::string &ext) const {
@@ -303,7 +208,7 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 		throw std::runtime_error((std::string("inet_ntop(): ") + strerror(errno)).c_str());
 	}
 
-	std::cout << "Socket " << fd << " listening on " << ip << ":" << ntohs(boundAddr.sin_port)
+	std::cout << "Listening on " << ip << ":" << ntohs(boundAddr.sin_port)
 	          << std::endl;
 	this->_serverBlocks[fd].push_back(block);
 	return fd;
@@ -322,7 +227,7 @@ error_t Server::addCGIToClientMap(const fd_t socket, const Client &client) {
 
 /* ************************************************************************** */
 
-error_t Server::_addConnection(const int32_t socket) {  // TODO: REMOVE PRINTS
+error_t Server::_addConnection(const int32_t socket) {
 	struct sockaddr_in clientAddr;
 	socklen_t          clientAddrLen = sizeof(clientAddr);
 

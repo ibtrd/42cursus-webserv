@@ -5,8 +5,6 @@
 #include "webservHTML.hpp"
 
 error_t Client::_openErrorPage(void) {
-	// std::cerr << "Loading error page" << std::endl;
-
 	if (!this->_context.serverBlock) {
 		return REQ_ERROR;
 	}

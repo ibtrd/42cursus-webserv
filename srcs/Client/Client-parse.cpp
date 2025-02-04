@@ -19,8 +19,6 @@ error_t Client::_parseRequest(void) {
 		}
 	}
 
-	// DEBUG (buffer)
-
 	if (this->_context.response.statusCode() == STATUS_NONE) {
 		ret = this->_resolveARequest();
 		if (ret != REQ_CONTINUE) {
@@ -118,7 +116,6 @@ error_t Client::_parseHeaders(void) {
 	std::string key;
 	std::string value;
 
-	// std::cerr << "Parsing headers..." << std::endl;
 	while ((pos = this->_context.buffer.find("\r\n")) != std::string::npos) {
 		line = this->_context.buffer.substr(0, pos);
 		this->_context.buffer.erase(0, pos + 2);

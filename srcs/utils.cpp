@@ -1,5 +1,3 @@
-// function a ranger quand on aura le temps (si nécessaire)
-
 #include "RequestContext.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
