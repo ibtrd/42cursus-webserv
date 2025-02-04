@@ -223,7 +223,7 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 		throw std::runtime_error((std::string("inet_ntop(): ") + strerror(errno)).c_str());
 	}
 
-	std::cout << "Socket " << fd << " listening on " << ip << ":" << ntohs(boundAddr.sin_port)
+	std::cout << "Listening on " << ip << ":" << ntohs(boundAddr.sin_port)
 	          << std::endl;
 	this->_serverBlocks[fd].push_back(block);
 	return fd;
