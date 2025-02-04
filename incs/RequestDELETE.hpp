@@ -13,7 +13,7 @@ public:
 
 	RequestDELETE &operator=(const RequestDELETE &other);
 
-	void      processing(void);
+	void processing(void);
 
 	ARequest *clone(void) const;
 };

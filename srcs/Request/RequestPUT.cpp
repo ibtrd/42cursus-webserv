@@ -1,8 +1,8 @@
 #include "RequestPUT.hpp"
 
 #include <fcntl.h>
-#include <unistd.h>
 #include <sys/sendfile.h>
+#include <unistd.h>
 
 #include <cstring>
 #include <iostream>
@@ -16,17 +16,15 @@
 // 	// std::cerr << "RequestPUT created" << std::endl;
 // }
 
-RequestPUT::RequestPUT(RequestContext_t &context)
-    : ARequest(context) {
+RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context) {
 	// std::cerr << "RequestPUT created" << std::endl;
-	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);	// No workOut needed
-	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);	// TMP
-	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);	// TMP
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);    // TMP
+	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);   // TMP
 	this->_contentTotalLength = 0;
 }
 
-RequestPUT::RequestPUT(const RequestPUT &other)
-    : ARequest(other) {
+RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) {
 	// std::cerr << "RequestPUT copy" << std::endl;
 	*this = other;
 }
@@ -81,7 +79,7 @@ error_t RequestPUT::_checkHeaders(void) {
 			return (REQ_DONE);
 		}
 	} else {
-		this->_contentLength = -1;	// -1: Need to read chunk size
+		this->_contentLength = -1;  // -1: Need to read chunk size
 	}
 	return (REQ_CONTINUE);
 }
@@ -107,21 +105,26 @@ void RequestPUT::processing(void) {
 
 	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
 
-	this->_path = this->_context.ruleBlock->clientBodyUploadPath().string() + this->_context.target.substr(matchLength, std::string::npos);
+	this->_path = this->_context.ruleBlock->clientBodyUploadPath().string() +
+	              this->_context.target.substr(matchLength, std::string::npos);
 	Path upload = this->_path.dir();
-	Path temp = this->_context.ruleBlock->clientBodyTempPath();
+	Path temp   = this->_context.ruleBlock->clientBodyTempPath();
 
-	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n" << temp.string() << "\n" << this->path() << std::endl;
+	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n"
+	          << temp.string() << "\n"
+	          << this->path() << std::endl;
 
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else if (0 != upload.stat()) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	} else if ((0 == this->_path.access(F_OK) && 0 == this->_path.stat() && this->_path.isDir()) || !upload.isDir()) {
+	} else if ((0 == this->_path.access(F_OK) && 0 == this->_path.stat() && this->_path.isDir()) ||
+	           !upload.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	} else if ( upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) || upload.deviceID() != temp.deviceID())) {
+	} else if (upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) ||
+	                              upload.deviceID() != temp.deviceID())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_openFile();

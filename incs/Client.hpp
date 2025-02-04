@@ -18,9 +18,9 @@ private:
 	static uint8_t _readBuffer[REQ_BUFFER_SIZE];
 	static ARequest *(*_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &);
 
-	time_t                   _timestamp[TIMEOUT_COUNT];
-	const fd_t               _connectSocket;	// Socket used to accept connections
-	struct epoll_event       _clientEvent;
+	time_t             _timestamp[TIMEOUT_COUNT];
+	const fd_t         _connectSocket;  // Socket used to accept connections
+	struct epoll_event _clientEvent;
 	// const fd_t               _socket;
 
 	ARequest        *_request;

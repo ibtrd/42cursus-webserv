@@ -39,7 +39,7 @@ error_t Client::_parseRequestLine(void) {
 	// Check at least one line is present
 	size_t pos = this->_context.buffer.find("\r\n");
 	if ((pos == std::string::npos && this->_context.buffer.size() > REQUEST_LINE_LIMIT) ||
-		(pos != std::string::npos && pos > REQUEST_LINE_LIMIT)) {
+	    (pos != std::string::npos && pos > REQUEST_LINE_LIMIT)) {
 		this->_context.response.setStatusCode(STATUS_BAD_REQUEST);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		return (REQ_DONE);
@@ -89,11 +89,11 @@ error_t Client::_parseRequestLine(void) {
 	requestLine.erase(0, pos + 1);
 
 	//  Query string
-		pos = this->_context.target.find('?');
-		if (pos != std::string::npos) {
-			this->_context.queries = Queries(this->_context.target.substr(pos + 1));
-			this->_context.target.erase(pos);
-		}
+	pos = this->_context.target.find('?');
+	if (pos != std::string::npos) {
+		this->_context.queries = Queries(this->_context.target.substr(pos + 1));
+		this->_context.target.erase(pos);
+	}
 
 	// Protocol version
 	this->_context.protocolVersion = requestLine;

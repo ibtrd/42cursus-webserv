@@ -1,9 +1,7 @@
 #include "Path.hpp"
 
-#include <errno.h>
 #include <unistd.h>
 
-#include <cstring>
 #include <sstream>
 
 /* CONSTRUCTORS ************************************************************* */
@@ -44,13 +42,9 @@ Path &Path::operator=(const Path &other) {
 	return (*this);
 }
 
-bool Path::operator!=(const Path &other) {
-	return (this->_str != other._str);
-}
+bool Path::operator!=(const Path &other) { return (this->_str != other._str); }
 
-bool Path::operator==(const Path &other) {
-	return (this->_str == other._str);
-}
+bool Path::operator==(const Path &other) { return (this->_str == other._str); }
 
 /* ************************************************************************** */
 

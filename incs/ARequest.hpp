@@ -1,11 +1,10 @@
 #ifndef AREQUEST_HPP
 #define AREQUEST_HPP
 
+#include <fstream>
 #include <vector>
 
 #include "RequestContext.hpp"
-
-#include <fstream>
 
 // # define CHUMK_TERMINATOR "0\r\n\r\n"
 #define CHUNK_TERMINATOR_SIZE 5
@@ -15,7 +14,7 @@ protected:
 	static const char *_chunkTerminator[CHUNK_TERMINATOR_SIZE];
 
 	RequestContext_t &_context;
-	Path             _path;
+	Path              _path;
 	const Path       *_cgiPath;
 
 	std::ofstream _file;
@@ -36,8 +35,8 @@ protected:
 
 	void    _saveFile(void);
 	error_t _writeChunk(size_t size);
-	error_t         _readContent(void);
-	error_t         _readChunked(void);
+	error_t _readContent(void);
+	error_t _readChunked(void);
 
 public:
 	ARequest(RequestContext_t &context);

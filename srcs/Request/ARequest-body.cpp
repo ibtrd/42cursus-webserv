@@ -1,18 +1,12 @@
-#include <sys/epoll.h>
-#include <errno.h>
-// #include <sys/stat.h>
 #include <unistd.h>
 
-#include <cstring>
-// #include <string>
-
-#include "ARequest.hpp"
 #include "Client.hpp"
 #include "ft.hpp"
 
 error_t ARequest::_generateFilename(void) {
-	std::string basename = this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
-	std::string tmp; 
+	std::string basename =
+	    this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	std::string tmp;
 	int32_t     i = 0;
 
 	std::cerr << "tmp: " << this->_context.ruleBlock->clientBodyTempPath() << std::endl;
@@ -51,7 +45,8 @@ void ARequest::_saveFile(void) {
 		struct epoll_event event;
 		event.events  = EPOLLIN;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
-		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
+		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD,
+		                    this->_context.cgiSockets[PARENT_SOCKET], &event)) {
 			throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
 		}
 
@@ -60,11 +55,11 @@ void ARequest::_saveFile(void) {
 	}
 	this->_file.close();
 	this->_context.response.setStatusCode(STATUS_CREATED);
-	if (0 == this->_path.access(F_OK) &&
-		0 != std::remove(this->_path.c_str())) {
+	if (0 == this->_path.access(F_OK) && 0 != std::remove(this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
-	std::cerr << "RENAMEPARAMS:\nold" << this->_tmpFilename.c_str() << "\nnew: " << this->_path.c_str() << std::endl; 
+	std::cerr << "RENAMEPARAMS:\nold" << this->_tmpFilename.c_str()
+	          << "\nnew: " << this->_path.c_str() << std::endl;
 	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
@@ -74,10 +69,12 @@ void ARequest::_saveFile(void) {
 
 error_t ARequest::_writeChunk(size_t size) {
 	if (this->_cgiPath) {
-	ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(), size, MSG_NOSIGNAL);
+		ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(),
+		                     size, MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
-			// throw std::runtime_error("RequestPOST::_readContent: send: " + std::string(strerror(errno)));
+			// throw std::runtime_error("RequestPOST::_readContent: send: " +
+			// std::string(strerror(errno)));
 			return (REQ_ERROR);
 		}
 		return (REQ_CONTINUE);

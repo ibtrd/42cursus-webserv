@@ -34,10 +34,10 @@ public:
 
 	RequestGET &operator=(const RequestGET &other);
 
-	void      processing(void);
+	void processing(void);
 
-	error_t   workOut(void);
-	error_t   CGIIn(void);
+	error_t workOut(void);
+	error_t CGIIn(void);
 
 	ARequest *clone(void) const;
 };

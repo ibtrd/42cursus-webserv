@@ -1,10 +1,10 @@
 #ifndef QUERIES_HPP
-# define QUERIES_HPP
+#define QUERIES_HPP
 
-# include <map>
-# include <string>
+#include <map>
+#include <string>
 
-# define QUERY_DELIM '&'
+#define QUERY_DELIM '&'
 
 typedef std::map<std::string, std::string> queries_t;
 
@@ -27,10 +27,9 @@ public:
 	void parse(void);
 
 	const std::string &queryLine(void) const;
-	const std::string originalQueryLine(void) const;
+	const std::string  originalQueryLine(void) const;
 	const queries_t   &queries(void) const;
-	bool              isValid(void) const;
+	bool               isValid(void) const;
 };
-
 
 #endif

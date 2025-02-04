@@ -56,8 +56,7 @@
 #define IS_REQ_WORK_OUT_COMPLETE(x) \
 	((x & REQ_STATE_WORK_OUT_COMPLETE) == REQ_STATE_WORK_OUT_COMPLETE)
 #define IS_REQ_CGI_IN_COMPLETE(x) ((x & REQ_STATE_CGI_IN_COMPLETE) == REQ_STATE_CGI_IN_COMPLETE)
-#define IS_REQ_CGI_OUT_COMPLETE(x) \
-	((x & REQ_STATE_CGI_OUT_COMPLETE) == REQ_STATE_CGI_OUT_COMPLETE)
+#define IS_REQ_CGI_OUT_COMPLETE(x) ((x & REQ_STATE_CGI_OUT_COMPLETE) == REQ_STATE_CGI_OUT_COMPLETE)
 #define IS_REQ_WORK_COMPLETE(x) ((x & REQ_STATE_WORK_COMPLETE) == REQ_STATE_WORK_COMPLETE)
 #define IS_REQ_CAN_WRITE(x) ((x & REQ_STATE_CAN_WRITE) == REQ_STATE_CAN_WRITE)
 #define IS_REQ_WRITE_COMPLETE(x) ((x & REQ_STATE_WRITE_COMPLETE) == REQ_STATE_WRITE_COMPLETE)
@@ -81,7 +80,6 @@
 #define UNSET_REQ_CGI_IN_COMPLETE(x) (x &= ~REQ_STATE_CGI_IN_COMPLETE)
 #define UNSET_REQ_CGI_OUT_COMPLETE(x) (x &= ~REQ_STATE_CGI_OUT_COMPLETE)
 
-
 #define HEADER_HOST "Host"
 #define HEADER_CONTENT_LENGTH "Content-Length"
 #define HEADER_CONTENT_TYPE "Content-Type"
@@ -103,7 +101,7 @@ typedef struct RequestContext_s {
 	Server              &server;
 	const ServerBlock   *serverBlock;
 	const LocationBlock *ruleBlock;
-	struct sockaddr_in  addr;
+	struct sockaddr_in   addr;
 
 	fd_t  cgiSockets[2];
 	int   option;
@@ -124,7 +122,12 @@ typedef struct RequestContext_s {
 	BinaryBuffer responseBuffer;
 
 	RequestContext_s(Server &server, const struct sockaddr_in &addr)
-	    : server(server), serverBlock(NULL), ruleBlock(NULL), addr(addr), pid(-1), requestState(REQ_STATE_NONE) {
+	    : server(server),
+	      serverBlock(NULL),
+	      ruleBlock(NULL),
+	      addr(addr),
+	      pid(-1),
+	      requestState(REQ_STATE_NONE) {
 		this->cgiSockets[PARENT_SOCKET] = -1;
 		this->cgiSockets[CHILD_SOCKET]  = -1;
 	}
@@ -133,32 +136,31 @@ typedef struct RequestContext_s {
 		if (this == &other) {
 			return (*this);
 		}
-		this->serverBlock   = other.serverBlock;
-		this->ruleBlock     = other.ruleBlock;
+		this->serverBlock = other.serverBlock;
+		this->ruleBlock   = other.ruleBlock;
 
 		this->addr = other.addr;
 
 		this->cgiSockets[0] = other.cgiSockets[0];
 		this->cgiSockets[1] = other.cgiSockets[1];
-		this->option		 = other.option;
-		this->pid = other.pid;
+		this->option        = other.option;
+		this->pid           = other.pid;
 
-		this->requestState  = other.requestState;
-		this->buffer        = other.buffer;
+		this->requestState = other.requestState;
+		this->buffer       = other.buffer;
 
-		this->method        = other.method;
-		this->target        = other.target;
+		this->method          = other.method;
+		this->target          = other.target;
 		this->protocolVersion = other.protocolVersion;
 
-		this->queries       = other.queries;
-		this->headers       = other.headers;
+		this->queries = other.queries;
+		this->headers = other.headers;
 
-		this->response      = other.response;
+		this->response       = other.response;
 		this->responseBuffer = other.responseBuffer;
 		return (*this);
 	}
 
 } RequestContext_t;
-
 
 #endif

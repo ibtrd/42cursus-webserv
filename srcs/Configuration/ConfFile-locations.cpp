@@ -1,6 +1,4 @@
-#include <iostream>
 
-#include "ConfFile.hpp"
 #include "Configuration.hpp"
 #include "ft.hpp"
 
@@ -148,7 +146,8 @@ void ConfFile::_cgiDirective(std::vector<ConfToken>::const_iterator &token,
 	++token;
 }
 
-void ConfFile::_clientBodyUploadPathDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_clientBodyUploadPathDirective(std::vector<ConfToken>::const_iterator &token,
+                                              LocationBlock                          &location) {
 	const uint32_t                               args      = this->_countArgs(token);
 	const std::vector<ConfToken>::const_iterator directive = token++;
 
@@ -159,7 +158,8 @@ void ConfFile::_clientBodyUploadPathDirective(std::vector<ConfToken>::const_iter
 	++token;
 }
 
-void ConfFile::_clientBodyTempPathDirective(std::vector<ConfToken>::const_iterator &token, LocationBlock &location) {
+void ConfFile::_clientBodyTempPathDirective(std::vector<ConfToken>::const_iterator &token,
+                                            LocationBlock                          &location) {
 	const uint32_t                               args      = this->_countArgs(token);
 	const std::vector<ConfToken>::const_iterator directive = token++;
 

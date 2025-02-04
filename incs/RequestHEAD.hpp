@@ -26,7 +26,7 @@ public:
 
 	RequestHEAD &operator=(const RequestHEAD &other);
 
-	void      processing(void);
+	void processing(void);
 
 	ARequest *clone(void) const;
 };

@@ -1,9 +1,10 @@
 #ifndef BINARYBUFFER_HPP
-# define BINARYBUFFER_HPP
+#define BINARYBUFFER_HPP
 
-# include <vector>
-# include <stdint.h>
-# include <iostream>
+#include <stdint.h>
+
+#include <iostream>
+#include <vector>
 
 class BinaryBuffer {
 private:
@@ -37,7 +38,9 @@ public:
 
 	size_t rfind(const BinaryBuffer &other, size_t pos) const;
 	size_t rfind(const std::vector<uint8_t> &buffer, size_t pos) const;
-	size_t rfind(const uint8_t *buffer, size_t size, size_t pos) const;	// Like std::string::rfind but with uint8_t (uint8_t *buffer, size_t pos). pos is the position to start the search from.
+	size_t rfind(const uint8_t *buffer, size_t size,
+	             size_t pos) const;  // Like std::string::rfind but with uint8_t (uint8_t *buffer,
+	                                 // size_t pos). pos is the position to start the search from.
 	size_t rfind(const char *c_string, size_t pos) const;
 
 	int compare(const BinaryBuffer &other) const;
@@ -46,13 +49,13 @@ public:
 	int compare(const char *c_string) const;
 
 	const std::vector<uint8_t> &buffer(void) const;
-	size_t                     size(void) const;
+	size_t                      size(void) const;
 	const uint8_t              *data(void) const;
 	const char                 *c_str(void) const;
-	BinaryBuffer               subbb(size_t pos, size_t len) const;
-	std::string                substr(size_t pos, size_t len) const;
+	BinaryBuffer                subbb(size_t pos, size_t len) const;
+	std::string                 substr(size_t pos, size_t len) const;
 	BinaryBuffer               &erase(size_t pos, size_t len);
-	bool                       empty(void) const;
+	bool                        empty(void) const;
 
 	bool operator==(const BinaryBuffer &other) const;
 	bool operator!=(const BinaryBuffer &other) const;
@@ -74,7 +77,7 @@ public:
 	BinaryBuffer operator+(const std::vector<uint8_t> &buffer) const;
 	BinaryBuffer operator+(const char *c_string) const;
 
-	uint8_t &operator[](size_t pos);
+	uint8_t       &operator[](size_t pos);
 	const uint8_t &operator[](size_t pos) const;
 
 	friend std::ostream &operator<<(std::ostream &os, const BinaryBuffer &buffer);

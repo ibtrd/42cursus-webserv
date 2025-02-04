@@ -1,15 +1,13 @@
 
 #include "LocationBlock.hpp"
 
-#include "Method.hpp"
-
 /* CONSTRUCTORS ************************************************************* */
 
 LocationBlock::LocationBlock(void) {
-	this->_allowed            = DEFAULT_ALLOW;
-	this->_dirListing         = UNDEFINED;
-	this->_maxBodySize        = UNDEFINED;
-	this->_redirection        = DEFAULT_REDIRECTON;
+	this->_allowed     = DEFAULT_ALLOW;
+	this->_dirListing  = UNDEFINED;
+	this->_maxBodySize = UNDEFINED;
+	this->_redirection = DEFAULT_REDIRECTON;
 }
 
 LocationBlock::LocationBlock(const LocationBlock &other) { *this = other; }
@@ -29,16 +27,16 @@ LocationBlock &LocationBlock::operator=(const LocationBlock &other) {
 	if (this == &other) {
 		return (*this);
 	}
-	this->_path        = other._path;
-	this->_dirListing  = other._dirListing;
-	this->_maxBodySize = other._maxBodySize;
-	this->_root        = other._root;
-	this->_allowed     = other._allowed;
-	this->_redirection = other._redirection;
-	this->_indexes     = other._indexes;
-	this->_gcis        = other._gcis;
+	this->_path                 = other._path;
+	this->_dirListing           = other._dirListing;
+	this->_maxBodySize          = other._maxBodySize;
+	this->_root                 = other._root;
+	this->_allowed              = other._allowed;
+	this->_redirection          = other._redirection;
+	this->_indexes              = other._indexes;
+	this->_gcis                 = other._gcis;
 	this->_clientBodyUploadPath = other._clientBodyUploadPath;
-	this->_clientBodyTempPath = other._clientBodyTempPath;
+	this->_clientBodyTempPath   = other._clientBodyTempPath;
 	return (*this);
 }
 
@@ -106,9 +104,7 @@ error_t LocationBlock::setDirListing(const std::string &str) {
 
 void LocationBlock::setMaxBodySize(const int32_t size) { this->_maxBodySize = size; }
 
-void LocationBlock::setRoot(const std::string &str) {
-	this->_root = Path(str);
-}
+void LocationBlock::setRoot(const std::string &str) { this->_root = Path(str); }
 
 void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
 	switch (status) {
@@ -181,9 +177,7 @@ const Path &LocationBlock::clientBodyTempPath(void) const {
 	return this->_clientBodyTempPath;
 }
 
-const Path &LocationBlock::clientBodyUploadPath(void) const {
-	return this->_clientBodyUploadPath;
-}
+const Path &LocationBlock::clientBodyUploadPath(void) const { return this->_clientBodyUploadPath; }
 
 /* ************************************************************************** */
 
