@@ -29,7 +29,6 @@ public:
 	const std::string &getMimeType(const std::string &ext) const;
 	const ServerBlock &findServerBlock(const fd_t socket, const std::string &host) const;
 	int32_t            getTimeout(const uint32_t type) const;
-	// const int32_t		*getTimeouts(void) const;
 
 	error_t addCGIToClientMap(const fd_t socket, const Client &client);
 

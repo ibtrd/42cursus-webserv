@@ -10,30 +10,20 @@
 /* CONSTRUCTORS ************************************************************* */
 
 RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context) {
-	// std::cerr << "RequestPOST created" << std::endl;
-	// SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
-	// SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-	// SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 	this->_contentTotalLength = 0;
 }
 
 RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other) {
-	// std::cerr << "RequestPOST copy" << std::endl;
 	*this = other;
 }
 
 RequestPOST::~RequestPOST(void) {
-	// std::cerr << "RequestPOST destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestPOST &RequestPOST::operator=(const RequestPOST &other) {
-	// std::cerr << "RequestPOST assign" << std::endl;
-	// int32_t _contentLength;
-
-	// int32_t _contentTotalLength;
 	(void)other;
 	return (*this);
 }
@@ -75,22 +65,6 @@ void RequestPOST::_openCGI(void) {
 	}
 }
 
-// void RequestPOST::_saveFile(void) {
-// 	std::cerr << "RequestPOST _saveFile" << std::endl;
-
-// 	shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
-// 	this->_context.response.setStatusCode(STATUS_OK);
-
-// 	struct epoll_event event;
-// 	event.events  = EPOLLIN;
-// 	event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
-// 	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_context.cgiSockets[PARENT_SOCKET],
-// &event)) { 		throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
-// 	}
-
-// 	std::cerr << "RequestPOST shutdown" << std::endl;
-// }
-
 error_t RequestPOST::_executeCGI(void) {
 	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO) ||
 	    -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
@@ -100,23 +74,11 @@ error_t RequestPOST::_executeCGI(void) {
 	close(this->_context.cgiSockets[CHILD_SOCKET]);
 
 	CgiBuilder builder(this);
-
 	char **envp = builder.envp();
 	char **argv = builder.argv();
 
-	// std::cerr << "CGI-argv:\n";
-	// for (uint32_t i = 0; argv[i]; ++i) {
-	// 	std::cerr << argv[i] << "\n";
-	// }
-	// std::cerr << "CGI-envp:\n";
-	// for (uint32_t i = 0; envp[i]; ++i) {
-	// 	std::cerr << envp[i] << "\n";
-	// }
-	// std::cerr.flush();
-
 	execve(this->_cgiPath->string().c_str(), argv, envp);
 	std::cerr << "execve(): " << strerror(errno) << std::endl;
-
 	CgiBuilder::destroy(envp);
 	CgiBuilder::destroy(argv);
 	std::exit(1);
@@ -163,7 +125,7 @@ void RequestPOST::processing(void) {
 	std::cerr << "RequestPOST parse" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
-		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);  // To change
+		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 		SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 		return;
 	}
@@ -246,19 +208,11 @@ error_t RequestPOST::CGIOut(void) {
 }
 
 ARequest *RequestPOST::clone(void) const {
-	// std::cerr << "RequestPOST clone" << std::endl;
 	return (new RequestPOST(*this));
 }
-
-/* GETTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
 
 /* OTHERS *********************************************************************/
 
 ARequest *createRequestPOST(RequestContext_t &context) {
-	// std::cerr << "createRequestPOST" << std::endl;
 	return (new RequestPOST(context));
 }

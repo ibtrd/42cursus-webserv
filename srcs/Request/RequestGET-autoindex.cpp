@@ -84,7 +84,6 @@ error_t RequestGET::_readDir(void) {
 		this->_context.response.addBody(HTMLFOOTER);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 	}
-	// this->_context.responseBuffer += this->_context.response.body();
 	this->_context.responseBuffer.append(this->_context.response.body().c_str());
 	this->_context.response.clearBody();
 	return (REQ_CONTINUE);

@@ -6,7 +6,6 @@
 
 #include "RequestContext.hpp"
 
-// # define CHUMK_TERMINATOR "0\r\n\r\n"
 #define CHUNK_TERMINATOR_SIZE 5
 
 class ARequest {

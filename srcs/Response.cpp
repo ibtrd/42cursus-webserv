@@ -5,25 +5,21 @@
 /* CONSTRUCTORS ************************************************************* */
 
 Response::Response(void) {
-	// std::cerr << "Response created" << std::endl;
 	this->_statusCode             = STATUS_NONE;
 	this->_reasonPhrase           = "";
 	this->_headers[HEADER_SERVER] = WEBSERV_VERSION;
 };
 
 Response::Response(const Response &other) {
-	// std::cerr << "Response copy" << std::endl;
 	*this = other;
 }
 
 Response::~Response(void) {
-	// std::cerr << "Response destroyed" << std::endl;
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
 Response &Response::operator=(const Response &other) {
-	// std::cerr << "Response assign" << std::endl;
 	if (this == &other) {
 		return (*this);
 	}

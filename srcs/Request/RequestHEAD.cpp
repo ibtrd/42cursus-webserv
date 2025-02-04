@@ -18,7 +18,7 @@
 
 RequestHEAD::RequestHEAD(RequestContext_t &context) : ARequest(context), _dir(NULL) {
 	std::cerr << "RequestHEAD created" << std::endl;
-	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
+	SET_REQ_WORK_COMPLETE(this->_context.requestState);
 }
 
 RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) {
@@ -54,7 +54,6 @@ void RequestHEAD::_openFile(void) {
 }
 
 void RequestHEAD::_openDir(void) {
-	// std::cerr << "RequestHEAD _openDir" << std::endl;
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
 }
@@ -82,7 +81,6 @@ error_t RequestHEAD::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
 	     it != this->_context.ruleBlock->indexes().end(); ++it) {
 		std::string test = this->_path.concat(*it);
-		// std::cerr << "testing indexfile: " << test << std::endl;
 		if (0 == access(test.c_str(), F_OK)) {
 			this->_path = test;
 			return 0;
@@ -94,7 +92,6 @@ error_t RequestHEAD::_fetchIndexes(void) {
 /* ************************************************************************** */
 
 void RequestHEAD::processing(void) {
-	// std::cerr << "RequestHEAD parse" << std::endl;
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;

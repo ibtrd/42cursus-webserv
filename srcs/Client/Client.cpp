@@ -22,7 +22,6 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
     : _connectSocket(idSocket), _request(NULL), _context(server, addr), _bytesSent(0) {
-	// std::cerr << "Client created" << std::endl;
 	if (server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
 		this->_timestamp[CLIENT_HEADER_TIMEOUT] = time(NULL);
 	}
@@ -47,23 +46,14 @@ Client::Client(const Client &other)
 
 	this->_clientEvent.events = other._clientEvent.events;
 	this->_clientEvent.data   = other._clientEvent.data;
-
-	// context
 	this->_context = other._context;
 }
 
 Client::~Client(void) {
-	// std::cerr << "Client destroyed" << std::endl;
 	if (this->_request) {
 		delete this->_request;
 	}
 	std::cerr << "Destroy Status: " << this->_requestStateStr() << std::endl;
-	// if (this->_context.cgiSockets[PARENT_SOCKET] != -1) {
-	// 	close(this->_context.cgiSockets[PARENT_SOCKET]);
-	// }
-	// if (this->_context.cgiSockets[CHILD_SOCKET] != -1) {
-	// 	close(this->_context.cgiSockets[CHILD_SOCKET]);
-	// }
 }
 
 /* OPERATOR OVERLOADS ******************************************************* */
@@ -163,13 +153,6 @@ error_t Client::_readSocket(void) {
 		std::cerr << "TIMEOUT UPDATE" << std::endl;
 		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
 	}
-
-	// std::cerr << "Client read size: " << bytes << std::endl;
-	// std::cerr << "Client read data: |";
-	// for (ssize_t i = 0; i < bytes; ++i) {
-	// 	std::cerr << Client::_readBuffer[i];
-	// }
-	// std::cerr << "|" << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -203,7 +186,6 @@ error_t Client::_resolveARequest(void) {
 		return REQ_CONTINUE;
 	}
 	this->_request->processing();
-	// std::cerr << "After processing status: " << this->_requestStateStr() << std::endl;
 	if (-1 != this->_context.cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
@@ -234,7 +216,6 @@ error_t Client::_switchToWrite(void) {
 	event.events  = EPOLLOUT | EPOLLIN;
 	event.data.fd = this->_clientEvent.data.fd;
 	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_MOD, this->_clientEvent.data.fd, &event)) {
-		// close(this->_clientEvent.data.fd);
 		throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 		return (-1);
 	}
@@ -243,16 +224,12 @@ error_t Client::_switchToWrite(void) {
 }
 
 error_t Client::_sendResponse(void) {
-	// std::cerr << "Sending response..." << std::endl;
-	// std::cerr << ".";
 	ssize_t bytes;
 
 	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
 	            ? this->_context.responseBuffer.size()
 	            : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" <<
-		// std::endl;
 		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes,
 		             MSG_NOSIGNAL);
 		if (bytes == -1) {
@@ -263,7 +240,6 @@ error_t Client::_sendResponse(void) {
 			this->_timestamp[SEND_TIMEOUT] = time(NULL);
 		}
 		this->_bytesSent += bytes;
-		// std::cerr << "Sent: " << bytes << " bytes" << std::endl;
 		this->_context.responseBuffer.erase(0, bytes);
 	}
 
@@ -271,17 +247,11 @@ error_t Client::_sendResponse(void) {
 	    IS_REQ_WORK_COMPLETE(this->_context.requestState)) {
 		return (REQ_DONE);
 	}
-	// std::cerr << "Response not fully sent" << std::endl;
 	return (REQ_CONTINUE);
 }
 
-#include <iomanip>
-
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
-
-	std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr()
-	          << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -310,60 +280,35 @@ error_t Client::_handleSocketIn(void) {
 	if (IS_REQ_CGI_IN_COMPLETE(this->_context.requestState)) {
 		this->_context.responseBuffer = this->_context.response.response();
 		this->_context.response.clearBody();
-		// return (REQ_CONTINUE);
 	}
 
 	if (this->_switchToWrite() == -1) {
 		return (REQ_ERROR);
 	}
-
-	// std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr()
-	// << std::endl;
-
 	return (REQ_CONTINUE);
 }
 
 error_t Client::_handleSocketOut(void) {
 	error_t ret;
 
-	// std::cerr << std::setw(45) << "_handleSocketOut req status start : " <<
-	// this->_requestStateStr() << std::endl;
-
 	if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) &&
 	    this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
 		this->_readErrorPage();
 	} else if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) && this->_request) {
 		ret = this->_request->workOut();
-		// if (ret != REQ_DONE)
-		// 	return (ret);
 	}
-
 	if ((ret = this->_sendResponse()) != REQ_DONE) {
-		// std::cerr << std::setw(45) << "_handleSocketOut req status continue : " <<
-		// this->_requestStateStr() << std::endl;
-
 		return (ret);
 	}
-	// std::cerr << "Natural exit: " << this->_requestStateStr() << std::endl;
 	return (REQ_DONE);
 }
 
 error_t Client::_handleCGIIn(void) {
-	// std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr()
-	// << std::endl;
-	// std::cerr << "CGI in" << std::endl;
 	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
-	// std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr()
-	// << std::endl;
-	// std::cerr << "CGI out" << std::endl;
-	error_t ret = this->_request->CGIOut();
-
-	// std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr()
-	// << std::endl;
-	return (ret);
+	return (this->_request->CGIOut());
 }
 
 /* ************************************************************************** */
@@ -382,7 +327,6 @@ error_t Client::init(void) {
 }
 
 error_t Client::handleIn(fd_t fd) {
-	// std::cerr << "Client(" << this->_clientEvent.data.fd << ") handleIn" << std::endl;
 	if (fd == this->_clientEvent.data.fd) {
 		return (this->_handleSocketIn());
 	} else {

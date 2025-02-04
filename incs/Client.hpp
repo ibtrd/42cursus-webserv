@@ -21,7 +21,6 @@ private:
 	time_t             _timestamp[TIMEOUT_COUNT];
 	const fd_t         _connectSocket;  // Socket used to accept connections
 	struct epoll_event _clientEvent;
-	// const fd_t               _socket;
 
 	ARequest        *_request;
 	RequestContext_t _context;
@@ -61,9 +60,6 @@ public:
 
 	~Client(void);
 
-	// Client &operator=(const Client &other);
-
-	// error_t		init(const fd_t idSocket, const fd_t requestSocket, Server const *server);
 	error_t init(void);
 	error_t handleIn(fd_t fd);
 	error_t handleOut(fd_t fd);
