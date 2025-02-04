@@ -39,7 +39,7 @@ public:
 	error_t allowMethod(const std::string &str);
 	error_t setDirListing(const std::string &str);
 	void    setMaxBodySize(const int32_t size);
-	error_t setRoot(const std::string &str);
+	void    setRoot(const std::string &str);
 	void    setRedirect(const uint16_t status, const std::string &body);
 	void    addIndex(const std::string &str);
 	void    addCGI(const std::string &ext, const std::string &bin);
