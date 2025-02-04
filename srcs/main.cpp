@@ -1,4 +1,3 @@
-#include <iostream>
 #include <unistd.h>
 
 #include "Server.hpp"
@@ -11,7 +10,7 @@ int main(int argc, char *argv[]) {
 		return (1);
 	}
 
-	server_restart:
+server_restart:
 	if (0 != g_signal) {
 		return (0);
 	}

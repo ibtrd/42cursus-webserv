@@ -1,10 +1,10 @@
 #include "CgiBuilder.hpp"
-#include "ft.hpp"
 
 #include <arpa/inet.h>
 
 #include <algorithm>
-#include <cstring>
+
+#include "ft.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -14,7 +14,7 @@ CgiBuilder::CgiBuilder(const CgiBuilder &other) { *this = other; }
 
 CgiBuilder::CgiBuilder(const ARequest *req) {
 	this->_addContext(req->context());
-    this->addEnvar("SCRIPT_FILENAME", req->path().string());
+	this->addEnvar("SCRIPT_FILENAME", req->path().string());
 	this->addEnvar("GATEWAY_INTERFACE", CGI_PROTOCOL_VERSION);
 	this->addEnvar("SERVER_PROTOCOL", HTTP_PROTOCOL_VERSION);
 	this->addEnvar("SERVER_SOFTWARE", WEBSERV_VERSION);
@@ -30,7 +30,7 @@ CgiBuilder &CgiBuilder::operator=(const CgiBuilder &other) {
 	if (this == &other) {
 		return (*this);
 	}
-	this->_envars = other._envars;
+	this->_envars    = other._envars;
 	this->_arguments = other._arguments;
 	return (*this);
 }
@@ -41,12 +41,10 @@ void CgiBuilder::addEnvar(const std::string &key, const std::string &val) {
 	this->_envars.push_back(key + "=" + val);
 }
 
-void CgiBuilder::addArgument(const std::string &arg) {
-	this->_arguments.push_back(arg);
-}
+void CgiBuilder::addArgument(const std::string &arg) { this->_arguments.push_back(arg); }
 
 char **CgiBuilder::envp(void) const {
-	char **envp = new char *[this->_envars.size() + 1];
+	char **envp                = new char *[this->_envars.size() + 1];
 	envp[this->_envars.size()] = NULL;
 	for (uint32_t i = 0; i < this->_envars.size(); ++i) {
 		envp[i] = new char[this->_envars.at(i).size() + 1];
@@ -63,7 +61,7 @@ char **CgiBuilder::envp(void) const {
 }
 
 char **CgiBuilder::argv(void) const {
-	char **argv = new char *[this->_arguments.size() + 1];
+	char **argv                   = new char *[this->_arguments.size() + 1];
 	argv[this->_arguments.size()] = NULL;
 	for (uint32_t i = 0; i < this->_arguments.size(); ++i) {
 		argv[i] = new char[this->_arguments.at(i).size() + 1];

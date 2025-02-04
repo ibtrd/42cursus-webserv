@@ -1,5 +1,5 @@
-#include <unistd.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "Client.hpp"
 
@@ -10,10 +10,16 @@ error_t ARequest::_readCGI(void) {
 
 	// std::cerr << "Request _readCGI: " << compteur++ << std::endl;
 
-	ssize_t bytes = recv(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
+	ssize_t bytes =
+	    recv(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
 		std::cerr << "read: EOF" << std::endl;
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
+			this->_context.response.clear();
+			this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
+			this->_context.responseBuffer = this->_context.response.response();
+		}
 		return (REQ_CONTINUE);
 	}
 	if (bytes == -1) {
@@ -46,11 +52,13 @@ static status_code_t cgiStatusToStatus(std::string &statusHeader) {
 	if (statusHeader.size() < 5 && statusHeader[3] == ' ' && std::isalpha(statusHeader[4])) {
 		return (STATUS_INTERNAL_SERVER_ERROR);
 	}
-	if (!std::isdigit(statusHeader[0]) || !std::isdigit(statusHeader[1]) || !std::isdigit(statusHeader[2])) {
+	if (!std::isdigit(statusHeader[0]) || !std::isdigit(statusHeader[1]) ||
+	    !std::isdigit(statusHeader[2])) {
 		return (STATUS_INTERNAL_SERVER_ERROR);
 	}
 
-	status_code_t code = (statusHeader[0] - '0') * 100 + (statusHeader[1] - '0') * 10 + (statusHeader[2] - '0');
+	status_code_t code =
+	    (statusHeader[0] - '0') * 100 + (statusHeader[1] - '0') * 10 + (statusHeader[2] - '0');
 	statusHeader.erase(0, 4);
 	return (code);
 }
@@ -90,8 +98,8 @@ void ARequest::_parseCGIHeaders(void) {
 			this->_context.responseBuffer = this->_context.response.response();
 			return;
 		}
-		key                         = line.substr(0, pos);
-		value                       = line.substr(pos + 2);
+		key   = line.substr(0, pos);
+		value = line.substr(pos + 2);
 		this->_context.response.setHeader(key, value);
 		std::cerr << "cgiHeader: |" << key << "| |" << value << "|" << std::endl;
 	}
@@ -99,4 +107,3 @@ void ARequest::_parseCGIHeaders(void) {
 }
 
 /* ************************************************************************** */
-

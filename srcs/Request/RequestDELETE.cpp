@@ -60,7 +60,7 @@ void RequestDELETE::processing(void) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
-	if (this->_path.isDir() && !this->_path.isDirFormat()) {
+	if (this->_path.isDir()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 		return;
 	}

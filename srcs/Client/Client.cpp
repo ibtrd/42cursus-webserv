@@ -21,10 +21,7 @@ ARequest *(*Client::_requestsBuilder[METHOD_INVAL_METHOD])(RequestContext_t &) =
 
 Client::Client(const fd_t idSocket, const fd_t requestSocket, Server &server,
                const struct sockaddr_in &addr)
-    : _connectSocket(idSocket),
-      _request(NULL),
-      _context(server, addr),
-      _bytesSent(0) {
+    : _connectSocket(idSocket), _request(NULL), _context(server, addr), _bytesSent(0) {
 	// std::cerr << "Client created" << std::endl;
 	if (server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
 		this->_timestamp[CLIENT_HEADER_TIMEOUT] = time(NULL);
@@ -41,7 +38,8 @@ Client::Client(const Client &other)
       _request(other._request),
       _context(other._context),
       _bytesSent(other._bytesSent) {
-	std::cerr << "[WARNING] Client(" << other._clientEvent.data.fd << ") copy" << std::endl;	// Not updated
+	std::cerr << "[WARNING] Client(" << other._clientEvent.data.fd << ") copy"
+	          << std::endl;  // Not updated
 
 	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
 		this->_timestamp[i] = other._timestamp[i];
@@ -51,7 +49,7 @@ Client::Client(const Client &other)
 	this->_clientEvent.data   = other._clientEvent.data;
 
 	// context
-	this-> _context = other._context;
+	this->_context = other._context;
 }
 
 Client::~Client(void) {
@@ -70,7 +68,9 @@ Client::~Client(void) {
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
-bool Client::operator==(const Client &other) const { return (this->_clientEvent.data.fd == other._clientEvent.data.fd); }
+bool Client::operator==(const Client &other) const {
+	return (this->_clientEvent.data.fd == other._clientEvent.data.fd);
+}
 
 /* ************************************************************************** */
 
@@ -159,6 +159,10 @@ error_t Client::_readSocket(void) {
 		return (REQ_ERROR);
 	}
 	this->_context.buffer.append(Client::_readBuffer, bytes);
+	if (IS_REQ_CLIENT_READ_COMPLETE(this->_context.requestState)) {
+		std::cerr << "TIMEOUT UPDATE" << std::endl;
+		this->_timestamp[CLIENT_BODY_TIMEOUT] = time(NULL);
+	}
 
 	// std::cerr << "Client read size: " << bytes << std::endl;
 	// std::cerr << "Client read data: |";
@@ -203,15 +207,18 @@ error_t Client::_resolveARequest(void) {
 	if (-1 != this->_context.cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
-		event.events  = this->_context.option;
-		std::cerr << "Adding CGI socket to epoll: " << this->_context.cgiSockets[PARENT_SOCKET] << " with option: " << this->_context.option << std::endl;
+		event.events = this->_context.option;
+		std::cerr << "Adding CGI socket to epoll: " << this->_context.cgiSockets[PARENT_SOCKET]
+		          << " with option: " << this->_context.option << std::endl;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
-		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_context.cgiSockets[PARENT_SOCKET], &event)) {
+		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD,
+		                    this->_context.cgiSockets[PARENT_SOCKET], &event)) {
 			throw std::runtime_error("epoll_ctl(): " + std::string(strerror(errno)));
 			return REQ_ERROR;
 		}
 		// add to server clientbindmap
-		if (this->_context.server.addCGIToClientMap(this->_context.cgiSockets[PARENT_SOCKET], *this)) {
+		if (this->_context.server.addCGIToClientMap(this->_context.cgiSockets[PARENT_SOCKET],
+		                                            *this)) {
 			std::cerr << "Error: addCGIToClientMap" << std::endl;
 			return REQ_ERROR;
 		}
@@ -240,12 +247,14 @@ error_t Client::_sendResponse(void) {
 	// std::cerr << ".";
 	ssize_t bytes;
 
-	bytes                          = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
-	                                     ? this->_context.responseBuffer.size()
-	                                     : REQ_BUFFER_SIZE;
+	bytes = REQ_BUFFER_SIZE > this->_context.responseBuffer.size()
+	            ? this->_context.responseBuffer.size()
+	            : REQ_BUFFER_SIZE;
 	if (bytes > 0) {
-		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" << std::endl;
-		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes, MSG_NOSIGNAL);
+		// std::cerr << "Sent: |" << this->_context.responseBuffer.substr(0, bytes) << "|" <<
+		// std::endl;
+		bytes = send(this->_clientEvent.data.fd, this->_context.responseBuffer.c_str(), bytes,
+		             MSG_NOSIGNAL);
 		if (bytes == -1) {
 			std::cerr << "Error: send: " << strerror(errno) << std::endl;
 			return (REQ_ERROR);
@@ -266,12 +275,13 @@ error_t Client::_sendResponse(void) {
 	return (REQ_CONTINUE);
 }
 
-# include <iomanip>
+#include <iomanip>
 
 error_t Client::_handleSocketIn(void) {
 	error_t ret;
 
-std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr() << std::endl;
+	std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_requestStateStr()
+	          << std::endl;
 
 	if (!IS_REQ_READ_COMPLETE(this->_context.requestState) &&
 	    (ret = this->_readSocket()) != REQ_CONTINUE) {
@@ -303,12 +313,12 @@ std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_re
 		// return (REQ_CONTINUE);
 	}
 
-
 	if (this->_switchToWrite() == -1) {
 		return (REQ_ERROR);
 	}
-	
-	// std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr() << std::endl;
+
+	// std::cerr << std::setw(45) << "_handleSocketIn req status end : " << this->_requestStateStr()
+	// << std::endl;
 
 	return (REQ_CONTINUE);
 }
@@ -316,7 +326,8 @@ std::cerr << std::setw(45) << "_handleSocketIn req status start : " << this->_re
 error_t Client::_handleSocketOut(void) {
 	error_t ret;
 
-// std::cerr << std::setw(45) << "_handleSocketOut req status start : " << this->_requestStateStr() << std::endl;
+	// std::cerr << std::setw(45) << "_handleSocketOut req status start : " <<
+	// this->_requestStateStr() << std::endl;
 
 	if (!IS_REQ_WORK_OUT_COMPLETE(this->_context.requestState) &&
 	    this->_context.response.statusCode() >= 400 && this->_context.response.statusCode() < 600) {
@@ -328,7 +339,8 @@ error_t Client::_handleSocketOut(void) {
 	}
 
 	if ((ret = this->_sendResponse()) != REQ_DONE) {
-		// std::cerr << std::setw(45) << "_handleSocketOut req status continue : " << this->_requestStateStr() << std::endl;
+		// std::cerr << std::setw(45) << "_handleSocketOut req status continue : " <<
+		// this->_requestStateStr() << std::endl;
 
 		return (ret);
 	}
@@ -337,17 +349,20 @@ error_t Client::_handleSocketOut(void) {
 }
 
 error_t Client::_handleCGIIn(void) {
-		// std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr() << std::endl;
+	// std::cerr << std::setw(45) << "_handleCGIIn req status start : " << this->_requestStateStr()
+	// << std::endl;
 	// std::cerr << "CGI in" << std::endl;
 	return (this->_request->CGIIn());
 }
 
 error_t Client::_handleCGIOut(void) {
-		// std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr() << std::endl;
+	// std::cerr << std::setw(45) << "_handleCGIOut req status start : " << this->_requestStateStr()
+	// << std::endl;
 	// std::cerr << "CGI out" << std::endl;
 	error_t ret = this->_request->CGIOut();
 
-		// std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr() << std::endl;
+	// std::cerr << std::setw(45) << "_handleCGIOut req status end : " << this->_requestStateStr()
+	// << std::endl;
 	return (ret);
 }
 
@@ -356,8 +371,9 @@ error_t Client::_handleCGIOut(void) {
 error_t Client::init(void) {
 	this->_context.requestState = REQ_STATE_NONE;
 
-	this->_clientEvent.events  = EPOLLIN;
-	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_clientEvent.data.fd, &this->_clientEvent)) {
+	this->_clientEvent.events = EPOLLIN;
+	if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD, this->_clientEvent.data.fd,
+	                    &this->_clientEvent)) {
 		close(this->_clientEvent.data.fd);
 		return (-1);
 	}
@@ -405,7 +421,8 @@ error_t Client::timeoutCheck(const time_t now) {
 		return (REQ_CONTINUE);
 	}
 
-	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState) &&
+	if ((!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState) ||
+	     !IS_REQ_CGI_OUT_COMPLETE(this->_context.requestState)) &&
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {

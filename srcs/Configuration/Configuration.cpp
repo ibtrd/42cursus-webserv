@@ -17,6 +17,9 @@ Configuration::Configuration(int argc, char *argv[])
 		this->_conf.setPath(DEFAULT_CONF_FILEPATH);
 	}
 	this->_conf.parse();
+	if (0 == this->_blocks.size()) {
+		throw Configuration::ConfigurationException("no \"server\" section in configuration");
+	}
 }
 
 Configuration::~Configuration(void) {}

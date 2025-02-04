@@ -1,6 +1,6 @@
-#include <csignal>
-#include <iostream>
 #include <sys/wait.h>
+
+#include <iostream>
 
 extern int g_signal;
 
@@ -9,15 +9,15 @@ static void sigQuitHandler(int sig) {
 	g_signal = sig;
 }
 
-// Signal handler function to reap zombie processes 
-void sigChldHandler(int signum) { 
-	pid_t pid; 
-	int status; 
-	
+// Signal handler function to reap zombie processes
+void sigChldHandler(int signum) {
+	pid_t pid;
+	int   status;
+
 	std::cout << " Child termination signal (" << signum << ") received.\n";
-	// Reap all zombie processes 
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) { 
-		std::cerr << "Parent process reaped child process with PID " << pid << "." << std::endl; 
+	// Reap all zombie processes
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		std::cerr << "Parent process reaped child process with PID " << pid << "." << std::endl;
 	}
 
 	std::cout << " Child termination signal (" << signum << ") handled.\n";

@@ -8,7 +8,9 @@ Queries::Queries(void) : _queryLine(), _queries() {}
 
 Queries::Queries(const Queries &other) : _queryLine(other._queryLine), _queries(other._queries) {}
 
-Queries::Queries(const std::string &queryLine) : _queryLine(queryLine), _queries() { this->parse(); }
+Queries::Queries(const std::string &queryLine) : _queryLine(queryLine), _queries() {
+	this->parse();
+}
 
 Queries::~Queries(void) {}
 

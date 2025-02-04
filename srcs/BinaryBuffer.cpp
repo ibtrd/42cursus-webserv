@@ -1,6 +1,7 @@
 #include "BinaryBuffer.hpp"
-#include <cstring>
+
 #include <algorithm>
+#include <cstring>
 
 BinaryBuffer::BinaryBuffer(void) : _buffer() {}
 
@@ -55,16 +56,15 @@ void BinaryBuffer::append(const char *c_string) {
 
 void BinaryBuffer::clear(void) { this->_buffer.clear(); }
 
-size_t BinaryBuffer::find(const BinaryBuffer &other) const {
-	return (this->find(other._buffer));
-}
+size_t BinaryBuffer::find(const BinaryBuffer &other) const { return (this->find(other._buffer)); }
 
 size_t BinaryBuffer::find(const std::vector<uint8_t> &buffer) const {
 	return (this->find(buffer.data(), buffer.size()));
 }
 
 size_t BinaryBuffer::find(const uint8_t *buffer, size_t size) const {
-	const uint8_t *pos = std::search(this->_buffer.data(), this->_buffer.data() + this->_buffer.size(), buffer, buffer + size);
+	const uint8_t *pos = std::search(
+	    this->_buffer.data(), this->_buffer.data() + this->_buffer.size(), buffer, buffer + size);
 	if (pos == this->_buffer.data() + this->_buffer.size()) {
 		return (std::string::npos);
 	}
@@ -96,13 +96,13 @@ size_t BinaryBuffer::rfind(const uint8_t *buffer, size_t size, size_t pos) const
 
 	// Search backwards
 	for (size_t i = pos + 1; i-- > 0;) {
-		if (size <= this->_buffer.size() - i && std::memcmp(buffer, this->_buffer.data() + i, size) == 0) {
+		if (size <= this->_buffer.size() - i &&
+		    std::memcmp(buffer, this->_buffer.data() + i, size) == 0) {
 			return i;
 		}
 	}
-	return std::string::npos; // No match found
+	return std::string::npos;  // No match found
 }
-
 
 size_t BinaryBuffer::rfind(const char *c_string, size_t pos) const {
 	return (this->rfind(reinterpret_cast<const uint8_t *>(c_string), strlen(c_string), pos));
@@ -148,14 +148,16 @@ std::string BinaryBuffer::substr(size_t pos, size_t len) const {
 	if (pos >= this->_buffer.size()) {
 		return (std::string());
 	}
-	return (std::string(reinterpret_cast<const char *>(this->_buffer.data() + pos), std::min(len, this->_buffer.size() - pos)));
+	return (std::string(reinterpret_cast<const char *>(this->_buffer.data() + pos),
+	                    std::min(len, this->_buffer.size() - pos)));
 }
 
 BinaryBuffer &BinaryBuffer::erase(size_t pos, size_t len) {
 	if (pos >= this->_buffer.size()) {
 		return (*this);
 	}
-	this->_buffer.erase(this->_buffer.begin() + pos, this->_buffer.begin() + std::min(pos + len, this->_buffer.size()));
+	this->_buffer.erase(this->_buffer.begin() + pos,
+	                    this->_buffer.begin() + std::min(pos + len, this->_buffer.size()));
 	return (*this);
 }
 

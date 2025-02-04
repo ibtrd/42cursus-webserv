@@ -1,16 +1,6 @@
-#include "Response.hpp"
-
-#include <sys/epoll.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
-#include <cerrno>
-#include <cstring>
-#include <iostream>
 
 #include "RequestContext.hpp"
 #include "ft.hpp"
-#include "webdef.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -18,7 +8,7 @@ Response::Response(void) {
 	// std::cerr << "Response created" << std::endl;
 	this->_statusCode             = STATUS_NONE;
 	this->_reasonPhrase           = "";
-	this->_headers[HEADER_SERVER] = WEBSERV_VERSION; 
+	this->_headers[HEADER_SERVER] = WEBSERV_VERSION;
 };
 
 Response::Response(const Response &other) {
@@ -86,7 +76,9 @@ void Response::setHeader(const std::string &key, const std::string &value) {
 	this->_headers[key] = value;
 }
 
-void Response::setReasonPhrase(const std::string &reasonPhrase) { this->_reasonPhrase = reasonPhrase; }
+void Response::setReasonPhrase(const std::string &reasonPhrase) {
+	this->_reasonPhrase = reasonPhrase;
+}
 
 void Response::setBody(const std::string &body) { this->_body = body; }
 

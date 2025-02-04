@@ -1,13 +1,8 @@
 // function a ranger quand on aura le temps (si nécessaire)
 
-#include <cerrno>
-#include <cstdlib>
-#include <limits>
-
 #include "RequestContext.hpp"
-#include "webdef.hpp"
-#include "webservHTML.hpp"
 #include "ft.hpp"
+#include "webservHTML.hpp"
 
 std::string statusCodeToReason(const status_code_t code) {
 	switch (code) {

@@ -1,11 +1,7 @@
 #ifndef SERVER_HPP
 #define SERVER_HPP
 
-#include <stdint.h>
-#include <sys/epoll.h>
-
 #include <list>
-#include <map>
 
 #include "Client.hpp"
 #include "Configuration.hpp"
@@ -35,7 +31,7 @@ public:
 	int32_t            getTimeout(const uint32_t type) const;
 	// const int32_t		*getTimeouts(void) const;
 
-	error_t           addCGIToClientMap(const fd_t socket, const Client &client);
+	error_t addCGIToClientMap(const fd_t socket, const Client &client);
 
 	int32_t epollFd(void) const;
 

@@ -3,7 +3,7 @@
 /* STATIC VARIABLES ********************************************************* */
 
 const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0\r\n\r", "0\r\n",
-                                                                   "0\r", "0"};
+                                                                 "0\r", "0"};
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -12,12 +12,13 @@ const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0
 // 	// std::cerr << "ARequest created" << std::endl;
 // }
 
-ARequest::ARequest(RequestContext_t &context) : _context(context), _chunked(false), _contentLength(0) {
+ARequest::ARequest(RequestContext_t &context)
+    : _context(context), _chunked(false), _contentLength(0) {
 	// std::cerr << "ARequest created" << std::endl;
-	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
+	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
-	const Path &root = this->_context.ruleBlock->getRoot().string();
-	
+	const Path &root         = this->_context.ruleBlock->getRoot().string();
+
 	if (!chopedTarget.empty()) {
 		this->_path = root.concat(chopedTarget);
 	} else {
@@ -27,12 +28,13 @@ ARequest::ARequest(RequestContext_t &context) : _context(context), _chunked(fals
 	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
-ARequest::ARequest(const ARequest &other) : _context(other._context), _chunked(false), _contentLength(0) {
+ARequest::ARequest(const ARequest &other)
+    : _context(other._context), _chunked(false), _contentLength(0) {
 	// std::cerr << "ARequest copy" << std::endl;
-	uint32_t matchLength = this->_context.ruleBlock->path().string().size() - 1;
+	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
-	const Path &root = this->_context.ruleBlock->getRoot().string();
-	
+	const Path &root         = this->_context.ruleBlock->getRoot().string();
+
 	if (!chopedTarget.empty()) {
 		this->_path = root.concat(chopedTarget);
 	} else {
@@ -81,15 +83,9 @@ error_t ARequest::CGIOut(void) {
 
 /* GETTERS ****************************************************************** */
 
-const RequestContext_t &ARequest::context(void) const {
-	return this->_context;
-}
+const RequestContext_t &ARequest::context(void) const { return this->_context; }
 
-const Path &ARequest::path(void) const {
-	return this->_path;
-}
-const Path &ARequest::cgiPath(void) const {
-	return *this->_cgiPath;
-}
+const Path &ARequest::path(void) const { return this->_path; }
+const Path &ARequest::cgiPath(void) const { return *this->_cgiPath; }
 
 /* ************************************************************************** */

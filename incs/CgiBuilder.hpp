@@ -24,8 +24,8 @@ public:
 	static void destroy(char **ptr);
 
 private:
-	std::vector<std::string> 	_envars;
-	std::vector<std::string> 	_arguments;
+	std::vector<std::string> _envars;
+	std::vector<std::string> _arguments;
 
 	void _addContext(const RequestContext_t &context);
 	void _addHeaders(const headers_t &headers);

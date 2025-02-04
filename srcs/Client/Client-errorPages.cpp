@@ -8,9 +8,11 @@ error_t Client::_openErrorPage(void) {
 	// std::cerr << "Loading error page" << std::endl;
 
 	if (!IS_REQ_WORK_IN_COMPLETE(this->_context.requestState)) {
-		std::cerr << "[Info] page requested before workIn was marked completed" << std::endl;	// DEBUG
+		std::cerr << "[Info] page requested before workIn was marked completed"
+		          << std::endl;  // DEBUG
 	} else {
-		std::cerr << "[Info] page requested after workIn was marked completed" << std::endl;	// DEBUG
+		std::cerr << "[Info] page requested after workIn was marked completed"
+		          << std::endl;  // DEBUG
 	}
 
 	if (!this->_context.serverBlock) {
@@ -41,10 +43,9 @@ void Client::_loadErrorPage(void) {
 	if (this->_openErrorPage() == REQ_ERROR) {
 		std::string errorBody;
 		errorBody = HTMLERROR(ft::numToStr(this->_context.response.statusCode()),
-								statusCodeToMsg(this->_context.response.statusCode()));
+		                      statusCodeToMsg(this->_context.response.statusCode()));
 		this->_context.response.setBody(errorBody);
-		this->_context.response.setHeader(HEADER_CONTENT_LENGTH,
-											ft::numToStr(errorBody.length()));
+		this->_context.response.setHeader(HEADER_CONTENT_LENGTH, ft::numToStr(errorBody.length()));
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 	}
 }

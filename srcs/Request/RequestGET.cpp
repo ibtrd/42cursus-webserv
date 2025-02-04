@@ -2,11 +2,10 @@
 
 #include <unistd.h>
 
-
+#include "CgiBuilder.hpp"
 #include "Server.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
-#include "CgiBuilder.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -14,7 +13,7 @@ RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL
 	// std::cerr << "RequestGET created" << std::endl;
 	SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);  // No workIn needed
 	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
-		SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 }
 
 RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
@@ -83,7 +82,6 @@ error_t RequestGET::_readFile(void) {
 	return (REQ_CONTINUE);
 }
 
-
 error_t RequestGET::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
 	     it != this->_context.ruleBlock->indexes().end(); ++it) {
@@ -136,13 +134,14 @@ void RequestGET::processing(void) {
 	// std::cerr << "RequestGET parse " << this->_path.isDirFormat() << std::endl;
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
-		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/' + this->_context.queries.originalQueryLine());
+		this->_context.response.setHeader(
+		    HEADER_LOCATION,
+		    this->_context.target + '/' + this->_context.queries.originalQueryLine());
 		return;
 	}
-	if (0 == this->_fetchIndexes() &&
-		REQ_CONTINUE != this->_validateLocalFile()) {
+	if (0 == this->_fetchIndexes() && REQ_CONTINUE != this->_validateLocalFile()) {
 		return;
-	} else if (this->_context.ruleBlock->isDirListing()){
+	} else if (this->_context.ruleBlock->isDirListing()) {
 		this->_openDir();
 		return;
 	}

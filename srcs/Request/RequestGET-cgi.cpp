@@ -1,10 +1,9 @@
-#include "RequestGET.hpp"
-
 #include <unistd.h>
 
+#include "CgiBuilder.hpp"
+#include "RequestGET.hpp"
 #include "Server.hpp"
 #include "ft.hpp"
-#include "CgiBuilder.hpp"
 
 void RequestGET::_openCGI(void) {
 	if (0 != this->_cgiPath->access(X_OK)) {
@@ -44,13 +43,13 @@ void RequestGET::_openCGI(void) {
 }
 
 error_t RequestGET::_executeCGI(void) {
-	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO)
-		|| -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
+	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO) ||
+	    -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
 		std::exit(1);
 	}
 	close(this->_context.cgiSockets[PARENT_SOCKET]);
 	close(this->_context.cgiSockets[CHILD_SOCKET]);
-	
+
 	CgiBuilder builder(this);
 	// std::cerr << builder;
 
@@ -66,7 +65,7 @@ error_t RequestGET::_executeCGI(void) {
 	// 	std::cerr << envp[i] << "\n";
 	// }
 	// std::cerr.flush();
-	
+
 	// close(STDIN_FILENO);
 
 	std::cerr << "EXECVE! [GET]" << std::endl;

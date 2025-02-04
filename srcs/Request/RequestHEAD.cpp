@@ -108,18 +108,17 @@ void RequestHEAD::processing(void) {
 	}
 	if (!this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_MOVED_PERMANENTLY);
-		this->_context.response.setHeader(HEADER_LOCATION, this->_context.target + '/');
+		this->_context.response.setHeader(
+		    HEADER_LOCATION,
+		    this->_context.target + '/' + this->_context.queries.originalQueryLine());
 		return;
 	}
-	if (0 == this->_fetchIndexes()) {
-		if (REQ_CONTINUE != this->_validateLocalFile()) {
-			return;
-		}
-	} else {
-		if (this->_context.ruleBlock->isDirListing()) {
-			this->_openDir();
-			return;
-		}
+
+	if (0 == this->_fetchIndexes() && REQ_CONTINUE != this->_validateLocalFile()) {
+		return;
+	} else if (this->_context.ruleBlock->isDirListing()) {
+		this->_openDir();
+		return;
 	}
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }

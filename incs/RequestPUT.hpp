@@ -17,9 +17,9 @@ public:
 
 	RequestPUT &operator=(const RequestPUT &other);
 
-	void      processing(void);
-	
-	error_t   workIn(void);
+	void processing(void);
+
+	error_t workIn(void);
 
 	ARequest *clone(void) const;
 };
