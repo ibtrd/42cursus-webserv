@@ -106,14 +106,8 @@ error_t LocationBlock::setDirListing(const std::string &str) {
 
 void LocationBlock::setMaxBodySize(const int32_t size) { this->_maxBodySize = size; }
 
-error_t LocationBlock::setRoot(const std::string &str) {
-	Path path(str);
-
-	if (!path.isOriginForm()) {
-		return -1;
-	}
-	this->_root = path;
-	return 0;
+void LocationBlock::setRoot(const std::string &str) {
+	this->_root = Path(str);
 }
 
 void LocationBlock::setRedirect(const uint16_t status, const std::string &body) {
