@@ -157,22 +157,6 @@ error_t RequestPOST::_checkHeaders(void) {
 	return (REQ_CONTINUE);
 }
 
-error_t RequestPOST::_validateLocalFile(void) {
-	// if (0 != this->_path.stat()) {
-	// 	this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
-	// 	return (REQ_DONE);
-	// }
-	// if (0 != this->_path.access(R_OK)) {
-	// 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	// 	return (REQ_DONE);
-	// }
-	// if (this->_path.isFile()) {
-	this->_openCGI();
-	return (REQ_DONE);
-	// }
-	// return (REQ_CONTINUE);
-}
-
 /* ************************************************************************** */
 
 void RequestPOST::processing(void) {
@@ -187,10 +171,7 @@ void RequestPOST::processing(void) {
 	// CGI
 	if (this->_cgiPath) {
 		SET_REQ_WORK_IN_COMPLETE(this->_context.requestState);
-		if (REQ_CONTINUE != this->_validateLocalFile()) {
-			return;
-		}
-		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
+		this->_openCGI();
 		return;
 	}
 	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);

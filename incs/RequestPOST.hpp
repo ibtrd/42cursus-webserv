@@ -12,7 +12,6 @@ private:
 	error_t _executeCGI(void);
 
 	error_t _checkHeaders(void);
-	error_t _validateLocalFile(void);
 
 public:
 	RequestPOST(RequestContext_t &context);
