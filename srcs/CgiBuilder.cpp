@@ -1,6 +1,7 @@
 #include "CgiBuilder.hpp"
 
 #include <arpa/inet.h>
+#include <unistd.h>
 
 #include <algorithm>
 
@@ -14,12 +15,12 @@ CgiBuilder::CgiBuilder(const CgiBuilder &other) { *this = other; }
 
 CgiBuilder::CgiBuilder(const ARequest *req) {
 	this->_addContext(req->context());
-	this->addEnvar("SCRIPT_FILENAME", req->path().string());
+	this->addEnvar("SCRIPT_FILENAME", req->path().notdir());
 	this->addEnvar("GATEWAY_INTERFACE", CGI_PROTOCOL_VERSION);
 	this->addEnvar("SERVER_PROTOCOL", HTTP_PROTOCOL_VERSION);
 	this->addEnvar("SERVER_SOFTWARE", WEBSERV_VERSION);
 	this->addArgument(req->cgiPath().string());
-	this->addArgument(req->path().string());
+	this->addArgument(req->path().notdir());
 }
 
 CgiBuilder::~CgiBuilder(void) {}
@@ -42,6 +43,10 @@ void CgiBuilder::addEnvar(const std::string &key, const std::string &val) {
 }
 
 void CgiBuilder::addArgument(const std::string &arg) { this->_arguments.push_back(arg); }
+
+int CgiBuilder::chdir(const ARequest *req) {
+	return ::chdir(req->path().dir().c_str());
+}
 
 char **CgiBuilder::envp(void) const {
 	char **envp                = new char *[this->_envars.size() + 1];

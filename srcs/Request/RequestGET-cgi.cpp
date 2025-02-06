@@ -37,22 +37,3 @@ void RequestGET::_openCGI(void) {
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 	}
 }
-
-error_t RequestGET::_executeCGI(void) {
-	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO) ||
-	    -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
-		std::exit(1);
-	}
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
-	close(this->_context.cgiSockets[CHILD_SOCKET]);
-
-	CgiBuilder builder(this);
-	char **envp = builder.envp();
-	char **argv = builder.argv();
-
-	execve(this->_cgiPath->string().c_str(), argv, envp);
-	std::cerr << "Error: execve(): " << strerror(errno) << std::endl;
-	CgiBuilder::destroy(argv);
-	CgiBuilder::destroy(envp);
-	std::exit(1);
-}

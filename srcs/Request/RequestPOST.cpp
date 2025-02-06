@@ -2,10 +2,8 @@
 
 #include <unistd.h>
 
-#include "CgiBuilder.hpp"
 #include "Server.hpp"
 #include "ft.hpp"
-#include "webservHTML.hpp"
 
 /* CONSTRUCTORS ************************************************************* */
 
@@ -61,25 +59,6 @@ void RequestPOST::_openCGI(void) {
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 	}
-}
-
-error_t RequestPOST::_executeCGI(void) {
-	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO) ||
-	    -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
-		std::exit(1);
-	}
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
-	close(this->_context.cgiSockets[CHILD_SOCKET]);
-
-	CgiBuilder builder(this);
-	char **envp = builder.envp();
-	char **argv = builder.argv();
-
-	execve(this->_cgiPath->string().c_str(), argv, envp);
-	std::cerr << "Error: execve(): " << strerror(errno) << std::endl;
-	CgiBuilder::destroy(envp);
-	CgiBuilder::destroy(argv);
-	std::exit(1);
 }
 
 error_t RequestPOST::_checkHeaders(void) {
