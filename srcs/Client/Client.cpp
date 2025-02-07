@@ -210,6 +210,7 @@ error_t Client::_switchToWrite(void) {
 		return (-1);
 	}
 	SET_REQ_CAN_WRITE(this->_context.requestState);
+	this->_timestamp[SEND_TIMEOUT] = time(NULL);
 	return (0);
 }
 
@@ -375,7 +376,21 @@ error_t Client::timeoutCheck(const time_t now) {
 	if (IS_REQ_CAN_WRITE(this->_context.requestState) &&
 	    this->_context.server.getTimeout(SEND_TIMEOUT) &&
 	    now - this->_timestamp[SEND_TIMEOUT] >= this->_context.server.getTimeout(SEND_TIMEOUT)) {
-		return (REQ_DONE);
+		if (!this->_request || !this->_request->CGISilent()) {
+			return (REQ_DONE);
+		}
+		this->_context.response.clear();
+		this->_context.response.setStatusCode(STATUS_GATEWAY_TIMEOUT);
+		SET_REQ_WORK_COMPLETE(this->_context.requestState);
+		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
+		this->_loadErrorPage();
+
+		this->_context.responseBuffer = this->_context.response.response();
+		this->_context.response.clearBody();
+
+		if (this->_switchToWrite() == -1) {
+			return (REQ_ERROR);
+		}
 	}
 
 	return (REQ_CONTINUE);

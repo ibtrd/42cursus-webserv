@@ -6,6 +6,10 @@
 error_t ARequest::_readCGI(void) {
 	uint8_t buffer[REQ_BUFFER_SIZE];
 
+	if (IS_REQ_CGI_IN_COMPLETE(this->_context.requestState)) {
+		return (REQ_CONTINUE);
+	}
+
 	ssize_t bytes =
 	    recv(this->_context.cgiSockets[PARENT_SOCKET], buffer, REQ_BUFFER_SIZE, MSG_NOSIGNAL);
 	if (bytes == 0) {
@@ -27,7 +31,9 @@ error_t ARequest::_readCGI(void) {
 	if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_parseCGIHeaders();
 	}
-	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
+	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState) &&
+		this->_readBuffer.size() > 0) {
+		this->_cgiSilent = false;
 		this->_context.responseBuffer.append(this->_readBuffer);
 		this->_readBuffer.clear();
 	}
