@@ -29,6 +29,7 @@ protected:
 	bool         _cgiSilent;
 
 	error_t _readCGI(void);
+	error_t _executeCGI(void);
 	void    _parseCGIHeaders(void);
 
 	error_t _generateFilename(void);

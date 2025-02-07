@@ -9,8 +9,6 @@ class RequestPOST : public ARequest {
 private:
 	void _openCGI(void);
 
-	error_t _executeCGI(void);
-
 	error_t _checkHeaders(void);
 
 public:
