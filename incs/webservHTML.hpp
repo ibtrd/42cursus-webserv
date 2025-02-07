@@ -174,6 +174,7 @@
 #define ERROR500MSG "The server encountered an internal error. Please try again later."
 #define ERROR501MSG "The server does not support the functionality required to fulfill the request."
 #define ERROR503MSG "The service is currently unavailable. Please try again later."
+#define ERROR504MSG "The server timed out waiting for a response from the upstream server."
 #define ERROR505MSG "The HTTP version used in your request is not supported."
 
 #endif /* ******************************************************************* */

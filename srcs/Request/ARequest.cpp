@@ -8,7 +8,7 @@ const char *ARequest::_chunkTerminator[CHUNK_TERMINATOR_SIZE] = {"0\r\n\r\n", "0
 /* CONSTRUCTORS ************************************************************* */
 
 ARequest::ARequest(RequestContext_t &context)
-    : _context(context), _chunked(false), _contentLength(0) {
+    : _context(context), _chunked(false), _contentLength(0), _cgiSilent(true) {
 	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
 	const Path &root         = this->_context.ruleBlock->getRoot().string();
@@ -23,7 +23,7 @@ ARequest::ARequest(RequestContext_t &context)
 }
 
 ARequest::ARequest(const ARequest &other)
-    : _context(other._context), _chunked(false), _contentLength(0) {
+    : _context(other._context), _chunked(other._chunked), _contentLength(other._contentLength), _cgiSilent(other._cgiSilent) {
 	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
 	const Path &root         = this->_context.ruleBlock->getRoot().string();
@@ -76,5 +76,7 @@ const RequestContext_t &ARequest::context(void) const { return this->_context; }
 
 const Path &ARequest::path(void) const { return this->_path; }
 const Path &ARequest::cgiPath(void) const { return *this->_cgiPath; }
+
+bool ARequest::CGISilent(void) const { return this->_cgiSilent; }
 
 /* ************************************************************************** */
