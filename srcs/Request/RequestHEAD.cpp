@@ -20,9 +20,7 @@ RequestHEAD::RequestHEAD(RequestContext_t &context) : ARequest(context), _dir(NU
 	SET_REQ_WORK_COMPLETE(this->_context.requestState);
 }
 
-RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) {
-	*this = other;
-}
+RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) { *this = other; }
 
 RequestHEAD::~RequestHEAD(void) {
 	if (this->_file.is_open()) {
@@ -116,18 +114,8 @@ void RequestHEAD::processing(void) {
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }
 
-ARequest *RequestHEAD::clone(void) const {
-	return (new RequestHEAD(*this));
-}
-
-/* HEADTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
+ARequest *RequestHEAD::clone(void) const { return (new RequestHEAD(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestHEAD(RequestContext_t &context) {
-	return (new RequestHEAD(context));
-}
+ARequest *createRequestHEAD(RequestContext_t &context) { return (new RequestHEAD(context)); }

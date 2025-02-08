@@ -18,9 +18,7 @@ RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context) {
 	this->_contentTotalLength = 0;
 }
 
-RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) {
-	*this = other;
-}
+RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) { *this = other; }
 
 RequestPUT::~RequestPUT(void) {
 	if (this->_file.is_open()) {
@@ -125,18 +123,8 @@ error_t RequestPUT::workIn(void) {
 	return (REQ_DONE);
 }
 
-ARequest *RequestPUT::clone(void) const {
-	return (new RequestPUT(*this));
-}
-
-/* GETTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
+ARequest *RequestPUT::clone(void) const { return (new RequestPUT(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestPUT(RequestContext_t &context) {
-	return (new RequestPUT(context));
-}
+ARequest *createRequestPUT(RequestContext_t &context) { return (new RequestPUT(context)); }

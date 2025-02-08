@@ -31,8 +31,7 @@ error_t ARequest::_readCGI(void) {
 	if (!IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState)) {
 		this->_parseCGIHeaders();
 	}
-	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState) &&
-		this->_readBuffer.size() > 0) {
+	if (IS_REQ_CGI_HEADERS_COMPLETE(this->_context.requestState) && this->_readBuffer.size() > 0) {
 		this->_cgiSilent = false;
 		this->_context.responseBuffer.append(this->_readBuffer);
 		this->_readBuffer.clear();

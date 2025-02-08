@@ -37,14 +37,13 @@ Client::Client(const Client &other)
       _request(other._request),
       _context(other._context),
       _bytesSent(other._bytesSent) {
-
 	for (int i = 0; i < TIMEOUT_COUNT; ++i) {
 		this->_timestamp[i] = other._timestamp[i];
 	}
 
 	this->_clientEvent.events = other._clientEvent.events;
 	this->_clientEvent.data   = other._clientEvent.data;
-	this->_context = other._context;
+	this->_context            = other._context;
 }
 
 Client::~Client(void) {
@@ -182,7 +181,7 @@ error_t Client::_resolveARequest(void) {
 	if (-1 != this->_context.cgiSockets[PARENT_SOCKET]) {
 		// add to epoll
 		struct epoll_event event;
-		event.events = this->_context.option;
+		event.events  = this->_context.option;
 		event.data.fd = this->_context.cgiSockets[PARENT_SOCKET];
 		if (-1 == epoll_ctl(Client::epollFd, EPOLL_CTL_ADD,
 		                    this->_context.cgiSockets[PARENT_SOCKET], &event)) {
@@ -294,13 +293,9 @@ error_t Client::_handleSocketOut(void) {
 	return (REQ_DONE);
 }
 
-error_t Client::_handleCGIIn(void) {
-	return (this->_request->CGIIn());
-}
+error_t Client::_handleCGIIn(void) { return (this->_request->CGIIn()); }
 
-error_t Client::_handleCGIOut(void) {
-	return (this->_request->CGIOut());
-}
+error_t Client::_handleCGIOut(void) { return (this->_request->CGIOut()); }
 
 /* ************************************************************************** */
 
@@ -337,7 +332,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_HEADER_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_HEADER_TIMEOUT)) {
-
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_READ_COMPLETE(this->_context.requestState);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
@@ -358,7 +352,6 @@ error_t Client::timeoutCheck(const time_t now) {
 	    this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT) &&
 	    now - this->_timestamp[CLIENT_BODY_TIMEOUT] >=
 	        this->_context.server.getTimeout(CLIENT_BODY_TIMEOUT)) {
-
 		this->_context.response.setStatusCode(STATUS_REQUEST_TIMEOUT);
 		SET_REQ_WORK_COMPLETE(this->_context.requestState);
 		UNSET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);

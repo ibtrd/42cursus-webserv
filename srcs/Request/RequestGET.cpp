@@ -15,9 +15,7 @@ RequestGET::RequestGET(RequestContext_t &context) : ARequest(context), _dir(NULL
 	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
 }
 
-RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) {
-	*this = other;
-}
+RequestGET::RequestGET(const RequestGET &other) : ARequest(other), _dir(NULL) { *this = other; }
 
 RequestGET::~RequestGET(void) {
 	if (this->_file.is_open()) {
@@ -149,16 +147,10 @@ error_t RequestGET::workOut(void) {
 	return (REQ_ERROR);
 }
 
-error_t RequestGET::CGIIn(void) {
-	return (this->_readCGI());
-}
+error_t RequestGET::CGIIn(void) { return (this->_readCGI()); }
 
-ARequest *RequestGET::clone(void) const {
-	return (new RequestGET(*this));
-}
+ARequest *RequestGET::clone(void) const { return (new RequestGET(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestGET(RequestContext_t &context) {
-	return (new RequestGET(context));
-}
+ARequest *createRequestGET(RequestContext_t &context) { return (new RequestGET(context)); }

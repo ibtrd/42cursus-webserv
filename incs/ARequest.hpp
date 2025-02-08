@@ -26,7 +26,7 @@ protected:
 
 	BinaryBuffer _readBuffer;
 
-	bool         _cgiSilent;
+	bool _cgiSilent;
 
 	error_t _readCGI(void);
 	error_t _executeCGI(void);
@@ -57,7 +57,7 @@ public:
 	const RequestContext_t &context(void) const;
 	const Path             &path(void) const;
 	const Path             &cgiPath(void) const;
-	bool                   CGISilent(void) const;
+	bool                    CGISilent(void) const;
 
 	virtual ARequest *clone(void) const = 0;
 };

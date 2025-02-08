@@ -10,12 +10,9 @@ Response::Response(void) {
 	this->_headers[HEADER_SERVER] = WEBSERV_VERSION;
 };
 
-Response::Response(const Response &other) {
-	*this = other;
-}
+Response::Response(const Response &other) { *this = other; }
 
-Response::~Response(void) {
-}
+Response::~Response(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 

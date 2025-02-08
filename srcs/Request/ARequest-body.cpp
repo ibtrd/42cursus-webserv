@@ -33,7 +33,6 @@ void ARequest::_openFile(void) {
 }
 
 void ARequest::_saveFile(void) {
-
 	if (this->_cgiPath) {
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 		this->_context.response.setStatusCode(STATUS_OK);

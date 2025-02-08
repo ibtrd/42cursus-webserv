@@ -17,9 +17,7 @@ RequestDELETE::RequestDELETE(RequestContext_t &context) : ARequest(context) {
 	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
 }
 
-RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other) {
-	*this = other;
-}
+RequestDELETE::RequestDELETE(const RequestDELETE &other) : ARequest(other) { *this = other; }
 
 RequestDELETE::~RequestDELETE(void) {}
 
@@ -61,6 +59,4 @@ ARequest *RequestDELETE::clone(void) const { return (new RequestDELETE(*this)); 
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestDELETE(RequestContext_t &context) {
-	return (new RequestDELETE(context));
-}
+ARequest *createRequestDELETE(RequestContext_t &context) { return (new RequestDELETE(context)); }

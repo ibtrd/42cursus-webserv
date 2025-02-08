@@ -44,9 +44,7 @@ void CgiBuilder::addEnvar(const std::string &key, const std::string &val) {
 
 void CgiBuilder::addArgument(const std::string &arg) { this->_arguments.push_back(arg); }
 
-int CgiBuilder::chdir(const ARequest *req) {
-	return ::chdir(req->path().dir().c_str());
-}
+int CgiBuilder::chdir(const ARequest *req) { return ::chdir(req->path().dir().c_str()); }
 
 char **CgiBuilder::envp(void) const {
 	char **envp                = new char *[this->_envars.size() + 1];

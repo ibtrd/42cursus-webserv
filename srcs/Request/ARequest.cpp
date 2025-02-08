@@ -27,7 +27,10 @@ ARequest::ARequest(RequestContext_t &context)
 }
 
 ARequest::ARequest(const ARequest &other)
-    : _context(other._context), _chunked(other._chunked), _contentLength(other._contentLength), _cgiSilent(other._cgiSilent) {
+    : _context(other._context),
+      _chunked(other._chunked),
+      _contentLength(other._contentLength),
+      _cgiSilent(other._cgiSilent) {
 	uint32_t    matchLength  = this->_context.ruleBlock->path().string().size() - 1;
 	std::string chopedTarget = this->_context.target.substr(matchLength, std::string::npos);
 	const Path &root         = this->_context.ruleBlock->getRoot().string();

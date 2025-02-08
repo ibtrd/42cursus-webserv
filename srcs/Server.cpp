@@ -105,7 +105,6 @@ void Server::routine(void) {
 
 		// Read events
 		if (this->_events[i].events & EPOLLIN) {
-
 			error_t err = it->second->handleIn(fd);
 			if (REQ_ERROR == err) {
 				this->_removeConnection(fd);
@@ -123,7 +122,6 @@ void Server::routine(void) {
 
 		// Write events
 		if (this->_events[i].events & EPOLLOUT) {
-
 			error_t err = it->second->handleOut(fd);
 			if (REQ_ERROR == err) {
 				this->_removeConnection(fd);
@@ -208,8 +206,7 @@ fd_t Server::_addSocket(const ServerBlock &block, const struct sockaddr_in &host
 		throw std::runtime_error((std::string("inet_ntop(): ") + strerror(errno)).c_str());
 	}
 
-	std::cout << "Listening on " << ip << ":" << ntohs(boundAddr.sin_port)
-	          << std::endl;
+	std::cout << "Listening on " << ip << ":" << ntohs(boundAddr.sin_port) << std::endl;
 	this->_serverBlocks[fd].push_back(block);
 	return fd;
 }

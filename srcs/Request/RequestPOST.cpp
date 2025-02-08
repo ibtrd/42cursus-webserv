@@ -12,12 +12,9 @@ RequestPOST::RequestPOST(RequestContext_t &context) : ARequest(context) {
 	this->_contentTotalLength = 0;
 }
 
-RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other) {
-	*this = other;
-}
+RequestPOST::RequestPOST(const RequestPOST &other) : ARequest(other) { *this = other; }
 
-RequestPOST::~RequestPOST(void) {
-}
+RequestPOST::~RequestPOST(void) {}
 
 /* OPERATOR OVERLOADS ******************************************************* */
 
@@ -162,9 +159,7 @@ error_t RequestPOST::workOut(void) {
 	return (REQ_DONE);
 }
 
-error_t RequestPOST::CGIIn(void) {
-	return (this->_readCGI());
-}
+error_t RequestPOST::CGIIn(void) { return (this->_readCGI()); }
 
 error_t RequestPOST::CGIOut(void) {
 	if (this->_chunked) {
@@ -175,12 +170,8 @@ error_t RequestPOST::CGIOut(void) {
 	return (REQ_ERROR);
 }
 
-ARequest *RequestPOST::clone(void) const {
-	return (new RequestPOST(*this));
-}
+ARequest *RequestPOST::clone(void) const { return (new RequestPOST(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestPOST(RequestContext_t &context) {
-	return (new RequestPOST(context));
-}
+ARequest *createRequestPOST(RequestContext_t &context) { return (new RequestPOST(context)); }
