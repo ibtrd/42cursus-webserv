@@ -179,6 +179,8 @@ const Path &LocationBlock::clientBodyTempPath(void) const {
 
 const Path &LocationBlock::clientBodyUploadPath(void) const { return this->_clientBodyUploadPath; }
 
+bool LocationBlock::hasClientBodyTempPath(void) const { return !this->_clientBodyTempPath.empty(); }
+
 /* ************************************************************************** */
 
 std::ostream &operator<<(std::ostream &os, const LocationBlock &location) {

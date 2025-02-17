@@ -4,8 +4,12 @@
 #include "ft.hpp"
 
 error_t ARequest::_generateFilename(void) {
-	std::string basename =
-	    this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	std::string basename;
+	if (this->_context.ruleBlock->clientBodyUploadPath() != this->_context.ruleBlock->clientBodyTempPath()) {
+		basename = this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	} else {
+		basename = this->_path.string();
+	}
 	std::string tmp;
 	int32_t     i = 0;
 
@@ -27,7 +31,7 @@ void ARequest::_openFile(void) {
 	this->_file.open(this->_tmpFilename.c_str(),
 	                 std::ios::out | std::ios::trunc | std::ios::binary);
 	if (!this->_file.is_open()) {
-		std::cerr << "Error: open(): " << std::strerror(errno) << std::endl;
+		std::cerr << "Error: open(): " << this->_tmpFilename << ": " << std::strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
 }
@@ -49,6 +53,7 @@ void ARequest::_saveFile(void) {
 	this->_file.close();
 	this->_context.response.setStatusCode(STATUS_CREATED);
 	if (0 == this->_path.access(F_OK) && 0 != std::remove(this->_path.c_str())) {
+		std::cerr << "Error: remove(): " << std::strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
 	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {

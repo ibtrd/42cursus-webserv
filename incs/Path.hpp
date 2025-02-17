@@ -17,8 +17,8 @@ public:
 	~Path(void);
 
 	Path &operator=(const Path &other);
-	bool  operator==(const Path &other);
-	bool  operator!=(const Path &other);
+	bool  operator==(const Path &other) const;
+	bool  operator!=(const Path &other) const;
 
 	bool    empty(void) const;
 	bool    isOriginForm(void) const;
