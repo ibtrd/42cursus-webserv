@@ -52,6 +52,8 @@ typename std::map<KEY, std::vector<VAL> >::const_iterator isBound(
 bool        is_dir(char *path);
 std::string numToStr(int num);
 std::string generateRandomString(size_t len);
+int         hexToDec(char c);
+std::string decodeURI(std::string uri);
 }  // namespace ft
 
 #endif

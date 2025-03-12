@@ -23,6 +23,8 @@ ARequest::ARequest(RequestContext_t &context)
 		this->_path = root.string().substr(0, root.string().size() - 1);
 	}
 
+	this->_path = ft::decodeURI(this->_path.string());
+
 	this->_cgiPath = this->_context.ruleBlock->findCGI(this->_path.extension());
 }
 
