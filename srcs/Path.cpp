@@ -42,9 +42,9 @@ Path &Path::operator=(const Path &other) {
 	return (*this);
 }
 
-bool Path::operator!=(const Path &other) { return (this->_str != other._str); }
+bool Path::operator!=(const Path &other) const { return (this->_str != other._str); }
 
-bool Path::operator==(const Path &other) { return (this->_str == other._str); }
+bool Path::operator==(const Path &other) const { return (this->_str == other._str); }
 
 /* ************************************************************************** */
 

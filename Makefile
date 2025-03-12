@@ -3,7 +3,9 @@ NAME = webserv
 # *** FILES ****************************************************************** #
 
 MAKE_DIR := .make/
-BUILD_DIR := $(MAKE_DIR)$(shell git branch --show-current 2>/dev/null)/
+BUILD_DIR := $(MAKE_DIR)$(shell git symbolic-ref --short HEAD 2> /dev/null || \
+								git describe --tags --exact-match HEAD 2> /dev/null || \
+								git rev-parse --short HEAD 2> /dev/null)/
 
 include SRCS.mk
 

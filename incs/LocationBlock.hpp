@@ -60,6 +60,7 @@ public:
 	const Path                     *findCGI(const std::string &extension) const;
 	const Path                     &clientBodyUploadPath(void) const;
 	const Path                     &clientBodyTempPath(void) const;
+	bool							hasClientBodyTempPath(void) const;
 
 private:
 	Path                     _path;

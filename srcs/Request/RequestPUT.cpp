@@ -106,8 +106,9 @@ void RequestPUT::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	} else if (upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) ||
-	                              upload.deviceID() != temp.deviceID())) {
+	} else if (this->_context.ruleBlock->hasClientBodyTempPath() &&
+				upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) ||
+				upload.deviceID() != temp.deviceID())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_openFile();
