@@ -16,11 +16,13 @@ public:
 
 	CgiBuilder &operator=(const CgiBuilder &other);
 
-	void   addEnvar(const std::string &key, const std::string &val);
-	void   addArgument(const std::string &arg);
+	void addEnvar(const std::string &key, const std::string &val);
+	void addArgument(const std::string &arg);
+
 	char **envp(void) const;
 	char **argv(void) const;
 
+	static int  chdir(const ARequest *req);
 	static void destroy(char **ptr);
 
 private:

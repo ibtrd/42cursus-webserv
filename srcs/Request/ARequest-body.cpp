@@ -4,13 +4,15 @@
 #include "ft.hpp"
 
 error_t ARequest::_generateFilename(void) {
-	std::string basename =
-	    this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	std::string basename;
+	if (this->_context.ruleBlock->clientBodyUploadPath() != this->_context.ruleBlock->clientBodyTempPath()) {
+		basename = this->_context.ruleBlock->clientBodyTempPath().string() + this->_path.notdir();
+	} else {
+		basename = this->_path.string();
+	}
 	std::string tmp;
 	int32_t     i = 0;
 
-	std::cerr << "tmp: " << this->_context.ruleBlock->clientBodyTempPath() << std::endl;
-	std::cerr << "basename: " << basename << std::endl;
 	do {
 		tmp = basename + '.' + ft::generateRandomString(8) + ".tmp";
 	} while (0 == access(tmp.c_str(), F_OK) && ++i < 100);
@@ -19,7 +21,6 @@ error_t ARequest::_generateFilename(void) {
 		return (REQ_DONE);
 	}
 	this->_tmpFilename = tmp;
-	std::cerr << "tmpFilename: " << this->_tmpFilename << std::endl;
 	return (REQ_CONTINUE);
 }
 
@@ -30,14 +31,12 @@ void ARequest::_openFile(void) {
 	this->_file.open(this->_tmpFilename.c_str(),
 	                 std::ios::out | std::ios::trunc | std::ios::binary);
 	if (!this->_file.is_open()) {
-		std::cerr << "open(): " << std::strerror(errno) << std::endl;
+		std::cerr << "Error: open(): " << this->_tmpFilename << ": " << std::strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
 }
 
 void ARequest::_saveFile(void) {
-	std::cerr << "ARequest _saveFile" << std::endl;
-
 	if (this->_cgiPath) {
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 		this->_context.response.setStatusCode(STATUS_OK);
@@ -49,17 +48,14 @@ void ARequest::_saveFile(void) {
 		                    this->_context.cgiSockets[PARENT_SOCKET], &event)) {
 			throw std::runtime_error("epoll_ctl: " + std::string(strerror(errno)));
 		}
-
-		std::cerr << "RequestPOST shutdown" << std::endl;
 		return;
 	}
 	this->_file.close();
 	this->_context.response.setStatusCode(STATUS_CREATED);
 	if (0 == this->_path.access(F_OK) && 0 != std::remove(this->_path.c_str())) {
+		std::cerr << "Error: remove(): " << std::strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	}
-	std::cerr << "RENAMEPARAMS:\nold" << this->_tmpFilename.c_str()
-	          << "\nnew: " << this->_path.c_str() << std::endl;
 	if (0 != std::rename(this->_tmpFilename.c_str(), this->_path.c_str())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		std::cerr << "Error: rename(): " << std::strerror(errno) << std::endl;
@@ -72,9 +68,7 @@ error_t ARequest::_writeChunk(size_t size) {
 		ssize_t bytes = send(this->_context.cgiSockets[PARENT_SOCKET], this->_context.buffer.data(),
 		                     size, MSG_NOSIGNAL);
 		if (bytes == -1) {
-			std::cerr << "Error: send: " << strerror(errno) << std::endl;
-			// throw std::runtime_error("RequestPOST::_readContent: send: " +
-			// std::string(strerror(errno)));
+			std::cerr << "Error: send(): " << strerror(errno) << std::endl;
 			return (REQ_ERROR);
 		}
 		return (REQ_CONTINUE);
@@ -106,10 +100,7 @@ error_t ARequest::_readContent(void) {
 }
 
 error_t ARequest::_readChunked(void) {
-	// std::cerr << "RequestPUT _readChunked" << std::endl;
 	while (!this->_context.buffer.empty()) {
-		// std::cerr << "ARequest begin buffer: |" << this->_context.buffer << "|" << std::endl;
-
 		// Read end of chunk
 		if (this->_contentLength == 0) {
 			if (this->_context.buffer.size() >= 2) {
@@ -182,9 +173,6 @@ error_t ARequest::_readChunked(void) {
 				return (this->_cgiPath ? REQ_CONTINUE : REQ_DONE);
 			}
 		}
-
-		// std::cerr << "ARequest chunk size: " << this->_contentLength << std::endl;
-		// std::cerr << "ARequest inter buffer: |" << this->_context.buffer << "|" << std::endl;
 
 		// Read chunk
 		if (static_cast<int32_t>(this->_context.buffer.size()) > this->_contentLength) {

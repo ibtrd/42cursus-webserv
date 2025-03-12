@@ -8,8 +8,7 @@ private:
 	status_code_t _statusCode;
 	std::string   _reasonPhrase;
 	headers_t     _headers;
-	// DEPRECATED
-	std::string _body;
+	std::string   _body;
 
 public:
 	Response(void);
@@ -32,7 +31,6 @@ public:
 	void setStatusCode(const status_code_t &code);
 	void setHeader(const std::string &key, const std::string &value);
 	void setReasonPhrase(const std::string &reasonPhrase);
-	// DEPRECATED
 	void setBody(const std::string &body);
 	void addBody(const std::string &body);
 

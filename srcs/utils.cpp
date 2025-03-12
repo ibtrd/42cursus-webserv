@@ -1,5 +1,3 @@
-// function a ranger quand on aura le temps (si nécessaire)
-
 #include "RequestContext.hpp"
 #include "ft.hpp"
 #include "webservHTML.hpp"
@@ -58,6 +56,8 @@ std::string statusCodeToReason(const status_code_t code) {
 			return ("Not Implemented");
 		case STATUS_SERVICE_UNAVAILABLE:
 			return ("Service Unavailable");
+		case STATUS_GATEWAY_TIMEOUT:
+			return ("Gateway Timeout");
 		case STATUS_HTTP_VERSION_NOT_SUPPORTED:
 			return ("HTTP Version Not Supported");
 		default:
@@ -99,6 +99,8 @@ std::string statusCodeToMsg(const status_code_t code) {
 			return (ERROR501MSG);
 		case STATUS_SERVICE_UNAVAILABLE:
 			return (ERROR503MSG);
+		case STATUS_GATEWAY_TIMEOUT:
+			return (ERROR504MSG);
 		case STATUS_HTTP_VERSION_NOT_SUPPORTED:
 			return (ERROR505MSG);
 		default:

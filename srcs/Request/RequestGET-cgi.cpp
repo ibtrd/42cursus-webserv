@@ -15,10 +15,7 @@ void RequestGET::_openCGI(void) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return;
 	}
-
 	this->_context.option = EPOLLIN;
-
-	// this->_context.response.setStatusCode(STATUS_OK);
 
 	this->_context.pid = fork();
 	if (-1 == this->_context.pid) {
@@ -38,42 +35,5 @@ void RequestGET::_openCGI(void) {
 		shutdown(this->_context.cgiSockets[PARENT_SOCKET], SHUT_WR);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 		UNSET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
-		std::cerr << "RequestGET CGI: " << this->_cgiPath->string() << std::endl;
 	}
-}
-
-error_t RequestGET::_executeCGI(void) {
-	if (-1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDOUT_FILENO) ||
-	    -1 == dup2(this->_context.cgiSockets[CHILD_SOCKET], STDIN_FILENO)) {
-		std::exit(1);
-	}
-	close(this->_context.cgiSockets[PARENT_SOCKET]);
-	close(this->_context.cgiSockets[CHILD_SOCKET]);
-
-	CgiBuilder builder(this);
-	// std::cerr << builder;
-
-	char **envp = builder.envp();
-	char **argv = builder.argv();
-
-	// std::cerr << "CGI-argv:\n";
-	// for (uint32_t i = 0; argv[i]; ++i) {
-	// 	std::cerr << argv[i] << "\n";
-	// }
-	// std::cerr << "CGI-envp:\n";
-	// for (uint32_t i = 0; envp[i]; ++i) {
-	// 	std::cerr << envp[i] << "\n";
-	// }
-	// std::cerr.flush();
-
-	// close(STDIN_FILENO);
-
-	std::cerr << "EXECVE! [GET]" << std::endl;
-	execve(this->_cgiPath->string().c_str(), argv, envp);
-	// execlp("/bin/ls", "ls", NULL, NULL);
-
-	std::cerr << "execve(): " << strerror(errno) << std::endl;
-	CgiBuilder::destroy(argv);
-	CgiBuilder::destroy(envp);
-	std::exit(1);
 }

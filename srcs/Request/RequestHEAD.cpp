@@ -17,17 +17,12 @@
 /* CONSTRUCTORS ************************************************************* */
 
 RequestHEAD::RequestHEAD(RequestContext_t &context) : ARequest(context), _dir(NULL) {
-	std::cerr << "RequestHEAD created" << std::endl;
-	SET_REQ_WORK_COMPLETE(this->_context.requestState);  // No work needed
+	SET_REQ_WORK_COMPLETE(this->_context.requestState);
 }
 
-RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) {
-	std::cerr << "RequestHEAD copy" << std::endl;
-	*this = other;
-}
+RequestHEAD::RequestHEAD(const RequestHEAD &other) : ARequest(other), _dir(NULL) { *this = other; }
 
 RequestHEAD::~RequestHEAD(void) {
-	std::cerr << "RequestHEAD destroyed" << std::endl;
 	if (this->_file.is_open()) {
 		this->_file.close();
 	}
@@ -39,7 +34,6 @@ RequestHEAD::~RequestHEAD(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestHEAD &RequestHEAD::operator=(const RequestHEAD &other) {
-	std::cerr << "RequestHEAD assign" << std::endl;
 	(void)other;
 	return (*this);
 }
@@ -54,7 +48,6 @@ void RequestHEAD::_openFile(void) {
 }
 
 void RequestHEAD::_openDir(void) {
-	// std::cerr << "RequestHEAD _openDir" << std::endl;
 	this->_context.response.setStatusCode(STATUS_OK);
 	this->_context.response.setHeader(HEADER_CONTENT_TYPE, "text/html");
 }
@@ -82,7 +75,6 @@ error_t RequestHEAD::_fetchIndexes(void) {
 	for (std::vector<std::string>::const_iterator it = this->_context.ruleBlock->indexes().begin();
 	     it != this->_context.ruleBlock->indexes().end(); ++it) {
 		std::string test = this->_path.concat(*it);
-		// std::cerr << "testing indexfile: " << test << std::endl;
 		if (0 == access(test.c_str(), F_OK)) {
 			this->_path = test;
 			return 0;
@@ -94,7 +86,6 @@ error_t RequestHEAD::_fetchIndexes(void) {
 /* ************************************************************************** */
 
 void RequestHEAD::processing(void) {
-	// std::cerr << "RequestHEAD parse" << std::endl;
 	if (0 != this->_path.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 		return;
@@ -123,20 +114,8 @@ void RequestHEAD::processing(void) {
 	this->_context.response.setStatusCode(STATUS_FORBIDDEN);
 }
 
-ARequest *RequestHEAD::clone(void) const {
-	std::cerr << "RequestHEAD clone" << std::endl;
-	return (new RequestHEAD(*this));
-}
-
-/* HEADTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
+ARequest *RequestHEAD::clone(void) const { return (new RequestHEAD(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestHEAD(RequestContext_t &context) {
-	std::cerr << "createRequestHEAD" << std::endl;
-	return (new RequestHEAD(context));
-}
+ARequest *createRequestHEAD(RequestContext_t &context) { return (new RequestHEAD(context)); }

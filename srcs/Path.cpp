@@ -42,9 +42,9 @@ Path &Path::operator=(const Path &other) {
 	return (*this);
 }
 
-bool Path::operator!=(const Path &other) { return (this->_str != other._str); }
+bool Path::operator!=(const Path &other) const { return (this->_str != other._str); }
 
-bool Path::operator==(const Path &other) { return (this->_str == other._str); }
+bool Path::operator==(const Path &other) const { return (this->_str == other._str); }
 
 /* ************************************************************************** */
 
@@ -102,6 +102,9 @@ dev_t Path::deviceID(void) const {
 }
 
 std::string Path::extension(void) const {
+	if (this->_chunks.empty()) {
+		return std::string();
+	}
 	const std::string &src = this->_chunks.back();
 	const std::size_t  pos = src.find_last_of('.');
 	if (pos != std::string::npos && pos != src.size() - 1) {

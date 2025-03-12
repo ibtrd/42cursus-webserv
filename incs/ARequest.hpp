@@ -6,7 +6,6 @@
 
 #include "RequestContext.hpp"
 
-// # define CHUMK_TERMINATOR "0\r\n\r\n"
 #define CHUNK_TERMINATOR_SIZE 5
 
 class ARequest {
@@ -27,7 +26,10 @@ protected:
 
 	BinaryBuffer _readBuffer;
 
+	bool _cgiSilent;
+
 	error_t _readCGI(void);
+	error_t _executeCGI(void);
 	void    _parseCGIHeaders(void);
 
 	error_t _generateFilename(void);
@@ -55,6 +57,7 @@ public:
 	const RequestContext_t &context(void) const;
 	const Path             &path(void) const;
 	const Path             &cgiPath(void) const;
+	bool                    CGISilent(void) const;
 
 	virtual ARequest *clone(void) const = 0;
 };

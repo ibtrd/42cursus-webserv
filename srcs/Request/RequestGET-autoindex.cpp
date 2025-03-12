@@ -75,7 +75,7 @@ error_t RequestGET::_readDir(void) {
 		errno = 0;
 	}
 	if (errno != 0) {
-		std::cerr << "readdir: " << strerror(errno) << std::endl;
+		std::cerr << "Error: readdir(): " << strerror(errno) << std::endl;
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 		return (REQ_ERROR);
 	}
@@ -84,7 +84,6 @@ error_t RequestGET::_readDir(void) {
 		this->_context.response.addBody(HTMLFOOTER);
 		SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
 	}
-	// this->_context.responseBuffer += this->_context.response.body();
 	this->_context.responseBuffer.append(this->_context.response.body().c_str());
 	this->_context.response.clearBody();
 	return (REQ_CONTINUE);

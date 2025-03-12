@@ -11,26 +11,16 @@
 
 /* CONSTRUCTORS ************************************************************* */
 
-// RequestPUT::RequestPUT(void)
-// {
-// 	// std::cerr << "RequestPUT created" << std::endl;
-// }
-
 RequestPUT::RequestPUT(RequestContext_t &context) : ARequest(context) {
-	// std::cerr << "RequestPUT created" << std::endl;
-	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);  // No workOut needed
-	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);    // TMP
-	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);   // TMP
+	SET_REQ_WORK_OUT_COMPLETE(this->_context.requestState);
+	SET_REQ_CGI_IN_COMPLETE(this->_context.requestState);
+	SET_REQ_CGI_OUT_COMPLETE(this->_context.requestState);
 	this->_contentTotalLength = 0;
 }
 
-RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) {
-	// std::cerr << "RequestPUT copy" << std::endl;
-	*this = other;
-}
+RequestPUT::RequestPUT(const RequestPUT &other) : ARequest(other) { *this = other; }
 
 RequestPUT::~RequestPUT(void) {
-	// std::cerr << "RequestPUT destroyed" << std::endl;
 	if (this->_file.is_open()) {
 		this->_file.close();
 	}
@@ -42,7 +32,6 @@ RequestPUT::~RequestPUT(void) {
 /* OPERATOR OVERLOADS ******************************************************* */
 
 RequestPUT &RequestPUT::operator=(const RequestPUT &other) {
-	// std::cerr << "RequestPUT assign" << std::endl;
 	(void)other;
 	return (*this);
 }
@@ -87,12 +76,10 @@ error_t RequestPUT::_checkHeaders(void) {
 /* ************************************************************************** */
 
 void RequestPUT::processing(void) {
-	std::cerr << "RequestPUT processing" << std::endl;
 	// Check headers
 	if (REQ_CONTINUE != this->_checkHeaders()) {
 		return;
 	}
-	std::cerr << "PUT Path:" << this->_path << std::endl;
 	// Check path
 	if (this->_path.isDirFormat()) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
@@ -110,10 +97,6 @@ void RequestPUT::processing(void) {
 	Path upload = this->_path.dir();
 	Path temp   = this->_context.ruleBlock->clientBodyTempPath();
 
-	std::cerr << "DEBUG UPLOAD: " << upload.string() << "\n"
-	          << temp.string() << "\n"
-	          << this->path() << std::endl;
-
 	if (0 != upload.access(F_OK)) {
 		this->_context.response.setStatusCode(STATUS_NOT_FOUND);
 	} else if (0 != upload.stat()) {
@@ -123,8 +106,9 @@ void RequestPUT::processing(void) {
 		this->_context.response.setStatusCode(STATUS_CONFLICT);
 	} else if (0 != upload.access(W_OK)) {
 		this->_context.response.setStatusCode(STATUS_FORBIDDEN);
-	} else if (upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) ||
-	                              upload.deviceID() != temp.deviceID())) {
+	} else if (this->_context.ruleBlock->hasClientBodyTempPath() &&
+				upload != temp && (0 != temp.stat() || !temp.isDir() || 0 != temp.access(W_OK) ||
+				upload.deviceID() != temp.deviceID())) {
 		this->_context.response.setStatusCode(STATUS_INTERNAL_SERVER_ERROR);
 	} else {
 		this->_openFile();
@@ -132,7 +116,6 @@ void RequestPUT::processing(void) {
 }
 
 error_t RequestPUT::workIn(void) {
-	// std::cerr << "RequestPUT workIn" << std::endl;
 	if (this->_chunked) {
 		return (this->_readChunked());
 	} else {
@@ -141,20 +124,8 @@ error_t RequestPUT::workIn(void) {
 	return (REQ_DONE);
 }
 
-ARequest *RequestPUT::clone(void) const {
-	// std::cerr << "RequestPUT clone" << std::endl;
-	return (new RequestPUT(*this));
-}
-
-/* GETTERS ****************************************************************** */
-
-/* SETTERS ****************************************************************** */
-
-/* EXCEPTIONS *************************************************************** */
+ARequest *RequestPUT::clone(void) const { return (new RequestPUT(*this)); }
 
 /* OTHERS *********************************************************************/
 
-ARequest *createRequestPUT(RequestContext_t &context) {
-	// std::cerr << "createRequestPUT" << std::endl;
-	return (new RequestPUT(context));
-}
+ARequest *createRequestPUT(RequestContext_t &context) { return (new RequestPUT(context)); }
